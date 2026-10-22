@@ -1,0 +1,11 @@
+// Prisma schema for QuizSlayer. Models are added per bounded context from Phase 2.
+// Prisma types never leave infrastructure/ (see CLAUDE.md).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}

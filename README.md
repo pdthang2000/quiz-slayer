@@ -2,7 +2,17 @@
 
 Study app: flashcards + "10 Quizzes per day" for IELTS, TOEIC, HSK and more.
 
-Status: domain modelling. No code yet.
+Status: Phase 0 (project setup) done. See `docs/plan.md`.
+
+## Run locally
+```
+pnpm install
+cp apps/api/.env.example apps/api/.env
+docker compose up -d               # Postgres 16 on localhost:5432
+pnpm --filter @quizslayer/api exec prisma migrate dev
+pnpm test && pnpm lint
+pnpm --filter @quizslayer/api start:dev
+```
 
 ## How we work
 1. Model the business with the agent (`/domain-interview`), one question at a time.
