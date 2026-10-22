@@ -69,7 +69,7 @@ export class CardIsNotTrashed extends DomainError {
   }
 }
 
-/** CARDTAG-04: replaceTag on a card without the old tag (race or bug). */
+/** CARDTAG-04: replaceTagForMerge on a card without the old tag (race or bug). */
 export class TagNotOnCard extends DomainError {
   readonly code = 'TagNotOnCard';
   constructor(

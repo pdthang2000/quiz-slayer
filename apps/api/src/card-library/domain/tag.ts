@@ -64,7 +64,7 @@ export class Tag extends AggregateRoot<TagEvent> {
 
   /**
    * TAG-08, TAG-10: this tag is merged into `target` and goes away.
-   * The target keeps its name and color (TAG-12). Cards change via card.replaceTag.
+   * The target keeps its name and color (TAG-12). Cards change via card.replaceTagForMerge.
    */
   mergeInto(target: Tag): void {
     if (target.id === this.id) {

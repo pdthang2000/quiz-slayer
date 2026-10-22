@@ -6,15 +6,19 @@ import {
   TagNotOnCard,
   TooManyTags,
 } from './errors';
+import { CardId, TagId, UserId } from './ids';
 
 const front = (text = 'Dog') => CardFront.create(text);
 const back = (text = 'a mammal that barks') => CardBack.create(text);
-const tagIds = (n: number) => Array.from({ length: n }, (_, i) => `tag-${i}`);
+const CARD = CardId('card-1');
+const USER = UserId('user-1');
+const tagIds = (n: number) =>
+  Array.from({ length: n }, (_, i) => TagId(`tag-${i}`));
 
-function newCard(tags: string[] = []): Card {
+function newCard(tags: TagId[] = []): Card {
   const card = Card.create({
-    id: 'card-1',
-    userId: 'user-1',
+    id: CARD,
+    userId: USER,
     front: front(),
     back: back(),
     tagIds: tags,
@@ -23,7 +27,7 @@ function newCard(tags: string[] = []): Card {
   return card;
 }
 
-function trashedCard(tags: string[] = []): Card {
+function trashedCard(tags: TagId[] = []): Card {
   const card = newCard(tags);
   card.moveToTrash();
   card.pullEvents();
@@ -38,11 +42,11 @@ describe('Card', () => {
 
     it('creates an Active card with its tags and records CardCreated', () => {
       const card = Card.create({
-        id: 'card-1',
-        userId: 'user-1',
+        id: CARD,
+        userId: USER,
         front: front(),
         back: back(),
-        tagIds: ['animals', 'pitbull'],
+        tagIds: [TagId('animals'), TagId('pitbull')],
       });
       expect(card.state).toBe('Active');
       expect(card.tagIds).toEqual(['animals', 'pitbull']);
@@ -62,8 +66,10 @@ describe('Card', () => {
     });
 
     it('CARDTAG-06: the same tag twice is kept once, and the limit is checked after', () => {
-      expect(newCard(['animals', 'animals']).tagIds).toEqual(['animals']);
-      expect(newCard([...tagIds(20), 'tag-0']).tagIds).toHaveLength(20);
+      expect(newCard([TagId('animals'), TagId('animals')]).tagIds).toEqual([
+        'animals',
+      ]);
+      expect(newCard([...tagIds(20), TagId('tag-0')]).tagIds).toHaveLength(20);
     });
   });
 
@@ -78,7 +84,7 @@ describe('Card', () => {
       ]);
     });
 
-    it('records nothing when front and back are unchanged', () => {
+    it('CARD-06: saving the same front and back is a no-op with no CardEdited', () => {
       const card = newCard();
       card.edit(front(' Dog '), back());
       expect(card.pullEvents()).toEqual([]);
@@ -94,7 +100,7 @@ describe('Card', () => {
   describe('addTag / removeTag', () => {
     it('adds a tag and records CardTagged', () => {
       const card = newCard();
-      card.addTag('animals');
+      card.addTag(TagId('animals'));
       expect(card.tagIds).toEqual(['animals']);
       expect(card.pullEvents()).toEqual([
         {
@@ -107,8 +113,8 @@ describe('Card', () => {
     });
 
     it('CARDTAG-01: removing a tag removes only that CardTag', () => {
-      const card = newCard(['animals', 'pitbull']);
-      card.removeTag('pitbull');
+      const card = newCard([TagId('animals'), TagId('pitbull')]);
+      card.removeTag(TagId('pitbull'));
       expect(card.tagIds).toEqual(['animals']);
       expect(card.pullEvents()).toEqual([
         {
@@ -121,61 +127,63 @@ describe('Card', () => {
     });
 
     it('CARDTAG-02: a trashed card cannot be tagged or untagged', () => {
-      const card = trashedCard(['animals']);
-      expect(() => card.addTag('pitbull')).toThrow(CardIsTrashed);
-      expect(() => card.removeTag('animals')).toThrow(CardIsTrashed);
+      const card = trashedCard([TagId('animals')]);
+      expect(() => card.addTag(TagId('pitbull'))).toThrow(CardIsTrashed);
+      expect(() => card.removeTag(TagId('animals'))).toThrow(CardIsTrashed);
       expect(card.tagIds).toEqual(['animals']);
     });
 
     it('CARDTAG-03: a 21st tag is rejected', () => {
       const card = newCard(tagIds(20));
-      expect(() => card.addTag('one-more')).toThrow(TooManyTags);
+      expect(() => card.addTag(TagId('one-more'))).toThrow(TooManyTags);
       expect(card.tagIds).toHaveLength(20);
     });
 
     it('CARDTAG-05: adding a tag the card has, or removing one it lacks, is a no-op with no event', () => {
       const card = newCard(tagIds(20));
-      card.addTag('tag-0'); // no TooManyTags: nothing is added
-      card.removeTag('not-on-card');
+      card.addTag(TagId('tag-0')); // no TooManyTags: nothing is added
+      card.removeTag(TagId('not-on-card'));
       expect(card.tagIds).toHaveLength(20);
       expect(card.pullEvents()).toEqual([]);
     });
   });
 
-  describe('replaceTag', () => {
+  describe('replaceTagForMerge', () => {
     it('CARDTAG-04: card has A, not B → A becomes B, count unchanged', () => {
-      const card = newCard(['pitbull', 'animals']);
-      card.replaceTag('pitbull', 'dogs');
+      const card = newCard([TagId('pitbull'), TagId('animals')]);
+      card.replaceTagForMerge(TagId('pitbull'), TagId('dogs'));
       expect(card.tagIds.sort()).toEqual(['animals', 'dogs']);
     });
 
     it('CARDTAG-04: card has A and B → A removed, count −1, not an error', () => {
-      const card = newCard(['pitbull', 'dogs']);
-      card.replaceTag('pitbull', 'dogs');
+      const card = newCard([TagId('pitbull'), TagId('dogs')]);
+      card.replaceTagForMerge(TagId('pitbull'), TagId('dogs'));
       expect(card.tagIds).toEqual(['dogs']);
     });
 
     it('CARDTAG-04: card does not have A → throws so the merge rolls back', () => {
-      const card = newCard(['dogs']);
-      expect(() => card.replaceTag('pitbull', 'dogs')).toThrow(TagNotOnCard);
+      const card = newCard([TagId('dogs')]);
+      expect(() =>
+        card.replaceTagForMerge(TagId('pitbull'), TagId('dogs')),
+      ).toThrow(TagNotOnCard);
       expect(card.tagIds).toEqual(['dogs']);
     });
 
     it('CARDTAG-04: never increases the tag count, even at 20 tags', () => {
       const card = newCard(tagIds(20));
-      card.replaceTag('tag-0', 'merged');
+      card.replaceTagForMerge(TagId('tag-0'), TagId('merged'));
       expect(card.tagIds).toHaveLength(20);
     });
 
     it('CARDTAG-04: records no per-card event (the merge raises TagsMerged)', () => {
-      const card = newCard(['pitbull']);
-      card.replaceTag('pitbull', 'dogs');
+      const card = newCard([TagId('pitbull')]);
+      card.replaceTagForMerge(TagId('pitbull'), TagId('dogs'));
       expect(card.pullEvents()).toEqual([]);
     });
 
     it('TAG-09: a merge also replaces the tag on a trashed card', () => {
-      const card = trashedCard(['pitbull']);
-      card.replaceTag('pitbull', 'dogs');
+      const card = trashedCard([TagId('pitbull')]);
+      card.replaceTagForMerge(TagId('pitbull'), TagId('dogs'));
       expect(card.tagIds).toEqual(['dogs']);
       expect(card.state).toBe('Trashed');
     });
@@ -192,7 +200,7 @@ describe('Card', () => {
     });
 
     it('TRASH-04: CardTags are kept in the Trash, so restore brings the tags back', () => {
-      const card = newCard(['hsk1', 'greeting']);
+      const card = newCard([TagId('hsk1'), TagId('greeting')]);
       card.moveToTrash();
       expect(card.tagIds).toEqual(['hsk1', 'greeting']);
       card.restore();

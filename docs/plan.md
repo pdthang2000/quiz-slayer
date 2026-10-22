@@ -32,7 +32,7 @@ Phase 0 Setup ─► 1 Card domain ─► 2 Persistence ─► 3 API ─► 4 Fr
 ## Phase 1 — Card Library domain, pure TypeScript (M)
 Source: `docs/domain/contexts/card-library.md`. Tests first, named by rule ID.
 - Value objects: `TagName` (TAG-01), `CardFront` / `CardBack` (CARD-01, CARD-02), `TagColor` (TAG-12, UI-07 palette).
-- `Card` aggregate: create, edit, addTag, removeTag, replaceTag (CARDTAG-04), moveToTrash, restore, state rules (TRASH-*, CARDTAG-*).
+- `Card` aggregate: create, edit, addTag, removeTag, replaceTagForMerge (CARDTAG-04), moveToTrash, restore, state rules (TRASH-*, CARDTAG-*).
 - `Tag` aggregate: create, rename.
 - Domain errors (`CardIsTrashed`, `TooManyTags`, `InvalidTagName`, ...).
 - Domain events (`CardMovedToTrash`, `TagsMerged`, ...).

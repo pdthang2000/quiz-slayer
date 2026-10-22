@@ -30,7 +30,12 @@ export class TagColor {
 
   /** TAG-12: a new tag gets a random color. `random` returns [0, 1), like Math.random. */
   static random(random: () => number = Math.random): TagColor {
-    const index = Math.floor(random() * TAG_COLOR_KEYS.length);
+    // Clamp: a custom `random` may return exactly 1 (or drift outside [0, 1)).
+    const last = TAG_COLOR_KEYS.length - 1;
+    const index = Math.min(
+      last,
+      Math.max(0, Math.floor(random() * TAG_COLOR_KEYS.length)),
+    );
     return new TagColor(TAG_COLOR_KEYS[index]);
   }
 

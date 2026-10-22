@@ -1,12 +1,13 @@
 import { TagMergeNotAllowed } from './errors';
+import { TagId, UserId } from './ids';
 import { Tag } from './tag';
 import { TagColor } from './tag-color';
 import { TagName } from './tag-name';
 
 function newTag(id: string, name: string, userId = 'user-1'): Tag {
   const tag = Tag.create({
-    id,
-    userId,
+    id: TagId(id),
+    userId: UserId(userId),
     name: TagName.create(name),
     color: TagColor.from('blue'),
   });
@@ -21,8 +22,8 @@ describe('Tag', () => {
 
   it('records TagCreated with the normalized name', () => {
     const tag = Tag.create({
-      id: 't1',
-      userId: 'user-1',
+      id: TagId('t1'),
+      userId: UserId('user-1'),
       name: TagName.create(' pit   bull '),
       color: TagColor.from('red'),
     });

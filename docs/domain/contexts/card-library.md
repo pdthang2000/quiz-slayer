@@ -27,7 +27,7 @@ Started fresh on 2026-10-20. The old Flex Card backend is reference only, not a 
 | emptyTrash() | user's trashed cards | Confirm with count (TRASH-07) |
 | createTag(name) / deleteTag() | Tag | |
 | renameTag(name) | Tag | Existing name → merge (TAG-08, TAG-10) |
-| replaceTag(A, B) | Card | Merge only (CARDTAG-04) |
+| replaceTagForMerge(A, B) | Card | Merge only (CARDTAG-04) |
 
 ---
 
@@ -46,6 +46,12 @@ Started fresh on 2026-10-20. The old Flex Card backend is reference only, not a 
 ```
 "  Dog \n"            → "Dog"
 "a mammal\nthat barks" → "a mammal\nthat barks"   (inner newline kept)
+```
+
+**CARD-06** `confirmed` — A card counts as edited only if its content changes. Saving the same front and back (after CARD-05) is a no-op: nothing changes, no `CardEdited`. Same idea as CARDTAG-05 and TAG-14.
+```
+Dog | a mammal that barks → Save with no changes → no-op
+Dog | a mammal that barks → Save "Dog | a mammal that barks " → trimmed → same → no-op
 ```
 
 ### Tags
@@ -112,18 +118,18 @@ A merge never increases a card's tag count, so it can't break CARDTAG-03.
 
 **TAG-09** `confirmed` — A merge also moves the CardTags of trashed cards, so a restored card shows the merged tag.
 
-**TAG-10** `confirmed` — A merge runs in one transaction. Every affected card goes through the Card class: `card.replaceTag(A, B)`. The DB only stores what Card approved. This spans many aggregates in one transaction: a documented exception (ADR-004). Event: `TagsMerged`.
+**TAG-10** `confirmed` — A merge runs in one transaction. Every affected card goes through the Card class: `card.replaceTagForMerge(A, B)`. The DB only stores what Card approved. This spans many aggregates in one transaction: a documented exception (ADR-004). Event: `TagsMerged`.
 ```ts
 await db.transaction(async (tx) => {
   // lock tag A and tag B rows first (SELECT ... FOR UPDATE)
-  const cards = await cardRepo.findByTag(A, tx);       // Active + Trashed (TAG-09)
-  for (const c of cards) c.replaceTag(A, B);           // throw → rollback, nothing changes
+  const cards = await cardRepo.findByTag(A, tx);     // Active + Trashed (TAG-09)
+  for (const c of cards) c.replaceTagForMerge(A, B); // throw → rollback, nothing changes
   await cardRepo.saveAll(cards, tx);
   await tagRepo.delete(A, tx);
 });
 ```
 - Any failure (rule, race, DB) → rollback → nothing changed → UI: "Merge failed, try again".
-- Listeners of `CardTagged` / `CardUntagged` must also handle `TagsMerged` (no per-card events).
+- `TagsMerged` is the only event of a merge: it also means tag A is gone. No `TagDeleted` for A, no per-card `CardTagged` / `CardUntagged`. Listeners of those events must also handle `TagsMerged`. (C-17)
 - No undo; covered by the UI confirmation (TAG-08).
 - If a merge ever gets slow (thousands of cards), revisit with set-based SQL (see ADR-004).
 
@@ -134,7 +140,7 @@ await db.transaction(async (tx) => {
 
 **CARDTAG-03** `confirmed` — A card has at most 20 tags. Raise later if someone actually hits it (raising is free, lowering is not).
 
-**CARDTAG-04** `confirmed` — `card.replaceTag(A, B)` removes A and adds B in one step, used only by a tag merge (TAG-08, TAG-10):
+**CARDTAG-04** `confirmed` — `card.replaceTagForMerge(A, B)` removes A and adds B in one step, used only by a tag merge (TAG-08, TAG-10):
 | Card has | Result |
 |---|---|
 | A, not B | A → B, count unchanged |
@@ -200,6 +206,33 @@ restore → 你好 [HSK1, greeting]
 **UI-03** `confirmed` — Deleting a tag asks for confirmation showing how many cards have it ("Animals is on 312 cards. Delete?").
 
 ---
+
+## Error handling
+
+Every rule violation throws a named domain error (never a plain `Error` or `HttpException`). An exception filter in `api/` maps each error to an HTTP status; the app maps it to a message.
+
+Names, kinds, HTTP statuses and messages `confirmed` (C-18).
+
+| Error | Rule | When | Kind | HTTP | Message to the user |
+|---|---|---|---|---|---|
+| `InvalidCardFront` (empty / tooLong) | CARD-01, CARD-02, CARD-05 | Front empty after trim, or > 500 chars | User input | 400 | "Front is required" / "Front is max 500 characters" |
+| `InvalidCardBack` (empty / tooLong) | CARD-01, CARD-02, CARD-05 | Back empty after trim, or > 3000 chars | User input | 400 | "Back is required" / "Back is max 3000 characters" |
+| `InvalidTagName` (length / character) | TAG-01 | Name not 1–50 chars, or a forbidden character | User input | 400 | "Tags use letters, numbers, spaces, - and _ (max 50)" |
+| `InvalidTagColor` | TAG-13 | Color key not in the palette | Bug (users can't pick colors yet) | 400 | generic "Something went wrong" |
+| `TooManyTags` | CARDTAG-03 | 21st tag on a card | User input | 422 | "A card can have at most 20 tags" |
+| `CardIsTrashed` | TRASH-02, CARDTAG-02, TRASH-10 | Edit / tag / trash a card that is in the Trash | Stale screen | 409 | "This card is in the Trash. Restore it first." + refresh |
+| `CardIsNotTrashed` | TRASH-10 | Restore / delete permanently an active card | Stale screen | 409 | "This card is no longer in the Trash." + refresh |
+| `TagNotOnCard` | CARDTAG-04 | Merge finds a card without tag A (race) | Race | 409 | "Merge failed, try again" (merge rolled back) |
+| `TagMergeNotAllowed` (sameTag) | TAG-08 | Merge a tag into itself | Bug (TAG-14 makes same-name rename a no-op) | 409 | generic "Something went wrong" |
+| `TagMergeNotAllowed` (otherUser) | TAG-08, CARD-04 | Merge into another user's tag | Bug / tampering | 404 | "Tag not found" (don't reveal other users' tags) |
+
+Kinds:
+- **User input** — the user can fix it; show the message next to the field.
+- **Stale screen** — the screen is out of date (e.g. changed on another device); show the message and refresh.
+- **Race** — two actions at once; the operation rolled back; safe to retry.
+- **Bug** — the app should never send this; log it, show a generic message.
+
+Not-found errors (`CardNotFound`, `TagNotFound`) come from the application layer in Phase 3 → 404.
 
 ## Open questions
 None open.

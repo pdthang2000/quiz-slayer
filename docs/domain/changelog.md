@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-22 — Phase 1 review
+- Confirmed: `TagsMerged` is the only event of a merge and means tag A is gone; no `TagDeleted` for A (C-17).
+- Confirmed: Card Library error names.
+- Confirmed: Error handling table (kind, HTTP, message per error) in card-library.md (C-18).
+- Confirmed: CARD-06 — a card is edited only if its content changes (C-19).
+- Confirmed: C-09..C-16 were answered by Jackkie.
+- Renamed `card.replaceTag` → `card.replaceTagForMerge` (CARDTAG-04, TAG-10, ADR-004) so the name says it is for merges only.
+
 ## 2026-10-22 — Phase 1 gaps (Card Library domain)
 Questions found while writing the domain classes, answered by Jackkie:
 - Confirmed: adding a tag the card has / removing one it lacks is a no-op (CARDTAG-05, C-09).

@@ -12,6 +12,8 @@ describe('TagColor', () => {
   it('TAG-12: a random color is always a palette key', () => {
     expect(TagColor.random(() => 0).value).toBe('red');
     expect(TagColor.random(() => 0.9999).value).toBe('slate');
+    expect(TagColor.random(() => 1).value).toBe('slate');
+    expect(TagColor.random(() => -0.1).value).toBe('red');
     for (let i = 0; i < 100; i++) {
       expect(TAG_COLOR_KEYS).toContain(TagColor.random().value);
     }

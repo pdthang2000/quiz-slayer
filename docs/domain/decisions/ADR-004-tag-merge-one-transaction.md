@@ -26,7 +26,7 @@ Merge: all at once, parts not independent → one transaction.
 A merge runs in one DB transaction, and every card still goes through the domain class:
 1. Lock tag A and tag B rows (`SELECT ... FOR UPDATE`).
 2. Load all cards with A (Active and Trashed).
-3. Call `card.replaceTag(A, B)` on each (CARDTAG-04). Rules are checked in the class.
+3. Call `card.replaceTagForMerge(A, B)` on each (CARDTAG-04). Rules are checked in the class.
 4. Save all cards, delete tag A, commit. Any throw → rollback, nothing changes.
 
 ## Options considered

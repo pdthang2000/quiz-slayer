@@ -135,7 +135,7 @@ export class Card extends AggregateRoot<CardEvent> {
    * CARDTAG-04: tag merge only (TAG-08, TAG-10). Allowed on a trashed card (TAG-09).
    * Never increases the tag count. No per-card event: the merge raises TagsMerged.
    */
-  replaceTag(from: TagId, to: TagId): void {
+  replaceTagForMerge(from: TagId, to: TagId): void {
     if (!this._tagIds.delete(from)) throw new TagNotOnCard(this.id, from);
     this._tagIds.add(to);
   }
