@@ -5,16 +5,17 @@ Personal flashcards that the user organises with tags. One card can have many ta
 
 Started fresh on 2026-10-20. The old Flex Card backend is reference only, not a source of rules.
 
-## Model (draft)
+## Model (confirmed 2026-10-22, C-16)
 - **Card** aggregate: front, back, state (Active | Trashed), and the set of tag ids it carries. The card owns its CardTags, because the rules about CardTags are card rules (state, max tags).
 - **Tag** aggregate: name. Referenced by cards by id only.
 - "Cards with tag X" and "tag card count" are queries, not something Tag protects.
 
-## Events (draft)
+## Events (confirmed 2026-10-22, C-16)
 - `CardCreated`, `CardEdited`
 - `CardTagged`, `CardUntagged`
 - `CardMovedToTrash`, `CardRestored`, `CardDeletedPermanently`
 - `TagCreated`, `TagRenamed`, `TagDeleted`
+- `TagsMerged` (TAG-10; replaces per-card `CardTagged` / `CardUntagged` during a merge)
 
 ## Commands (draft)
 | Command | On | Notes |
@@ -41,13 +42,19 @@ Started fresh on 2026-10-20. The old Flex Card backend is reference only, not a 
 
 **CARD-04** `confirmed` — Cards and tags are private to their owner. Public cards/tags come later (backlog B-06).
 
+**CARD-05** `confirmed` — Front and back are stored as NFC with leading and trailing whitespace removed. Inner spaces and newlines are kept. Order: NFC → trim → empty check (CARD-01) → length check (CARD-02), so the length is counted after trimming. (C-11)
+```
+"  Dog \n"            → "Dog"
+"a mammal\nthat barks" → "a mammal\nthat barks"   (inner newline kept)
+```
+
 ### Tags
 **TAG-01** `confirmed` — A tag name is normalized before it is checked or saved:
 1. Unicode NFC (see ADR-003)
 2. trim both ends
 3. collapse inner whitespace to one space
 4. length 1–50 characters after normalization
-5. allowed characters: letters in any language, combining marks, digits, space, `-`, `_`. Everything else (`.`, `,`, `#`, `/`, ...) is rejected.
+5. allowed characters: letters in any language, combining marks, decimal digits (Unicode `Nd`: `0-9`, `٣`, ...; not `①`, `Ⅻ`, `½`; C-12), space, `-`, `_`. Everything else (`.`, `,`, `#`, `/`, ...) is rejected.
 
 ```
 " pit   bull "   → "pit bull"     ok
@@ -84,7 +91,14 @@ Animals [Cat, Fish, Dog] → rename to "Mammals"
 → Cat, Fish, Dog now show #Mammals
 ```
 
+**TAG-14** `confirmed` — Renaming a tag to its current name (after TAG-01) is a no-op: nothing changes, no event, not a merge. (C-15)
+```
+"Animals" → rename to " Animals " → normalized "Animals" → no-op
+```
+
 **TAG-12** `confirmed` — A new tag gets a random color, stored on the tag so it stays the same. A rename keeps the color. After a merge (TAG-08) the result keeps the existing tag's color. Letting the user choose a color comes later (backlog B-03).
+
+**TAG-13** `confirmed` — A tag stores a color key, not a hex value. Keys: `red`, `orange`, `amber`, `green`, `teal`, `cyan`, `blue`, `indigo`, `purple`, `pink`, `brown`, `slate`. The app maps each key to a light-mode and a dark-mode color (UI-07). (C-13)
 
 **TAG-08** `confirmed` — Renaming tag A to the name of an existing tag B merges A into B: every card with A gets B, and A is deleted. The UI shows the merge explicitly and asks for confirmation before it happens.
 ```
@@ -128,6 +142,13 @@ await db.transaction(async (tx) => {
 | not A | throw (race or bug) → merge rolls back |
 It is the only tag change allowed on a trashed card (supports TAG-09). It never increases the tag count, so CARDTAG-03 always holds.
 
+**CARDTAG-05** `confirmed` — Adding a tag the card already has, or removing a tag it doesn't have, is a no-op: nothing changes, no event. A double-tap or a retried request is harmless. (C-09)
+
+**CARDTAG-06** `confirmed` — The same tag twice in one input (createCard, tagCard) is kept once. CARDTAG-03 is checked after removing duplicates. Names are compared after TAG-01, case-sensitive (TAG-02). (C-14)
+```
+#Animals #Animals #animals → Animals, animals (2 tags)
+```
+
 ### Trash
 **TRASH-01** `confirmed` — Deleting a card moves it to the Trash. It is not gone.
 
@@ -151,6 +172,8 @@ restore → 你好 [HSK1, greeting]
 
 **TRASH-09** `confirmed` — Deleting a card always moves it to the Trash. There is no "delete permanently" outside the Trash tab (one delete button, no confusion).
 
+**TRASH-10** `confirmed` — Moving a trashed card to the trash fails with `CardIsTrashed`. Restoring or deleting permanently an active card fails with `CardIsNotTrashed` (the latter follows from TRASH-09). The UI never offers these, so if one happens it is a bug or a stale screen. (C-10)
+
 ### Reads
 **READ-01** `confirmed` — Every read that returns or counts cards states which state it wants. Repository methods are named by state (`findActive`, `findTrashed`); there is no `findAll`. No DB view. Each read path gets a test: "trashed card not returned".
 
@@ -172,7 +195,7 @@ restore → 你好 [HSK1, greeting]
 
 **UI-06** `confirmed` — Tag list shows tags as colored buttons. Long-press on a tag opens a bottom sheet with: Show cards, Rename, Delete (mobile form of the original tooltip idea). Tag color: TAG-12.
 
-**UI-07** `confirmed` — The random color is picked from a fixed palette of readable colors (good contrast in light and dark mode), not any hex value.
+**UI-07** `confirmed` — The random color is picked from a fixed palette of readable colors (good contrast in light and dark mode), not any hex value. The palette keys are in TAG-13; the app owns the light/dark hex for each key.
 
 **UI-03** `confirmed` — Deleting a tag asks for confirmation showing how many cards have it ("Animals is on 312 cards. Delete?").
 

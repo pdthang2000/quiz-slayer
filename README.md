@@ -2,7 +2,7 @@
 
 Study app: flashcards + "10 Quizzes per day" for IELTS, TOEIC, HSK and more.
 
-Status: Phase 0 (project setup) done. See `docs/plan.md`.
+Status: Phase 1 (Card Library domain) at Checkpoint 1. See `docs/plan.md`.
 
 ## Run locally
 ```

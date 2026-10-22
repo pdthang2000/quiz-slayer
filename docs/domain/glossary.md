@@ -18,6 +18,32 @@ Status: `confirmed` = decided by Jackkie, `draft` = proposed.
 | Move to trash | Delete a card from the normal view. The card becomes Trashed. | | confirmed |
 | Restore | Bring a trashed card back to Active, with its tags. | | confirmed |
 | Delete permanently | Remove a trashed card and its CardTags for good. No undo. | | confirmed |
+| Tag color | A key from a fixed palette, stored on the tag (TAG-12, TAG-13). Code: `TagColor`. | `blue` | confirmed |
+
+### Card Library events (C-16)
+| Event | Raised when | Status |
+|---|---|---|
+| `CardCreated` | A card is created (with its initial tags). | confirmed |
+| `CardEdited` | Front or back changed. | confirmed |
+| `CardTagged` / `CardUntagged` | One tag added to / removed from a card. | confirmed |
+| `CardMovedToTrash` / `CardRestored` | Card goes Active → Trashed / Trashed → Active. | confirmed |
+| `CardDeletedPermanently` | A trashed card is removed for good. | confirmed |
+| `TagCreated` / `TagRenamed` / `TagDeleted` | Tag lifecycle. | confirmed |
+| `TagsMerged` | Tag A was merged into tag B (TAG-08, TAG-10). No per-card events during a merge. | confirmed |
+
+### Card Library errors (C-16)
+The rules behind every error are confirmed; `draft` here means only the name is proposed.
+
+| Error | Rule | Status |
+|---|---|---|
+| `InvalidCardFront` / `InvalidCardBack` | CARD-01, CARD-02 | draft (name proposed in Phase 1) |
+| `InvalidTagName` | TAG-01 | confirmed |
+| `InvalidTagColor` | TAG-13 (key not in the palette) | draft (name proposed in Phase 1) |
+| `TooManyTags` | CARDTAG-03 | confirmed |
+| `CardIsTrashed` | TRASH-02, CARDTAG-02, TRASH-10 | confirmed |
+| `CardIsNotTrashed` | TRASH-10 | confirmed |
+| `TagNotOnCard` | CARDTAG-04 (replaceTag when the card lacks A) | draft (name proposed in Phase 1) |
+| `TagMergeNotAllowed` | Merging a tag into itself or into another user's tag (TAG-08, CARD-04) | draft (name proposed in Phase 1) |
 
 ## Daily Practice (all draft)
 

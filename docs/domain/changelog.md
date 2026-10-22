@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-10-22 — Phase 1 gaps (Card Library domain)
+Questions found while writing the domain classes, answered by Jackkie:
+- Confirmed: adding a tag the card has / removing one it lacks is a no-op (CARDTAG-05, C-09).
+- Confirmed: move to trash on a trashed card / restore on an active card is an error (TRASH-10, C-10).
+- Confirmed: front/back stored as NFC with the ends trimmed; length counted after trimming (CARD-05, C-11).
+- Clarified TAG-01: "digits" means decimal digits (Unicode Nd) only (C-12).
+- Confirmed: a tag stores a color key from 12 names; the app maps keys to light/dark colors (TAG-13, UI-07, C-13).
+- Confirmed: duplicate tags in one input are kept once; the 20-tag limit is checked after (CARDTAG-06, C-14).
+- Confirmed: renaming a tag to its current name is a no-op (TAG-14, C-15).
+- Confirmed: Card Library Model and Events, plus `TagsMerged` (C-16).
+- Glossary: Tag color, Card Library events and errors. Error names `InvalidCardFront`/`InvalidCardBack`, `InvalidTagColor`, `TagNotOnCard`, `TagMergeNotAllowed` are draft (name only).
+
 ## 2026-10-22 — repo layout
 - ADR-007: one repo with pnpm workspaces (`apps/api`, `apps/mobile`, `packages/`, `docs/`).
 - CLAUDE.md and plan Phase 0/4 updated for the new paths.

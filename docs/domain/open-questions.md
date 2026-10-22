@@ -15,6 +15,14 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | C-08 | Tag color: chosen and stored per tag, or derived from the name? | answered: random for now, user chooses later → TAG-12, B-03 |
 | T-01 | Auto-purge trashed cards: never, or after N days (e.g. 30)? | answered: not in v1; later 30 days → TRASH-08, B-04 |
 | T-03 | Can a card be deleted permanently without going through the Trash? | answered: no, always Trash → TRASH-09 |
+| C-09 | Adding a tag the card already has, or removing a tag it doesn't have: no-op or error? | answered: no-op, no event → CARDTAG-05 |
+| C-10 | Move to trash on a trashed card, or restore on an active card: error or no-op? | answered: error (`CardIsTrashed` / `CardIsNotTrashed`) → TRASH-10 |
+| C-11 | Front/back: stored trimmed or exactly as typed (after NFC)? Is the length counted before or after trimming? | answered: NFC + trim ends, inner whitespace kept, length after trim → CARD-05 |
+| C-12 | TAG-01 "digits": decimal digits only (`0-9`, `٣`), or every number character (`①`, `Ⅻ`, `½`)? | answered: decimal digits only (Unicode Nd) → TAG-01 |
+| C-13 | UI-07 palette: which colors? Does the tag store a color key (e.g. `blue`) or a hex value? | answered: a color key from 12 names; the app maps keys to light/dark hex → TAG-13, UI-07 |
+| C-14 | The same tag name twice in one createCard/tagCard input: dedupe silently or error? | answered: dedupe silently, limit checked after → CARDTAG-06 |
+| C-15 | Rename a tag to its current name: no-op or error? | answered: no-op, no event → TAG-14 |
+| C-16 | The Model and Events sections of card-library.md are `draft` (incl. `TagsMerged`). Confirm them as the Phase 1 design? | answered: confirmed as listed, plus `TagsMerged` |
 
 ## Daily Practice
 | ID | Question | Status |
