@@ -6,6 +6,7 @@
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "build": "pnpm -r build",
-    "rules:coverage": "pnpm --filter @quizslayer/api rules:coverage"
+    "rules:coverage": "pnpm --filter @quizslayer/api rules:coverage",
+    "test:int": "pnpm -r test:int"
   }
 }

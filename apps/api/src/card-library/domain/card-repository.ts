@@ -3,7 +3,7 @@ import { CardId, TagId, UserId } from './ids';
 
 /**
  * READ-01: every read names the card state it wants. There is no findAll.
- * Transactions (TAG-10) are handled by the infrastructure in Phase 2.
+ * Transactions: ADR-008 (no tx parameter; the infrastructure joins the current one).
  */
 export interface CardRepository {
   findActive(userId: UserId, cardId: CardId): Promise<Card | null>;

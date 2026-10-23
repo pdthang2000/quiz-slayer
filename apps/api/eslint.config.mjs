@@ -32,6 +32,31 @@ export default tseslint.config(
     },
   },
   {
+    // Prisma stays in infrastructure/ (CLAUDE.md): no Prisma types elsewhere, and only
+    // repositories touch PrismaService. src/prisma/ is PrismaService itself.
+    // Must come before the domain block: for domain files that block replaces this one.
+    files: ['src/**/*.ts'],
+    ignores: ['src/**/infrastructure/**', 'src/prisma/**'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@prisma/*'],
+              message:
+                'Prisma types stay in infrastructure/. Map rows to domain objects there.',
+            },
+            {
+              group: ['**/prisma/prisma.service'],
+              message: 'Only repositories (infrastructure/) use PrismaService.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Keep the framework out of the domain (CLAUDE.md). Never disable this rule.
     // The '../../' patterns assume domain/ stays flat. If it gets subfolders,
     // switch to eslint-plugin-boundaries or dependency-cruiser.

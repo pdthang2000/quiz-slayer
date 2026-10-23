@@ -18,7 +18,7 @@ function* specFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const path = join(dir, entry.name);
     if (entry.isDirectory() && entry.name !== 'node_modules') yield* specFiles(path);
-    else if (/\.(e2e-)?spec\.ts$/.test(entry.name)) yield path;
+    else if (/\.((e2e|int)-)?spec\.ts$/.test(entry.name)) yield path;
   }
 }
 

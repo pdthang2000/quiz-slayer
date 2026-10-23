@@ -1,5 +1,6 @@
-// Prisma schema for QuizSlayer. Models are added per bounded context from Phase 2.
-// Prisma types never leave infrastructure/ (see CLAUDE.md).
+// Prisma schema for QuizSlayer.
+// Prisma types never leave infrastructure/ (see CLAUDE.md). Business rules live in the domain;
+// constraints here are backstops only.
 
 generator client {
   provider = "prisma-client-js"
@@ -8,4 +9,54 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// ---------- Card Library ----------
+
+enum CardState {
+  Active
+  Trashed
+
+  @@map("card_state")
+}
+
+model Card {
+  id        String    @id @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  front     String
+  back      String
+  state     CardState
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  tags      CardTag[]
+
+  @@index([userId, state])
+  @@map("card")
+}
+
+model Tag {
+  id        String    @id @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  /// TAG-01 normalized. DB guard: CHECK (name IS NFC NORMALIZED), added in the migration (ADR-003).
+  name      String
+  /// TAG-13 palette key, validated by TagColor.
+  color     String
+  createdAt DateTime  @default(now()) @map("created_at")
+  cards     CardTag[]
+
+  /// TAG-03
+  @@unique([userId, name])
+  @@map("tag")
+}
+
+/// CardTag: owned by the Card. Cascades: delete card (TRASH-05), delete tag (TAG-06, TRASH-06).
+model CardTag {
+  cardId String @map("card_id") @db.Uuid
+  tagId  String @map("tag_id") @db.Uuid
+  card   Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([cardId, tagId])
+  @@index([tagId])
+  @@map("card_tag")
 }

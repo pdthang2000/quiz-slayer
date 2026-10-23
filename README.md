@@ -2,7 +2,7 @@
 
 Study app: flashcards + "10 Quizzes per day" for IELTS, TOEIC, HSK and more.
 
-Status: Phase 1 (Card Library domain) at Checkpoint 1. See `docs/plan.md`.
+Status: Phase 2 (persistence) at Checkpoint 2. See `docs/plan.md`.
 
 ## Run locally
 ```
@@ -11,6 +11,7 @@ cp apps/api/.env.example apps/api/.env
 docker compose up -d               # Postgres 16 on localhost:5432
 pnpm --filter @quizslayer/api exec prisma migrate dev
 pnpm test && pnpm lint
+pnpm test:int                      # integration tests, uses database quizslayer_test
 pnpm --filter @quizslayer/api start:dev
 ```
 

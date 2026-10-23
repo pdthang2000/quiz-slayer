@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-23 — Phase 2 (persistence)
+- Confirmed: a TAG-03 race (DB unique constraint rejects a tag name) fails with `TagNameTaken`, Race, 409 (C-20). Added to the error table and glossary.
+- ADR-008 (proposed): transactions are carried by AsyncLocalStorage, not a `tx` parameter. TAG-10 sketch updated to match.
+- DB column for card state is `state` (glossary "Card state"), not `status`.
+
 ## 2026-10-22 — Phase 1 review
 - Confirmed: `TagsMerged` is the only event of a merge and means tag A is gone; no `TagDeleted` for A (C-17).
 - Confirmed: Card Library error names.

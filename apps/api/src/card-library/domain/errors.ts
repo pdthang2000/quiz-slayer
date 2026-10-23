@@ -69,6 +69,14 @@ export class CardIsNotTrashed extends DomainError {
   }
 }
 
+/** TAG-03, C-20: the DB unique constraint rejected a name another request just took. */
+export class TagNameTaken extends DomainError {
+  readonly code = 'TagNameTaken';
+  constructor(readonly tagName: string) {
+    super(`A tag named "${tagName}" already exists`);
+  }
+}
+
 /** CARDTAG-04: replaceTagForMerge on a card without the old tag (race or bug). */
 export class TagNotOnCard extends DomainError {
   readonly code = 'TagNotOnCard';

@@ -48,7 +48,7 @@ Source: `docs/domain/contexts/card-library.md`. Tests first, named by rule ID.
 ---
 
 ## Phase 2 — Persistence (M)
-- Prisma schema: `card` (status, front, back), `tag` (name, color), `card_tag`; unique `(user_id, name)` on tag (TAG-03); cascade delete of `card_tag` (TAG-06, TRASH-05).
+- Prisma schema: `card` (state, front, back), `tag` (name, color), `card_tag`; unique `(user_id, name)` on tag (TAG-03); cascade delete of `card_tag` (TAG-06, TRASH-05).
 - Optional DB guard: `CHECK (name IS NFC NORMALIZED)` (ADR-003).
 - Repositories + mappers: `findActive`, `findTrashed`, `findByTag` (Active + Trashed, for merge), `save`, `saveAll`, `delete`.
 - Row lock for merge via `$queryRaw` (`SELECT ... FOR UPDATE`) in the tag repository (TAG-10).

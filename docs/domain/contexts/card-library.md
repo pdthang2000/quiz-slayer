@@ -72,7 +72,7 @@ Dog | a mammal that barks → Save "Dog | a mammal that barks " → trimmed → 
 
 **TAG-02** `confirmed` — Tag names are case-sensitive. `Animals` and `animals` are two different tags.
 
-**TAG-03** `confirmed` — A tag name is unique per user (after TAG-01). Enforced by a DB unique constraint on (user, name).
+**TAG-03** `confirmed` — A tag name is unique per user (after TAG-01). Enforced by a DB unique constraint on (user, name). If two requests race and the constraint rejects one, it fails with `TagNameTaken` (C-20).
 
 **TAG-04** `confirmed` — Empty tags (0 cards) are kept. The user deletes them manually. A "remove all empty tags" action is planned for later (backlog B-01).
 
@@ -120,12 +120,13 @@ A merge never increases a card's tag count, so it can't break CARDTAG-03.
 
 **TAG-10** `confirmed` — A merge runs in one transaction. Every affected card goes through the Card class: `card.replaceTagForMerge(A, B)`. The DB only stores what Card approved. This spans many aggregates in one transaction: a documented exception (ADR-004). Event: `TagsMerged`.
 ```ts
-await db.transaction(async (tx) => {
-  // lock tag A and tag B rows first (SELECT ... FOR UPDATE)
-  const cards = await cardRepo.findByTag(A, tx);     // Active + Trashed (TAG-09)
-  for (const c of cards) c.replaceTagForMerge(A, B); // throw → rollback, nothing changes
-  await cardRepo.saveAll(cards, tx);
-  await tagRepo.delete(A, tx);
+await transactions.run(async () => {                   // ADR-008
+  await tagRepo.lockForMerge(userId, [A.id, B.id]);    // SELECT ... FOR UPDATE
+  const cards = await cardRepo.findByTag(userId, A.id); // Active + Trashed (TAG-09)
+  for (const c of cards) c.replaceTagForMerge(A.id, B.id); // throw → rollback, nothing changes
+  await cardRepo.saveAll(cards);
+  A.mergeInto(B);                                      // records TagsMerged
+  await tagRepo.delete(A);
 });
 ```
 - Any failure (rule, race, DB) → rollback → nothing changed → UI: "Merge failed, try again".
@@ -222,6 +223,7 @@ Names, kinds, HTTP statuses and messages `confirmed` (C-18).
 | `TooManyTags` | CARDTAG-03 | 21st tag on a card | User input | 422 | "A card can have at most 20 tags" |
 | `CardIsTrashed` | TRASH-02, CARDTAG-02, TRASH-10 | Edit / tag / trash a card that is in the Trash | Stale screen | 409 | "This card is in the Trash. Restore it first." + refresh |
 | `CardIsNotTrashed` | TRASH-10 | Restore / delete permanently an active card | Stale screen | 409 | "This card is no longer in the Trash." + refresh |
+| `TagNameTaken` | TAG-03 | Two requests create the same tag name at once; the DB unique constraint rejects the second (C-20) | Race | 409 | "This tag already exists. Try again." (rolled back; a retry links the existing tag) |
 | `TagNotOnCard` | CARDTAG-04 | Merge finds a card without tag A (race) | Race | 409 | "Merge failed, try again" (merge rolled back) |
 | `TagMergeNotAllowed` (sameTag) | TAG-08 | Merge a tag into itself | Bug (TAG-14 makes same-name rename a no-op) | 409 | generic "Something went wrong" |
 | `TagMergeNotAllowed` (otherUser) | TAG-08, CARD-04 | Merge into another user's tag | Bug / tampering | 404 | "Tag not found" (don't reveal other users' tags) |

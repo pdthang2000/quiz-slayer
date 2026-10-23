@@ -25,6 +25,7 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | C-17 | Merge events: does `TagsMerged` also mean tag A is deleted, or is `TagDeleted` raised too? | answered: `TagsMerged` only; it means A is gone → TAG-10, glossary |
 | C-18 | Error handling: kind, HTTP status and user message per error | answered: confirmed as in card-library.md → Error handling |
 | C-19 | Saving a card with the same front/back: edit or no-op? | answered: no-op, no event → CARD-06 |
+| C-20 | TAG-03 race: two requests create the same tag name at once, both pass the name check, and the DB unique constraint rejects one. Which error does the user get? | answered: new error `TagNameTaken` (Race, 409); the transaction rolls back and a retry links the existing tag → Error handling, TAG-03 |
 | C-16 | The Model and Events sections of card-library.md are `draft` (incl. `TagsMerged`). Confirm them as the Phase 1 design? | answered: confirmed as listed, plus `TagsMerged` |
 
 ## Daily Practice

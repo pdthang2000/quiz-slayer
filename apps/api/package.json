@@ -20,7 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "lint:fix": "eslint \"{src,test}/**/*.ts\" --fix",
     "prisma:migrate": "prisma migrate dev",
-    "rules:coverage": "node scripts/rules-coverage.mjs"
+    "rules:coverage": "node scripts/rules-coverage.mjs",
+    "test:int": "jest --config ./test/jest-int.json --runInBand"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.7",
