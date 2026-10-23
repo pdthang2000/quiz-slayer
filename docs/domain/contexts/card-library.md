@@ -41,6 +41,7 @@ Started fresh on 2026-10-20. The old Flex Card backend is reference only, not a 
 **CARD-03** `confirmed` — Front and back are plain text in v1. Images and audio come later (backlog B-02).
 
 **CARD-04** `confirmed` — Cards and tags are private to their owner. Public cards/tags come later (backlog B-06).
+A card can only carry its owner's tags. Enforced twice (C-22): use cases check the tag ids with `tagRepo.findByIds(userId, ids)`, and the DB backstops it — `card_tag` stores `user_id`, with foreign keys on (card_id, user_id) and (tag_id, user_id).
 
 **CARD-05** `confirmed` — Front and back are stored as NFC with leading and trailing whitespace removed. Inner spaces and newlines are kept. Order: NFC → trim → empty check (CARD-01) → length check (CARD-02), so the length is counted after trimming. (C-11)
 ```
@@ -223,6 +224,7 @@ Names, kinds, HTTP statuses and messages `confirmed` (C-18).
 | `TooManyTags` | CARDTAG-03 | 21st tag on a card | User input | 422 | "A card can have at most 20 tags" |
 | `CardIsTrashed` | TRASH-02, CARDTAG-02, TRASH-10 | Edit / tag / trash a card that is in the Trash | Stale screen | 409 | "This card is in the Trash. Restore it first." + refresh |
 | `CardIsNotTrashed` | TRASH-10 | Restore / delete permanently an active card | Stale screen | 409 | "This card is no longer in the Trash." + refresh |
+| `TagNoLongerExists` | CARD-04, TAG-06, TAG-10 | Saving a card with a tag that was deleted or merged away meanwhile (DB foreign key fails) (C-21) | Stale screen | 409 | "This tag no longer exists. Refresh." |
 | `TagNameTaken` | TAG-03 | Two requests create the same tag name at once; the DB unique constraint rejects the second (C-20) | Race | 409 | "This tag already exists. Try again." (rolled back; a retry links the existing tag) |
 | `TagNotOnCard` | CARDTAG-04 | Merge finds a card without tag A (race) | Race | 409 | "Merge failed, try again" (merge rolled back) |
 | `TagMergeNotAllowed` (sameTag) | TAG-08 | Merge a tag into itself | Bug (TAG-14 makes same-name rename a no-op) | 409 | generic "Something went wrong" |

@@ -1,7 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Card } from '../domain/card';
 import { CardRepository } from '../domain/card-repository';
+import { TagNoLongerExists } from '../domain/errors';
 import { CardId, TagId, UserId } from '../domain/ids';
 import { cardInclude, toCard, toCardData } from './card.mapper';
 
@@ -38,12 +40,44 @@ export class PrismaCardRepository implements CardRepository {
   }
 
   save(card: Card): Promise<void> {
-    return this.prisma.runInTransaction(() => this.write(card));
+    return this.saveAll([card]);
   }
 
+  /**
+   * One upsert per card, then the CardTags of all cards in bulk: one deleteMany and one
+   * createMany. user_id goes into card_tag, so the DB rejects another user's tag (C-22).
+   */
   saveAll(cards: Card[]): Promise<void> {
+    if (cards.length === 0) return Promise.resolve();
     return this.prisma.runInTransaction(async () => {
-      for (const card of cards) await this.write(card);
+      const db = this.prisma.db;
+      for (const card of cards) {
+        const data = toCardData(card);
+        await db.card.upsert({
+          where: { id: card.id },
+          create: { id: card.id, userId: card.userId, ...data },
+          update: data,
+        });
+      }
+      await db.cardTag.deleteMany({
+        where: { cardId: { in: cards.map((c) => c.id) } },
+      });
+      const rows = cards.flatMap((card) =>
+        card.tagIds.map((tagId) => ({
+          cardId: card.id,
+          tagId,
+          userId: card.userId,
+        })),
+      );
+      if (rows.length === 0) return;
+      try {
+        await db.cardTag.createMany({ data: rows });
+      } catch (error) {
+        if (isTagForeignKeyViolation(error)) {
+          throw new TagNoLongerExists(cards.map((c) => c.id));
+        }
+        throw error;
+      }
     });
   }
 
@@ -53,25 +87,15 @@ export class PrismaCardRepository implements CardRepository {
       where: { id: card.id, userId: card.userId },
     });
   }
+}
 
-  /** Writes the card row and makes its CardTags match card.tagIds. */
-  private async write(card: Card): Promise<void> {
-    const db = this.prisma.db;
-    const tagIds = card.tagIds;
-    const data = toCardData(card);
-    await db.card.upsert({
-      where: { id: card.id },
-      create: { id: card.id, userId: card.userId, ...data },
-      update: data,
-    });
-    await db.cardTag.deleteMany({
-      where: { cardId: card.id, tagId: { notIn: tagIds } },
-    });
-    if (tagIds.length > 0) {
-      await db.cardTag.createMany({
-        data: tagIds.map((tagId) => ({ cardId: card.id, tagId })),
-        skipDuplicates: true,
-      });
-    }
+/** P2003 on card_tag's (tag_id, user_id) foreign key (C-21). */
+function isTagForeignKeyViolation(error: unknown): boolean {
+  if (
+    !(error instanceof Prisma.PrismaClientKnownRequestError) ||
+    error.code !== 'P2003'
+  ) {
+    return false;
   }
+  return JSON.stringify(error.meta ?? {}).includes('card_tag_tag_fkey');
 }

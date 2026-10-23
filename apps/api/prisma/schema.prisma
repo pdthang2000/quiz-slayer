@@ -30,6 +30,8 @@ model Card {
   updatedAt DateTime  @updatedAt @map("updated_at")
   tags      CardTag[]
 
+  /// Target of card_tag's (card_id, user_id) foreign key (CARD-04, C-22).
+  @@unique([id, userId])
   @@index([userId, state])
   @@map("card")
 }
@@ -46,15 +48,19 @@ model Tag {
 
   /// TAG-03
   @@unique([userId, name])
+  /// Target of card_tag's (tag_id, user_id) foreign key (CARD-04, C-22).
+  @@unique([id, userId])
   @@map("tag")
 }
 
 /// CardTag: owned by the Card. Cascades: delete card (TRASH-05), delete tag (TAG-06, TRASH-06).
+/// user_id is in both foreign keys, so a card can only carry its owner's tags (CARD-04, C-22).
 model CardTag {
   cardId String @map("card_id") @db.Uuid
   tagId  String @map("tag_id") @db.Uuid
-  card   Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  tag    Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  userId String @map("user_id") @db.Uuid
+  card   Card   @relation(fields: [cardId, userId], references: [id, userId], onDelete: Cascade, map: "card_tag_card_fkey")
+  tag    Tag    @relation(fields: [tagId, userId], references: [id, userId], onDelete: Cascade, map: "card_tag_tag_fkey")
 
   @@id([cardId, tagId])
   @@index([tagId])

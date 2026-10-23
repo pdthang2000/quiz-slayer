@@ -43,6 +43,7 @@ Names confirmed 2026-10-22. How each error is handled: card-library.md → Error
 | `CardIsTrashed` | TRASH-02, CARDTAG-02, TRASH-10 | confirmed |
 | `CardIsNotTrashed` | TRASH-10 | confirmed |
 | `TagNameTaken` | TAG-03 (DB unique constraint hit by a race, C-20) | confirmed |
+| `TagNoLongerExists` | Card saved with a tag deleted/merged meanwhile (C-21) | confirmed |
 | `TagNotOnCard` | CARDTAG-04 (replaceTagForMerge when the card lacks A) | confirmed |
 | `TagMergeNotAllowed` | Merging a tag into itself or into another user's tag (TAG-08, CARD-04) | confirmed |
 

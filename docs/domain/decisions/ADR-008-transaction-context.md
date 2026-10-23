@@ -1,7 +1,7 @@
 # ADR-008: Transactions are carried by AsyncLocalStorage, not passed as a parameter
 
 - Date: 2026-10-23
-- Status: proposed
+- Status: accepted (Jackkie, 2026-10-23)
 
 ## Context
 A tag merge (TAG-10, ADR-004) calls several repositories in one DB transaction: lock tags, load cards, save cards, delete a tag. The repository interfaces live in `domain/` and must not mention Prisma, so they cannot take a `Prisma.TransactionClient` parameter.

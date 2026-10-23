@@ -122,4 +122,18 @@ describe('PrismaTagRepository', () => {
       /inside a transaction/,
     );
   });
+
+  it("CARD-04: findByIds returns only the user's own tags", async () => {
+    const mine = newTag(user, 'Animals');
+    const alsoMine = newTag(user, 'Dogs');
+    const theirs = newTag(newUserId(), 'Animals');
+    await tags.save(mine);
+    await tags.save(alsoMine);
+    await tags.save(theirs);
+
+    const found = await tags.findByIds(user, [mine.id, alsoMine.id, theirs.id]);
+    expect(found.map((t) => t.id).sort()).toEqual(
+      [mine.id, alsoMine.id].sort(),
+    );
+  });
 });

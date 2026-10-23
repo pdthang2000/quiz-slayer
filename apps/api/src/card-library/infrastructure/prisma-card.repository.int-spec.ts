@@ -1,5 +1,7 @@
 import { connectTestDb, resetDb } from '../../../test/int/db';
+import { Prisma } from '@prisma/client';
 import { CardBack, CardFront } from '../domain/card-text';
+import { TagNoLongerExists } from '../domain/errors';
 import { PrismaCardRepository } from './prisma-card.repository';
 import { PrismaTagRepository } from './prisma-tag.repository';
 import { newCard, newTag, newUserId } from './fixtures.int';
@@ -168,5 +170,45 @@ describe('PrismaCardRepository', () => {
 
     const found = await cards.findByTag(user, pitbull.id);
     expect(found.map((c) => c.front.value).sort()).toEqual(['Dog', 'Rex']);
+  });
+
+  it("CARD-04: a card cannot be linked to another user's tag", async () => {
+    const theirs = newTag(newUserId(), 'Animals');
+    await tags.save(theirs);
+    const dog = newCard(user, 'Dog');
+    await cards.save(dog);
+
+    // The DB backstop (C-22): the composite foreign key rejects the row.
+    await expect(
+      prisma.db.cardTag.create({
+        data: { cardId: dog.id, tagId: theirs.id, userId: user },
+      }),
+    ).rejects.toBeInstanceOf(Prisma.PrismaClientKnownRequestError);
+
+    // Through the repository it surfaces as TagNoLongerExists (C-21 error table).
+    dog.addTag(theirs.id);
+    await expect(cards.save(dog)).rejects.toBeInstanceOf(TagNoLongerExists);
+    expect((await cards.findActive(user, dog.id))?.tagIds).toEqual([]);
+  });
+
+  it('C-21: saving a card with a deleted tag throws TagNoLongerExists', async () => {
+    const animals = newTag(user, 'Animals');
+    await tags.save(animals);
+    const dog = newCard(user, 'Dog');
+    dog.addTag(animals.id);
+    await tags.delete(animals);
+    await expect(cards.save(dog)).rejects.toBeInstanceOf(TagNoLongerExists);
+  });
+
+  it('saveAll writes many cards and their CardTags', async () => {
+    const animals = newTag(user, 'Animals');
+    await tags.save(animals);
+    const many = Array.from({ length: 50 }, (_, i) =>
+      newCard(user, `Card ${i}`, i % 2 === 0 ? [animals] : []),
+    );
+    await cards.saveAll(many);
+    expect(
+      await prisma.db.cardTag.count({ where: { tagId: animals.id } }),
+    ).toBe(25);
   });
 });

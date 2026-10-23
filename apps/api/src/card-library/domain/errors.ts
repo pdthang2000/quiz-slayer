@@ -69,6 +69,18 @@ export class CardIsNotTrashed extends DomainError {
   }
 }
 
+/**
+ * CARD-04, TAG-06, TAG-10, C-21: a card was saved with a tag that was deleted or merged
+ * away meanwhile, or that is not the user's (the DB foreign key failed).
+ */
+export class TagNoLongerExists extends DomainError {
+  readonly code = 'TagNoLongerExists';
+  /** The cards in the failed save; the DB does not say which one had the tag. */
+  constructor(readonly cardIds: CardId[]) {
+    super(`A tag on card(s) ${cardIds.join(', ')} no longer exists`);
+  }
+}
+
 /** TAG-03, C-20: the DB unique constraint rejected a name another request just took. */
 export class TagNameTaken extends DomainError {
   readonly code = 'TagNameTaken';

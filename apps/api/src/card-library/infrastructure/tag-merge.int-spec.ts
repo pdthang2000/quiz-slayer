@@ -1,7 +1,7 @@
 import { connectTestDb, resetDb } from '../../../test/int/db';
 import { PrismaTransactionRunner } from '../../prisma/prisma-transaction-runner';
 import { Card } from '../domain/card';
-import { TagNotOnCard } from '../domain/errors';
+import { TagNoLongerExists, TagNotOnCard } from '../domain/errors';
 import { Tag } from '../domain/tag';
 import { PrismaCardRepository } from './prisma-card.repository';
 import { PrismaTagRepository } from './prisma-tag.repository';
@@ -19,19 +19,27 @@ const user = newUserId();
 beforeEach(() => resetDb(prisma));
 afterAll(() => prisma.onModuleDestroy());
 
-/** TAG-10 as written in card-library.md. `beforeSave` lets a test interfere. */
+/**
+ * TAG-10 as written in card-library.md. `beforeSave` lets a test interfere;
+ * `saveEach` saves card by card, so a missing rollback would leave partial writes.
+ */
 function merge(
   from: Tag,
   into: Tag,
-  beforeSave: (cards: Card[]) => void = () => {},
+  options: { beforeSave?: (cards: Card[]) => void; saveEach?: boolean } = {},
 ): Promise<void> {
   return transactions.run(async () => {
     await tags.lockForMerge(user, [from.id, into.id]);
     const affected = await cards.findByTag(user, from.id);
-    beforeSave(affected);
-    for (const card of affected) {
-      card.replaceTagForMerge(from.id, into.id);
-      await cards.save(card); // one by one, so a missing rollback would show
+    options.beforeSave?.(affected);
+    if (options.saveEach) {
+      for (const card of affected) {
+        card.replaceTagForMerge(from.id, into.id);
+        await cards.save(card);
+      }
+    } else {
+      for (const card of affected) card.replaceTagForMerge(from.id, into.id);
+      await cards.saveAll(affected);
     }
     from.mergeInto(into);
     await tags.delete(from);
@@ -101,18 +109,21 @@ describe('Tag merge (TAG-08, TAG-09, TAG-10)', () => {
 
     // The last card lost tag A in memory (e.g. edited in another tab), so
     // replaceTagForMerge throws after the earlier cards were already saved.
-    const failing = merge(pitbull, dogs, (affected) => {
-      const last = affected.filter((c) => c.state === 'Active').at(-1)!;
-      last.removeTag(pitbull.id);
-      affected.splice(affected.indexOf(last), 1);
-      affected.push(last);
+    const failing = merge(pitbull, dogs, {
+      saveEach: true,
+      beforeSave: (affected) => {
+        const last = affected.filter((c) => c.state === 'Active').at(-1)!;
+        last.removeTag(pitbull.id);
+        affected.splice(affected.indexOf(last), 1);
+        affected.push(last);
+      },
     });
 
     await expect(failing).rejects.toBeInstanceOf(TagNotOnCard);
     expect(await snapshot()).toEqual(before);
   });
 
-  it('TAG-10: tagging a card with A waits for the merge lock, then fails because A is gone', async () => {
+  it('TAG-10: tagging a card with A waits for the merge lock, then fails with TagNoLongerExists (C-21)', async () => {
     const { pitbull, dogs } = await seed();
     const late = newCard(user, 'Late');
     await cards.save(late);
@@ -145,9 +156,30 @@ describe('Tag merge (TAG-08, TAG-09, TAG-10)', () => {
 
     releaseMerge();
     await merging;
-    expect(await tagging).toBeInstanceOf(Error); // foreign key: pitbull no longer exists
+    expect(await tagging).toBeInstanceOf(TagNoLongerExists); // pitbull is gone
     expect(
       await prisma.db.cardTag.count({ where: { tagId: pitbull.id } }),
     ).toBe(0);
   });
+
+  it('TAG-10: merging a tag on 1000 cards succeeds', async () => {
+    const pitbull = newTag(user, 'pitbull');
+    const dogs = newTag(user, 'Dogs');
+    await tags.save(pitbull);
+    await tags.save(dogs);
+    const many = Array.from({ length: 1000 }, (_, i) =>
+      newCard(user, `Dog ${i}`, i % 2 === 0 ? [pitbull, dogs] : [pitbull]),
+    );
+    await cards.saveAll(many);
+
+    const started = Date.now();
+    await merge(pitbull, dogs);
+    const elapsed = Date.now() - started;
+
+    expect(await tags.findById(user, pitbull.id)).toBeNull();
+    expect(await prisma.db.cardTag.count({ where: { tagId: dogs.id } })).toBe(
+      1000,
+    );
+    expect(elapsed).toBeLessThan(30_000); // the transaction timeout
+  }, 60_000);
 });

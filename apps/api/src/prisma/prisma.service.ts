@@ -33,6 +33,9 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   /** Runs `work` in one transaction. A nested call joins the outer transaction. */
   runInTransaction<T>(work: () => Promise<T>): Promise<T> {
     if (this.inTransaction) return work();
-    return this.client.$transaction((tx) => this.transaction.run(tx, work));
+    return this.client.$transaction((tx) => this.transaction.run(tx, work), {
+      maxWait: 5_000, // waiting for a connection
+      timeout: 30_000, // a TAG-10 merge of thousands of cards
+    });
   }
 }

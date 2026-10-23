@@ -19,6 +19,14 @@ export class PrismaTagRepository implements TagRepository {
     return row ? toTag(row) : null;
   }
 
+  /** CARD-04, C-22 */
+  async findByIds(userId: UserId, tagIds: TagId[]): Promise<Tag[]> {
+    const rows = await this.prisma.db.tag.findMany({
+      where: { userId, id: { in: tagIds } },
+    });
+    return rows.map(toTag);
+  }
+
   async findByName(userId: UserId, name: TagName): Promise<Tag | null> {
     const row = await this.prisma.db.tag.findUnique({
       where: { userId_name: { userId, name: name.value } },
