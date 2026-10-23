@@ -7,6 +7,7 @@
     "lint": "pnpm -r lint",
     "build": "pnpm -r build",
     "rules:coverage": "pnpm --filter @quizslayer/api rules:coverage",
-    "test:int": "pnpm -r test:int"
+    "test:int": "pnpm -r test:int",
+    "test:e2e": "pnpm -r test:e2e"
   }
 }

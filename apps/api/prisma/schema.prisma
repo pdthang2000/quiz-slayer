@@ -26,6 +26,8 @@ model Card {
   front     String
   back      String
   state     CardState
+  /// TRASH-12: set by move to trash, cleared by restore.
+  trashedAt DateTime? @map("trashed_at")
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   tags      CardTag[]

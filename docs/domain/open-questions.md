@@ -28,6 +28,20 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | C-20 | TAG-03 race: two requests create the same tag name at once, both pass the name check, and the DB unique constraint rejects one. Which error does the user get? | answered: new error `TagNameTaken` (Race, 409); the transaction rolls back and a retry links the existing tag → Error handling, TAG-03 |
 | C-21 | A card is saved with a tag that was deleted or merged meanwhile (FK fails). Which error? | answered: `TagNoLongerExists`, Stale screen, 409 |
 | C-22 | How is "a card only carries its owner's tags" enforced? | answered: use-case check via `findByIds` + DB backstop (`card_tag.user_id`, composite FKs) → CARD-04 |
+| C-23 | Commands table is `draft`. Does the card editor save front, back and tags in one command, or as separate edit / tag / untag calls? | answered: one request from Save; server applies the changes → CARD-07, Commands table |
+| C-24 | createTag with a name that already exists (not a race): return the existing tag, or fail? | answered: no "New tag" button in v1; tags come only from cards → UI-08 |
+| C-25 | Rename onto an existing name (TAG-08): how does the API ask for confirmation, and do preview counts include trashed cards? | answered: one endpoint; 409 with preview, resend with confirmMerge; counts Active only → TAG-15 |
+| C-26 | Empty trash (TRASH-07): if a card is trashed on another device after the count was shown, delete it too or fail? | answered: send the count shown; mismatch → 409, nothing deleted → TRASH-11 |
+| C-27 | Card list: order and paging? | answered: newest created first → READ-02; paging → C-31 |
+| C-28 | Search: what matches (front/back/tags), case- and accent-sensitivity? | answered: front + back, any part, case- and accent-insensitive → READ-03 |
+| C-29 | Tag list: order? | answered: A–Z → READ-04 |
+| C-31 | Card list paging: "load more" while scrolling (cursor-based, 20 per page) or page numbers? | answered: load more, cursor-based, 20 per page → READ-02 |
+| C-32 | CARD-07 Save creates new tags and saves the card: one transaction (all or nothing; another ADR-004-style exception), or tags first and then the card (a failed card save can leave a new empty tag, allowed by TAG-04)? | answered: one transaction, all or nothing → CARD-07, ADR-009 |
+| C-30 | Trash tab: order? | answered: most recently trashed first; card stores trashedAt → TRASH-12 |
+| C-33 | Trash tab paging: "load more" 20 at a time like READ-02, or all trashed cards at once? | answered: load more, 20 at a time, with the total count → TRASH-12 |
+| C-34 | Card list with several tag chips selected: cards with all of them, or with any of them? | answered: cards with all selected chips (AND) → READ-05 |
+| C-35 | Empty trash deletes many cards: one transaction, all or nothing (another exception to "one aggregate per transaction", needs an ADR)? | answered: one transaction, all or nothing → TRASH-11, ADR-010 |
+| C-36 | Tag list "A–Z" (READ-04): ignore case and accents (Animals, apple, động vật next to dog), or plain character order (all capitals first, accented letters after z)? | answered: dictionary order, ignoring case and accents → READ-04 |
 | C-16 | The Model and Events sections of card-library.md are `draft` (incl. `TagsMerged`). Confirm them as the Phase 1 design? | answered: confirmed as listed, plus `TagsMerged` |
 
 ## Daily Practice

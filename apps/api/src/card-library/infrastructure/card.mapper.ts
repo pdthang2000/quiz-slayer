@@ -16,6 +16,7 @@ export function toCard(row: CardRow): Card {
     front: CardFront.create(row.front),
     back: CardBack.create(row.back),
     state: row.state,
+    trashedAt: row.trashedAt,
     tagIds: row.tags.map((t) => TagId(t.tagId)),
   });
 }
@@ -25,5 +26,6 @@ export function toCardData(card: Card) {
     front: card.front.value,
     back: card.back.value,
     state: card.state,
+    trashedAt: card.trashedAt,
   } satisfies Prisma.CardUpdateInput;
 }

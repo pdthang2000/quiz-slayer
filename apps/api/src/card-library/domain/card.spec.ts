@@ -12,6 +12,7 @@ const front = (text = 'Dog') => CardFront.create(text);
 const back = (text = 'a mammal that barks') => CardBack.create(text);
 const CARD = CardId('card-1');
 const USER = UserId('user-1');
+const NOW = new Date('2026-10-23T10:00:00Z');
 const tagIds = (n: number) =>
   Array.from({ length: n }, (_, i) => TagId(`tag-${i}`));
 
@@ -29,7 +30,7 @@ function newCard(tags: TagId[] = []): Card {
 
 function trashedCard(tags: TagId[] = []): Card {
   const card = newCard(tags);
-  card.moveToTrash();
+  card.moveToTrash(NOW);
   card.pullEvents();
   return card;
 }
@@ -148,6 +149,53 @@ describe('Card', () => {
     });
   });
 
+  describe('setTags', () => {
+    it('CARD-07: applies only the difference and records one event per changed tag', () => {
+      const card = newCard([TagId('pitbull'), TagId('english')]);
+      card.setTags([TagId('english'), TagId('animals')]);
+      expect(card.tagIds.sort()).toEqual(['animals', 'english']);
+      expect(card.pullEvents()).toEqual([
+        {
+          type: 'CardUntagged',
+          cardId: 'card-1',
+          userId: 'user-1',
+          tagId: 'pitbull',
+        },
+        {
+          type: 'CardTagged',
+          cardId: 'card-1',
+          userId: 'user-1',
+          tagId: 'animals',
+        },
+      ]);
+    });
+
+    it('CARD-07: the same tags again change nothing and record nothing', () => {
+      const card = newCard([TagId('a'), TagId('b')]);
+      card.setTags([TagId('b'), TagId('a'), TagId('a')]);
+      expect(card.pullEvents()).toEqual([]);
+    });
+
+    it('CARDTAG-03: setTags rejects more than 20 tags without changing the card', () => {
+      const card = newCard(tagIds(3));
+      expect(() => card.setTags([...tagIds(20), TagId('one-more')])).toThrow(
+        TooManyTags,
+      );
+      expect(card.tagIds).toEqual(tagIds(3));
+    });
+
+    it('CARDTAG-03: swapping a tag on a card with 20 tags works', () => {
+      const card = newCard(tagIds(20));
+      card.setTags([...tagIds(20).slice(1), TagId('new')]);
+      expect(card.tagIds).toHaveLength(20);
+      expect(card.hasTag(TagId('new'))).toBe(true);
+    });
+
+    it('CARDTAG-02: a trashed card cannot get new tags via setTags', () => {
+      expect(() => trashedCard().setTags([TagId('a')])).toThrow(CardIsTrashed);
+    });
+  });
+
   describe('replaceTagForMerge', () => {
     it('CARDTAG-04: card has A, not B → A becomes B, count unchanged', () => {
       const card = newCard([TagId('pitbull'), TagId('animals')]);
@@ -192,7 +240,7 @@ describe('Card', () => {
   describe('trash', () => {
     it('TRASH-01: moving to trash makes the card Trashed, not gone', () => {
       const card = newCard();
-      card.moveToTrash();
+      card.moveToTrash(NOW);
       expect(card.state).toBe('Trashed');
       expect(card.pullEvents()).toEqual([
         { type: 'CardMovedToTrash', cardId: 'card-1', userId: 'user-1' },
@@ -201,7 +249,7 @@ describe('Card', () => {
 
     it('TRASH-04: CardTags are kept in the Trash, so restore brings the tags back', () => {
       const card = newCard([TagId('hsk1'), TagId('greeting')]);
-      card.moveToTrash();
+      card.moveToTrash(NOW);
       expect(card.tagIds).toEqual(['hsk1', 'greeting']);
       card.restore();
       expect(card.state).toBe('Active');
@@ -210,6 +258,15 @@ describe('Card', () => {
         'CardMovedToTrash',
         'CardRestored',
       ]);
+    });
+
+    it('TRASH-12: moving to trash sets trashedAt; restore clears it', () => {
+      const card = newCard();
+      expect(card.trashedAt).toBeNull();
+      card.moveToTrash(NOW);
+      expect(card.trashedAt).toEqual(NOW);
+      card.restore();
+      expect(card.trashedAt).toBeNull();
     });
 
     it('TRASH-09: a card can be deleted permanently only from the Trash', () => {
@@ -222,7 +279,7 @@ describe('Card', () => {
     });
 
     it('TRASH-10: moving a trashed card to the trash fails with CardIsTrashed', () => {
-      expect(() => trashedCard().moveToTrash()).toThrow(CardIsTrashed);
+      expect(() => trashedCard().moveToTrash(NOW)).toThrow(CardIsTrashed);
     });
 
     it('TRASH-10: restoring an active card fails with CardIsNotTrashed', () => {

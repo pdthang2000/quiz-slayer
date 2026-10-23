@@ -8,6 +8,11 @@ export interface TagRepository {
   findByIds(userId: UserId, tagIds: TagId[]): Promise<Tag[]>;
   /** TAG-03, TAG-08: an existing tag with this name means create links / rename merges. */
   findByName(userId: UserId, name: TagName): Promise<Tag | null>;
+  /**
+   * TAG-05, ADR-009: inserts the new tag, or returns the user's existing tag with the same
+   * name if another request created it first. Safe inside a transaction (no unique-violation abort).
+   */
+  findOrInsertByName(tag: Tag): Promise<Tag>;
   /** Throws TagNameTaken if another tag of the user already has the name (TAG-03, C-20). */
   save(tag: Tag): Promise<void>;
   /** TAG-06: removes the tag and all its CardTags. */

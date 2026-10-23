@@ -17,6 +17,7 @@ Status: `confirmed` = decided by Jackkie, `draft` = proposed.
 | Merge tags | Renaming a tag to an existing name: its cards move to the existing tag and it is deleted. | pitbull → Dogs | confirmed |
 | Move to trash | Delete a card from the normal view. The card becomes Trashed. | | confirmed |
 | Restore | Bring a trashed card back to Active, with its tags. | | confirmed |
+| Trashed at | When a card was moved to the Trash; cleared on restore (TRASH-12). Code: `trashedAt`. | | confirmed |
 | Delete permanently | Remove a trashed card and its CardTags for good. No undo. | | confirmed |
 | Tag color | A key from a fixed palette, stored on the tag (TAG-12, TAG-13). Code: `TagColor`. | `blue` | confirmed |
 
@@ -42,6 +43,9 @@ Names confirmed 2026-10-22. How each error is handled: card-library.md → Error
 | `TooManyTags` | CARDTAG-03 | confirmed |
 | `CardIsTrashed` | TRASH-02, CARDTAG-02, TRASH-10 | confirmed |
 | `CardIsNotTrashed` | TRASH-10 | confirmed |
+| `TagMergeNeedsConfirmation` | TAG-15 (rename onto an existing name without `confirmMerge`) | draft (name) |
+| `TrashChanged` | TRASH-11 (empty trash count no longer matches) | draft (name) |
+| `CardNotFound` / `TagNotFound` | No such card / tag for this user (application layer, 404) | confirmed |
 | `TagNameTaken` | TAG-03 (DB unique constraint hit by a race, C-20) | confirmed |
 | `TagNoLongerExists` | Card saved with a tag deleted/merged meanwhile (C-21) | confirmed |
 | `TagNotOnCard` | CARDTAG-04 (replaceTagForMerge when the card lacks A) | confirmed |

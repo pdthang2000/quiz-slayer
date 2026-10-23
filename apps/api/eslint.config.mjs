@@ -32,6 +32,15 @@ export default tseslint.config(
     },
   },
   {
+    // Tests read untyped HTTP bodies (supertest's res.body is `any`).
+    files: ['test/**/*.ts', 'src/**/*.int-spec.ts'],
+    rules: {
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+    },
+  },
+  {
     // Prisma stays in infrastructure/ (CLAUDE.md): no Prisma types elsewhere, and only
     // repositories touch PrismaService. src/prisma/ is PrismaService itself.
     // Must come before the domain block: for domain files that block replaces this one.

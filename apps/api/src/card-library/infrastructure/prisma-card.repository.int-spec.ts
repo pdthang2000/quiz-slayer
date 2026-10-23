@@ -51,7 +51,7 @@ describe('PrismaCardRepository', () => {
 
   it('READ-01: findActive does not return a trashed card', async () => {
     const dog = newCard(user, 'Dog');
-    dog.moveToTrash();
+    dog.moveToTrash(new Date());
     await cards.save(dog);
     expect(await cards.findActive(user, dog.id)).toBeNull();
   });
@@ -66,7 +66,7 @@ describe('PrismaCardRepository', () => {
     const dog = newCard(user, 'Dog');
     await cards.save(dog);
     const trashed = newCard(user, 'Cat');
-    trashed.moveToTrash();
+    trashed.moveToTrash(new Date());
     await cards.save(trashed);
 
     const other = newUserId();
@@ -83,7 +83,7 @@ describe('PrismaCardRepository', () => {
     const nihao = newCard(user, '你好', [hsk1, greeting]);
     await cards.save(nihao);
 
-    nihao.moveToTrash();
+    nihao.moveToTrash(new Date());
     await cards.save(nihao);
     const trashed = await cards.findTrashed(user, nihao.id);
     expect(trashed?.tagIds.sort()).toEqual([hsk1.id, greeting.id].sort());
@@ -100,7 +100,7 @@ describe('PrismaCardRepository', () => {
     await tags.save(hsk1);
     await tags.save(greeting);
     const nihao = newCard(user, '你好', [hsk1, greeting]);
-    nihao.moveToTrash();
+    nihao.moveToTrash(new Date());
     await cards.save(nihao);
 
     await tags.delete(greeting);
@@ -115,7 +115,7 @@ describe('PrismaCardRepository', () => {
     const hsk1 = newTag(user, 'HSK1');
     await tags.save(hsk1);
     const nihao = newCard(user, '你好', [hsk1]);
-    nihao.moveToTrash();
+    nihao.moveToTrash(new Date());
     await cards.save(nihao);
 
     nihao.deletePermanently();
@@ -164,7 +164,7 @@ describe('PrismaCardRepository', () => {
     await tags.save(other);
     const dog = newCard(user, 'Dog', [pitbull]);
     const rex = newCard(user, 'Rex', [pitbull]);
-    rex.moveToTrash();
+    rex.moveToTrash(new Date());
     const cat = newCard(user, 'Cat', [other]);
     await cards.saveAll([dog, rex, cat]);
 
@@ -210,5 +210,42 @@ describe('PrismaCardRepository', () => {
     expect(
       await prisma.db.cardTag.count({ where: { tagId: animals.id } }),
     ).toBe(25);
+  });
+
+  it('TRASH-12: trashedAt is stored, and cleared on restore', async () => {
+    const dog = newCard(user, 'Dog');
+    const at = new Date('2026-10-23T10:00:00.123Z');
+    dog.moveToTrash(at);
+    await cards.save(dog);
+    const trashed = await cards.findTrashed(user, dog.id);
+    expect(trashed?.trashedAt).toEqual(at);
+    trashed!.restore();
+    await cards.save(trashed!);
+    expect((await cards.findActive(user, dog.id))?.trashedAt).toBeNull();
+  });
+
+  it('TRASH-09: deleteAll skips a card that was restored meanwhile', async () => {
+    const dog = newCard(user, 'Dog');
+    dog.moveToTrash(new Date());
+    await cards.save(dog);
+    const stale = await cards.findTrashed(user, dog.id); // loaded for empty trash
+    const fresh = await cards.findTrashed(user, dog.id);
+    fresh!.restore(); // another device restores it
+    await cards.save(fresh!);
+
+    stale!.deletePermanently();
+    await cards.deleteAll([stale!]);
+    expect(await cards.findActive(user, dog.id)).not.toBeNull();
+  });
+
+  it('TRASH-11: listTrashed returns only trashed cards of the user', async () => {
+    const dog = newCard(user, 'Dog');
+    dog.moveToTrash(new Date());
+    const cat = newCard(user, 'Cat');
+    const theirs = newCard(newUserId(), 'Fish');
+    theirs.moveToTrash(new Date());
+    await cards.saveAll([dog, cat]);
+    await cards.save(theirs);
+    expect((await cards.listTrashed(user)).map((c) => c.id)).toEqual([dog.id]);
   });
 });

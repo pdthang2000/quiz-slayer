@@ -64,7 +64,7 @@ async function seed() {
   await tags.save(dogs);
   const dog = newCard(user, 'Dog', [pitbull, dogs]);
   const rex = newCard(user, 'Rex', [pitbull]);
-  rex.moveToTrash();
+  rex.moveToTrash(new Date());
   const max = newCard(user, 'Max', [pitbull]);
   const fido = newCard(user, 'Fido', [dogs]);
   await cards.saveAll([dog, rex, max, fido]);

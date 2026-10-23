@@ -29,6 +29,16 @@ export class PrismaCardRepository implements CardRepository {
     return row ? toCard(row) : null;
   }
 
+  /** TRASH-11, ADR-010 */
+  async listTrashed(userId: UserId): Promise<Card[]> {
+    const rows = await this.prisma.db.card.findMany({
+      where: { userId, state: 'Trashed' },
+      include: cardInclude,
+      orderBy: { id: 'asc' },
+    });
+    return rows.map(toCard);
+  }
+
   /** TAG-09, TAG-10: Active and Trashed, for a merge only. */
   async findByTag(userId: UserId, tagId: TagId): Promise<Card[]> {
     const rows = await this.prisma.db.card.findMany({
@@ -81,10 +91,22 @@ export class PrismaCardRepository implements CardRepository {
     });
   }
 
-  /** TRASH-05: the card_tag rows go with it (ON DELETE CASCADE). */
-  async delete(card: Card): Promise<void> {
+  delete(card: Card): Promise<void> {
+    return this.deleteAll([card]);
+  }
+
+  /**
+   * TRASH-05: the card_tag rows go with them (ON DELETE CASCADE). Only rows still Trashed
+   * are deleted, so a card restored on another device meanwhile survives (TRASH-09).
+   */
+  async deleteAll(cards: Card[]): Promise<void> {
+    if (cards.length === 0) return;
     await this.prisma.db.card.deleteMany({
-      where: { id: card.id, userId: card.userId },
+      where: {
+        id: { in: cards.map((c) => c.id) },
+        userId: cards[0].userId,
+        state: 'Trashed',
+      },
     });
   }
 }

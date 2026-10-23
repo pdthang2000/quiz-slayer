@@ -136,4 +136,21 @@ describe('PrismaTagRepository', () => {
       [mine.id, alsoMine.id].sort(),
     );
   });
+
+  it('TAG-05: findOrInsertByName inserts a new tag', async () => {
+    const tag = newTag(user, 'Animals');
+    expect(await tags.findOrInsertByName(tag)).toBe(tag);
+    expect((await tags.findByName(user, tag.name))?.id).toBe(tag.id);
+  });
+
+  it('TAG-03: findOrInsertByName returns the existing tag when another request took the name (ADR-009)', async () => {
+    const first = newTag(user, 'Animals');
+    await tags.save(first);
+    const second = newTag(user, 'Animals');
+    const result = await prisma.runInTransaction(() =>
+      tags.findOrInsertByName(second),
+    );
+    expect(result.id).toBe(first.id);
+    expect(await prisma.db.tag.count({ where: { userId: user } })).toBe(1);
+  });
 });

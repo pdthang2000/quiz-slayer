@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-10-23 — Phase 3 (application + API)
+- ADR-010 (accepted, C-35): empty trash in one transaction.
+- Code: use cases createCard, editCard (CARD-07), moveToTrash, restore, deletePermanently, emptyTrash (TRASH-11), renameTag (TAG-15 preview, TAG-10 merge), deleteTag; queries for card list/search (READ-02/03/05), card detail, Trash (TRASH-12), Tag list (READ-04).
+- Code: `card.setTags(tagIds)` applies a CARD-07 Save's tag list as a diff; `trashedAt` on Card (migration `card_trashed_at_search`, also enables `unaccent` for READ-03).
+- Code: `TagRepository.findOrInsertByName` (INSERT ... ON CONFLICT DO NOTHING) for tag creation inside a transaction (ADR-009).
+- HTTP: /cards, /trash, /tags; no POST /tags (UI-08). Domain errors mapped per the error table; `TagMergeNotAllowed` (otherUser) is answered as 404 `TagNotFound`.
+
+## 2026-10-23 — Phase 3 questions
+- Confirmed: Trash tab loads 20 at a time with the total count (TRASH-12, C-33).
+- Confirmed: several tag chips = cards with all of them (READ-05, C-34).
+- Confirmed: empty trash in one transaction, all or nothing (TRASH-11, C-35, ADR-010).
+- Confirmed: Tag list A–Z in dictionary order, ignoring case and accents (READ-04, C-36).
+- Confirmed: no "New tag" button in v1 (UI-08, C-24).
+- Confirmed: rename onto an existing name → 409 with merge preview, resend with `confirmMerge`; counts Active only (TAG-15, C-25).
+- Confirmed: empty trash checks the count the user saw (TRASH-11, C-26).
+- Confirmed: card list newest created first (READ-02, C-27); search front/back, case- and accent-insensitive (READ-03, C-28); Tag list A–Z (READ-04, C-29).
+- Confirmed: Trash tab most recently trashed first; card gets `trashedAt` (TRASH-12, C-30).
+- Draft names: `TagMergeNeedsConfirmation`, `TrashChanged`.
+- Confirmed: the card editor saves front, back and tags in one request (CARD-07, C-23); Commands table confirmed.
+- Confirmed: card list paging is cursor-based "load more", 20 per page (READ-02, C-31).
+- Confirmed: Save with new tags runs in one transaction, all or nothing (CARD-07, C-32, ADR-009).
+
 ## 2026-10-23 — Phase 2 review
 - Confirmed: `TagNoLongerExists` (Stale screen, 409) when a card is saved with a tag deleted/merged meanwhile (C-21).
 - Confirmed: CARD-04 enforced in use cases (`findByIds`) and by the DB (`card_tag.user_id` + composite FKs) (C-22).

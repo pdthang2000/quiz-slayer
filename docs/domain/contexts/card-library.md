@@ -6,7 +6,7 @@ Personal flashcards that the user organises with tags. One card can have many ta
 Started fresh on 2026-10-20. The old Flex Card backend is reference only, not a source of rules.
 
 ## Model (confirmed 2026-10-22, C-16)
-- **Card** aggregate: front, back, state (Active | Trashed), and the set of tag ids it carries. The card owns its CardTags, because the rules about CardTags are card rules (state, max tags).
+- **Card** aggregate: front, back, state (Active | Trashed), trashedAt (TRASH-12), and the set of tag ids it carries. The card owns its CardTags, because the rules about CardTags are card rules (state, max tags).
 - **Tag** aggregate: name. Referenced by cards by id only.
 - "Cards with tag X" and "tag card count" are queries, not something Tag protects.
 
@@ -17,17 +17,18 @@ Started fresh on 2026-10-20. The old Flex Card backend is reference only, not a 
 - `TagCreated`, `TagRenamed`, `TagDeleted`
 - `TagsMerged` (TAG-10; replaces per-card `CardTagged` / `CardUntagged` during a merge)
 
-## Commands (draft)
+## Commands (confirmed 2026-10-23, C-23)
 | Command | On | Notes |
 |---|---|---|
-| createCard(front, back, tagNames) | Card | Unknown tag names are created (TAG-05) |
-| editCard(front, back) | Card | Active only (TRASH-02) |
-| tagCard(tagName) / untagCard(tagId) | Card | Active only |
+| createCard(front, back, tagNames) | Card (+ new Tags) | Unknown tag names are created (TAG-05) |
+| editCard(cardId, front, back, tagNames) | Card (+ new Tags) | One request from the card editor's Save (CARD-07). Active only (TRASH-02) |
 | moveToTrash() / restore() / deletePermanently() | Card | |
-| emptyTrash() | user's trashed cards | Confirm with count (TRASH-07) |
-| createTag(name) / deleteTag() | Tag | |
-| renameTag(name) | Tag | Existing name → merge (TAG-08, TAG-10) |
+| emptyTrash(expectedCount) | user's trashed cards | TRASH-07, TRASH-11 |
+| renameTag(name, confirmMerge?) | Tag | Existing name → 409 preview, then merge (TAG-08, TAG-10, TAG-15) |
+| deleteTag() | Tag | |
 | replaceTagForMerge(A, B) | Card | Merge only (CARDTAG-04) |
+
+No separate tag/untag commands and no createTag in v1 (C-23, UI-08).
 
 ---
 
@@ -53,6 +54,18 @@ A card can only carry its owner's tags. Enforced twice (C-22): use cases check t
 ```
 Dog | a mammal that barks → Save with no changes → no-op
 Dog | a mammal that barks → Save "Dog | a mammal that barks " → trimmed → same → no-op
+```
+
+**CARD-07** `confirmed` — The card editor saves front, back and tags in one request when the user taps Save. The server compares with the stored card and applies only what changed: edit text (CARD-06), remove tags, add tags (creating new ones, TAG-05). Leaving the editor without Save changes nothing. (C-23)
+```
+Before: Dog | a mammal            #pitbull #English
+Save:   Dog | a mammal that barks #English #Animals
+→ back edited, #pitbull removed, #Animals added (created if new) — one request
+```
+New tags and the card are written in one transaction: if anything fails, nothing is saved and no new tag is left behind (C-32, ADR-009).
+```
+Save Dog + new #Animals → card save fails (Dog was trashed on another device)
+→ rolled back: no #Animals tag, Dog unchanged
 ```
 
 ### Tags
@@ -135,6 +148,14 @@ await transactions.run(async () => {                   // ADR-008
 - No undo; covered by the UI confirmation (TAG-08).
 - If a merge ever gets slow (thousands of cards), revisit with set-based SQL (see ADR-004).
 
+**TAG-15** `confirmed` — Renaming onto an existing name never merges silently. The rename request without confirmation fails with 409 and the merge preview; the app shows the dialog (TAG-08) and sends the same request again with `confirmMerge: true`. Preview counts are Active cards only (TRASH-03), even though the merge also moves trashed cards (TAG-09). (C-25)
+```
+PATCH rename pitbull → "Dogs"
+← 409 { into: "Dogs", intoCount: 2, fromCount: 3, resultCount: 4 }
+app: "Dogs already exists (2 cards). Merge pitbull (3 cards) into Dogs? Result: 4 cards."
+PATCH rename pitbull → "Dogs", confirmMerge: true → merged
+```
+
 ### CardTags
 **CARDTAG-01** `confirmed` — Removing a tag from a card removes only that one CardTag. The tag stays (even with 0 cards) and other cards keep it. No soft delete: the user can add it again in seconds.
 
@@ -182,6 +203,15 @@ restore → 你好 [HSK1, greeting]
 
 **TRASH-10** `confirmed` — Moving a trashed card to the trash fails with `CardIsTrashed`. Restoring or deleting permanently an active card fails with `CardIsNotTrashed` (the latter follows from TRASH-09). The UI never offers these, so if one happens it is a bug or a stale screen. (C-10)
 
+**TRASH-11** `confirmed` — "Empty trash" sends the count the user saw. If the Trash now holds a different number of cards, nothing is deleted and it fails with 409 (Stale screen): "Trash changed, check again." (C-26)
+```
+Dialog: "Delete 47 cards forever?" → another device trashes 1 more → 48 in Trash
+→ confirm sends 47 → 409, nothing deleted → app refreshes the Trash
+```
+The count check and every `card.deletePermanently()` run in one transaction: any failure deletes nothing (C-35, ADR-010).
+
+**TRASH-12** `confirmed` — The Trash tab shows the most recently trashed card first. A card stores `trashedAt`: set by move to trash, cleared by restore. (C-30; also what B-04 auto-delete needs.) It loads 20 at a time ("load more", like READ-02), and the response carries the total count for the TRASH-07 dialog. (C-33)
+
 ### Reads
 **READ-01** `confirmed` — Every read that returns or counts cards states which state it wants. Repository methods are named by state (`findActive`, `findTrashed`); there is no `findAll`. No DB view. Each read path gets a test: "trashed card not returned".
 
@@ -191,6 +221,21 @@ restore → 你好 [HSK1, greeting]
 | Card detail | Active (Trashed only from the Trash tab) |
 | Trash tab | Trashed |
 | Other contexts (Daily Practice) | Active, via Card Library API only |
+
+**READ-02** `confirmed` — The card list shows the newest created card first, 20 at a time; scrolling to the bottom loads the next 20 (cursor-based "load more", no page numbers). (C-27, C-31)
+
+**READ-03** `confirmed` — Search matches any part of the front or back, ignoring case and accents. Tags are filtered with tag chips, not by text search. Tag names themselves stay case-sensitive (TAG-02). (C-28)
+```
+"dog"      → finds "Dog"
+"dong vat" → finds "động vật"
+```
+
+**READ-04** `confirmed` — The Tag list is sorted A–Z in dictionary order, ignoring case and accents. (C-29, C-36)
+```
+animals, Animals, apple, dog, động vật, HSK1, 动物
+```
+
+**READ-05** `confirmed` — With several tag chips selected, the card list shows cards that have all of them (AND); each chip narrows the list. Combined with search (READ-03), both must match. (C-34)
 
 ### UI
 **UI-01** `confirmed` — Tags are entered with a chip input. Enter commits a chip. Spaces are allowed inside a chip. `#` is display only, not part of the name.
@@ -209,6 +254,8 @@ restore → 你好 [HSK1, greeting]
 
 ---
 
+**UI-08** `confirmed` — No "New tag" button in v1. Tags are created only by typing them on a card (TAG-05). (C-24)
+
 ## Error handling
 
 Every rule violation throws a named domain error (never a plain `Error` or `HttpException`). An exception filter in `api/` maps each error to an HTTP status; the app maps it to a message.
@@ -225,6 +272,8 @@ Names, kinds, HTTP statuses and messages `confirmed` (C-18).
 | `CardIsTrashed` | TRASH-02, CARDTAG-02, TRASH-10 | Edit / tag / trash a card that is in the Trash | Stale screen | 409 | "This card is in the Trash. Restore it first." + refresh |
 | `CardIsNotTrashed` | TRASH-10 | Restore / delete permanently an active card | Stale screen | 409 | "This card is no longer in the Trash." + refresh |
 | `TagNoLongerExists` | CARD-04, TAG-06, TAG-10 | Saving a card with a tag that was deleted or merged away meanwhile (DB foreign key fails) (C-21) | Stale screen | 409 | "This tag no longer exists. Refresh." |
+| `TagMergeNeedsConfirmation` (name draft) | TAG-15 | Rename onto an existing name without `confirmMerge` | Confirmation | 409 | Merge dialog with the preview counts (TAG-08) |
+| `TrashChanged` (name draft) | TRASH-11 | Empty trash with a count that no longer matches | Stale screen | 409 | "Trash changed, check again." + refresh |
 | `TagNameTaken` | TAG-03 | Two requests create the same tag name at once; the DB unique constraint rejects the second (C-20) | Race | 409 | "This tag already exists. Try again." (rolled back; a retry links the existing tag) |
 | `TagNotOnCard` | CARDTAG-04 | Merge finds a card without tag A (race) | Race | 409 | "Merge failed, try again" (merge rolled back) |
 | `TagMergeNotAllowed` (sameTag) | TAG-08 | Merge a tag into itself | Bug (TAG-14 makes same-name rename a no-op) | 409 | generic "Something went wrong" |
@@ -235,6 +284,7 @@ Kinds:
 - **Stale screen** — the screen is out of date (e.g. changed on another device); show the message and refresh.
 - **Race** — two actions at once; the operation rolled back; safe to retry.
 - **Bug** — the app should never send this; log it, show a generic message.
+- **Confirmation** — not a failure: the server needs the user to confirm first; the app shows a dialog and resends.
 
 Not-found errors (`CardNotFound`, `TagNotFound`) come from the application layer in Phase 3 → 404.
 

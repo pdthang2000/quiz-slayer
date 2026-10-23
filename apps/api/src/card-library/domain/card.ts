@@ -17,6 +17,8 @@ export type CardProps = {
   front: CardFront;
   back: CardBack;
   state: CardState;
+  /** TRASH-12: set by moveToTrash, cleared by restore. */
+  trashedAt: Date | null;
   tagIds: TagId[];
 };
 
@@ -31,6 +33,7 @@ export class Card extends AggregateRoot<CardEvent> {
     private _front: CardFront,
     private _back: CardBack,
     private _state: CardState,
+    private _trashedAt: Date | null,
     private readonly _tagIds: Set<TagId>,
   ) {
     super();
@@ -52,6 +55,7 @@ export class Card extends AggregateRoot<CardEvent> {
       props.front,
       props.back,
       'Active',
+      null,
       tagIds,
     );
     card.record({
@@ -71,6 +75,7 @@ export class Card extends AggregateRoot<CardEvent> {
       props.front,
       props.back,
       props.state,
+      props.trashedAt,
       new Set(props.tagIds),
     );
   }
@@ -85,6 +90,10 @@ export class Card extends AggregateRoot<CardEvent> {
 
   get state(): CardState {
     return this._state;
+  }
+
+  get trashedAt(): Date | null {
+    return this._trashedAt;
   }
 
   get tagIds(): TagId[] {
@@ -132,6 +141,21 @@ export class Card extends AggregateRoot<CardEvent> {
   }
 
   /**
+   * CARD-07: the editor's Save sends the full tag list; only the difference is applied
+   * (CardUntagged / CardTagged per tag). CARDTAG-06 dedupes; CARDTAG-03 is checked
+   * on the result before anything changes. Removals go first, so swapping a tag at 20 works.
+   */
+  setTags(tagIds: TagId[]): void {
+    this.assertActive();
+    const target = new Set(tagIds);
+    if (target.size > Card.MAX_TAGS) throw new TooManyTags(Card.MAX_TAGS);
+    for (const tagId of this.tagIds) {
+      if (!target.has(tagId)) this.removeTag(tagId);
+    }
+    for (const tagId of target) this.addTag(tagId);
+  }
+
+  /**
    * CARDTAG-04: tag merge only (TAG-08, TAG-10). Allowed on a trashed card (TAG-09).
    * Never increases the tag count. No per-card event: the merge raises TagsMerged.
    */
@@ -140,10 +164,11 @@ export class Card extends AggregateRoot<CardEvent> {
     this._tagIds.add(to);
   }
 
-  /** TRASH-01, TRASH-04 (tags kept), TRASH-10 */
-  moveToTrash(): void {
+  /** TRASH-01, TRASH-04 (tags kept), TRASH-10, TRASH-12 */
+  moveToTrash(at: Date): void {
     this.assertActive();
     this._state = 'Trashed';
+    this._trashedAt = at;
     this.record({
       type: 'CardMovedToTrash',
       cardId: this.id,
@@ -151,10 +176,11 @@ export class Card extends AggregateRoot<CardEvent> {
     });
   }
 
-  /** TRASH-04, TRASH-10 */
+  /** TRASH-04, TRASH-10, TRASH-12 */
   restore(): void {
     this.assertTrashed();
     this._state = 'Active';
+    this._trashedAt = null;
     this.record({ type: 'CardRestored', cardId: this.id, userId: this.userId });
   }
 

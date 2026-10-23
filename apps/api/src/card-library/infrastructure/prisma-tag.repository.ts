@@ -34,6 +34,23 @@ export class PrismaTagRepository implements TagRepository {
     return row ? toTag(row) : null;
   }
 
+  /** TAG-05, ADR-009: INSERT ... ON CONFLICT DO NOTHING, then read whichever tag won. */
+  async findOrInsertByName(tag: Tag): Promise<Tag> {
+    await this.prisma.db.tag.createMany({
+      data: {
+        id: tag.id,
+        userId: tag.userId,
+        name: tag.name.value,
+        color: tag.color.value,
+      },
+      skipDuplicates: true,
+    });
+    const row = await this.prisma.db.tag.findUniqueOrThrow({
+      where: { userId_name: { userId: tag.userId, name: tag.name.value } },
+    });
+    return row.id === tag.id ? tag : toTag(row);
+  }
+
   /** TAG-03, C-20: a unique violation on (user_id, name) becomes TagNameTaken. */
   async save(tag: Tag): Promise<void> {
     try {
