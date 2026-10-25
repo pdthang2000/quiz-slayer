@@ -14,4 +14,3 @@ Ideas agreed for later. Not v1 unless moved.
 | B-08 | Web app | Frontend | 2026-10-22 |
 | B-09 | Try AWS Lambda hosting (serverless-express adapter, Neon/RDS, EventBridge for B-04) as a learning project | Infrastructure | 2026-10-22 (H-01) |
 | B-10 | Transactional outbox for domain events, before any listener depends on them (Daily Practice, Phase 6). Today events are published after commit and only logged; a crash between commit and publish would lose them. | Cross-cutting | 2026-10-25 (Phase 3 review) |
-| B-11 | Card Save vs tag merge deadlock: a Save that adds tag A while a merge of A holds its lock can deadlock (Postgres aborts one → 500). Fix: Save locks its tags in the same order as the merge, or retry on 40P01. Not reproduced yet. | Card Library | 2026-10-25 (phase-3 DDD review #14) |

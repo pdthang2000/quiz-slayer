@@ -49,6 +49,7 @@ const MAPPINGS: Record<string, Mapping> = {
   CardChanged: { status: HttpStatus.CONFLICT },
   TagNameTaken: { status: HttpStatus.CONFLICT },
   TagNotOnCard: { status: HttpStatus.CONFLICT },
+  TagMergeFailed: { status: HttpStatus.CONFLICT },
   CardNotFound: { status: HttpStatus.NOT_FOUND },
   TagNotFound: { status: HttpStatus.NOT_FOUND },
 };

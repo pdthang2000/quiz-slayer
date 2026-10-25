@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-25 — C-40 and B-11
+- Answered C-40: a merge rolled back by a concurrent card save raises its own error `TagMergeFailed`, "Merge failed, try again." (glossary, Error handling).
+- B-11 fixed now (Jackkie): transactions retry up to 3× on a Postgres deadlock, then 409 `TransactionConflict` "Try again." ADR-008 addendum. Removed from the backlog.
+
 ## 2026-10-25 — Phase 3.1
 - Implemented CARD-08 (card version, `CardChanged` 409) and the revised C-38 (TAG-15 table).
 - Commands table: editCard takes the version the editor was shown (CARD-08).

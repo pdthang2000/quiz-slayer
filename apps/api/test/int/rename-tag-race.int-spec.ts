@@ -1,10 +1,13 @@
 import { connectTestDb, resetDb } from './db';
 import { PrismaTransactionRunner } from '../../src/prisma/prisma-transaction-runner';
 import {
+  TagMergeFailed,
   TagMergeNeedsConfirmation,
   TagNotFound,
 } from '../../src/card-library/application/errors';
+import { CardBack, CardFront } from '../../src/card-library/domain/card-text';
 import { RenameTag } from '../../src/card-library/application/rename-tag';
+import { Card } from '../../src/card-library/domain/card';
 import { TagId, UserId } from '../../src/card-library/domain/ids';
 import { TagName } from '../../src/card-library/domain/tag-name';
 import {
@@ -32,11 +35,25 @@ class InterferingTagRepository extends PrismaTagRepository {
   }
 }
 
+/** Runs `interfere` right after the merge loaded its cards, before it saves them. */
+class InterferingCardRepository extends PrismaCardRepository {
+  interfere?: () => Promise<void>;
+
+  override async findByTag(userId: UserId, tagId: TagId) {
+    const found = await super.findByTag(userId, tagId);
+    const interfere = this.interfere;
+    this.interfere = undefined;
+    await interfere?.();
+    return found;
+  }
+}
+
 const prisma = connectTestDb();
 const other = connectTestDb(); // "another device"
 const otherTags = new PrismaTagRepository(other);
 const tags = new InterferingTagRepository(prisma);
-const cards = new PrismaCardRepository(prisma);
+const cards = new InterferingCardRepository(prisma);
+const otherCards = new PrismaCardRepository(other);
 const renameTag = new RenameTag(
   new PrismaTransactionRunner(prisma),
   tags,
@@ -163,5 +180,26 @@ describe('RenameTag: tags changed between preview and confirmed merge (C-38)', (
 
     await expect(confirmMerge(pitbull.id)).rejects.toBeInstanceOf(TagNotFound);
     expect(await tagNames()).toEqual(['Dogs']);
+  });
+
+  it('TAG-10: a card saved on another device during the merge → TagMergeFailed, nothing merged (C-40)', async () => {
+    const { pitbull } = await seed();
+    const rex = (
+      await prisma.db.card.findFirstOrThrow({ where: { front: 'Rex' } })
+    ).id;
+    cards.interfere = async () => {
+      // Laptop: Save on Rex (removes #pitbull, so it doesn't wait for the merge's tag lock).
+      const r = (await otherCards.findActive(user, rex as Card['id']))!;
+      r.edit(CardFront.create('Rex!'), CardBack.create('back'));
+      r.removeTag(pitbull.id);
+      await otherCards.save(r);
+    };
+
+    const error = await confirmMerge(pitbull.id).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(TagMergeFailed);
+    expect(await tagNames()).toEqual(['Dogs', 'pitbull']);
+    expect(
+      await prisma.db.cardTag.count({ where: { tagId: pitbull.id } }),
+    ).toBe(1); // Dog keeps it
   });
 });

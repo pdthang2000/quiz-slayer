@@ -294,6 +294,8 @@ Names, kinds, HTTP statuses and messages `confirmed` (C-18).
 | `TrashChanged` | TRASH-11 | Empty trash with a count that no longer matches | Stale screen | 409 | "Trash changed, check again." + refresh |
 | `CardChanged` | CARD-08 | Saving a card that changed since it was loaded (another device or tab) (C-39) | Stale screen | 409 | "This card was changed on another device. Refresh." |
 | `TagNameTaken` | TAG-03 | Two requests create the same tag name at once; the DB unique constraint rejects the second (C-20) | Race | 409 | "This tag already exists. Try again." (rolled back; a retry links the existing tag) |
+| `TagMergeFailed` | TAG-10, CARD-08 | A confirmed merge finds one of its cards saved on another device meanwhile (C-40) | Race | 409 | "Merge failed, try again." (merge rolled back; a retry almost always works) |
+| `TransactionConflict` (technical) | — | Postgres kept aborting the transaction (deadlock), even after 3 automatic retries (B-11, ADR-008) | Race | 409 | "Try again." |
 | `TagNotOnCard` | CARDTAG-04 | Merge finds a card without tag A (race) | Race | 409 | "Merge failed, try again" (merge rolled back) |
 | `TagMergeNotAllowed` (sameTag) | TAG-08 | Merge a tag into itself | Bug (TAG-14 makes same-name rename a no-op) | 409 | generic "Something went wrong" |
 | `TagMergeNotAllowed` (otherUser) | TAG-08, CARD-04 | Merge into another user's tag | Bug / tampering | 404 | "Tag not found" (don't reveal other users' tags) |

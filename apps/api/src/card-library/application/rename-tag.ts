@@ -18,7 +18,13 @@ import { TagId, UserId } from '../domain/ids';
 import { Tag } from '../domain/tag';
 import { TagName } from '../domain/tag-name';
 import type { TagRepository } from '../domain/tag-repository';
-import { MergePreview, TagMergeNeedsConfirmation, TagNotFound } from './errors';
+import { CardChanged } from '../domain/errors';
+import {
+  MergePreview,
+  TagMergeFailed,
+  TagMergeNeedsConfirmation,
+  TagNotFound,
+} from './errors';
 
 /**
  * TAG-11 rename, TAG-14 same name → no-op. An existing name means a merge
@@ -97,7 +103,15 @@ export class RenameTag {
       if (into && into.name.equals(name)) {
         const affected = await this.cards.findByTag(userId, from.id); // TAG-09
         for (const card of affected) card.replaceTagForMerge(from.id, into.id);
-        await this.cards.saveAll(affected);
+        try {
+          await this.cards.saveAll(affected);
+        } catch (error) {
+          // C-40: a card was saved meanwhile; the whole merge rolls back.
+          if (error instanceof CardChanged) {
+            throw new TagMergeFailed(from.id, into.id);
+          }
+          throw error;
+        }
         from.mergeInto(into); // TagsMerged (C-17)
         await this.tags.delete(from);
         return { result: into.id, events: from.pullEvents() };

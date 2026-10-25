@@ -49,6 +49,7 @@ Names confirmed 2026-10-22. How each error is handled: card-library.md → Error
 | `TagNameTaken` | TAG-03 (DB unique constraint hit by a race, C-20) | confirmed |
 | `CardChanged` | CARD-08 (card saved from an outdated view, C-39) | confirmed |
 | `TagNoLongerExists` | Card saved with a tag deleted/merged meanwhile (C-21) | confirmed |
+| `TagMergeFailed` | A confirmed merge rolled back because one of its cards was saved on another device at the same moment (C-40) | confirmed |
 | `TagNotOnCard` | CARDTAG-04 (replaceTagForMerge when the card lacks A) | confirmed |
 | `TagMergeNotAllowed` | Merging a tag into itself or into another user's tag (TAG-08, CARD-04) | confirmed |
 

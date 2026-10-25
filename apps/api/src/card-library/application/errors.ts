@@ -37,6 +37,20 @@ export class TagMergeNeedsConfirmation extends DomainError {
   }
 }
 
+/**
+ * C-40: a confirmed merge was rolled back because one of its cards was saved on another
+ * device at the same moment (CARD-08). A retry almost always works.
+ */
+export class TagMergeFailed extends DomainError {
+  readonly code = 'TagMergeFailed';
+  constructor(
+    readonly tagId: TagId,
+    readonly intoTagId: TagId,
+  ) {
+    super('Merge failed, try again');
+  }
+}
+
 /** TRASH-11: the Trash no longer holds the count the user confirmed. */
 export class TrashChanged extends DomainError {
   readonly code = 'TrashChanged';

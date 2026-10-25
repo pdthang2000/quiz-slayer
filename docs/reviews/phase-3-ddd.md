@@ -4,7 +4,7 @@ Scope: `apps/api/src/card-library`. Two skills:
 - `ddd-validate` (ruvnet/ruflo), run 2026-10-25 on the Phase 3 code.
 - `domain-driven-design` (wondelai), run 2026-10-25 on the Phase 3.1 code (after CARD-08). Its findings 3–10 below came from an earlier manual review using the same checklist and were re-checked in this run.
 
-Verdicts: **fixed** · **false positive** (not a problem, reason given) · **later** (real, not worth fixing now; when to revisit).
+Verdicts (updated 2026-10-25 after C-40 and B-11): **fixed** · **false positive** (not a problem, reason given) · **later** (real, not worth fixing now; when to revisit).
 
 ## Score (domain-driven-design): 9/10
 Quick Diagnostic 6/7. Failing row: "Domain events used for cross-aggregate communication" (finding 11).
@@ -26,5 +26,5 @@ Depth +3: behaviour-rich aggregates, invariants inside Card/Tag, one language ac
 | 10 | domain-driven-design | A TAG-14 same-name rename is a no-op but still calls `tags.save` (one useless write). | later | Harmless (same values). Fix when that code is next touched. |
 | 11 | domain-driven-design | Diagnostic row failed: cross-aggregate changes (tag merge, Save with new tags, empty trash) run in one transaction instead of reacting to events. | later | Deliberate, Jackkie's choice: all-or-nothing behaviour (ADR-004, ADR-009, ADR-010). Events become the integration path for Daily Practice (B-10). |
 | 12 | domain-driven-design | The application helper class `CardTags` is named after the glossary term CardTag (the card–tag link), but it resolves tag names and loads cards. | later | Internal name, no behaviour impact. Rename when the card use cases are next touched. |
-| 13 | domain-driven-design | Tag merge vs a concurrent card Save: before CARD-08 the merge overwrote that Save's tags with its stale copy (lost update). | fixed | CARD-08: the merge's `saveAll` now fails with `CardChanged` and rolls back. The message the user sees in that case is open: C-40. |
-| 14 | domain-driven-design | A card Save that adds tag A while a merge of A holds its lock can deadlock with the merge (Postgres aborts one → 500). Existed before CARD-08. | later | Not reproduced yet, rare (single user, two devices, same second). Backlog B-11. |
+| 13 | domain-driven-design | Tag merge vs a concurrent card Save: before CARD-08 the merge overwrote that Save's tags with its stale copy (lost update). | fixed | CARD-08: the merge's `saveAll` now fails with `CardChanged` and rolls back. The merge then throws its own `TagMergeFailed` ("Merge failed, try again.", C-40). |
+| 14 | domain-driven-design | A card Save and a tag merge can deadlock (Save locks the card then needs the tag; the merge the other way round). Postgres aborts one → 500. Existed before CARD-08. | fixed | Reproduced in an integration test. The transaction runner retries up to 3× on a deadlock, then 409 `TransactionConflict` (B-11, ADR-008 addendum). |
