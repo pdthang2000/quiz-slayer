@@ -41,6 +41,22 @@ export default tseslint.config(
     },
   },
   {
+    // reconstitute() rebuilds a stored aggregate without checking rules or recording events.
+    // Only the mappers in infrastructure/ may call it; new aggregates use create().
+    files: ['src/**/*.ts', 'test/**/*.ts'],
+    ignores: ['src/**/infrastructure/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "CallExpression[callee.property.name='reconstitute']",
+          message:
+            'Only infrastructure/ mappers may call reconstitute(). Use create() for new aggregates; load existing ones through a repository.',
+        },
+      ],
+    },
+  },
+  {
     // Prisma stays in infrastructure/ (CLAUDE.md): no Prisma types elsewhere, and only
     // repositories touch PrismaService. src/prisma/ is PrismaService itself.
     // Must come before the domain block: for domain files that block replaces this one.
