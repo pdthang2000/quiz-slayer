@@ -72,6 +72,17 @@ NestJS and Prisma make it tempting to mix framework code into the domain. Don't:
 - All times are stored and compared in UTC. The app converts to local time for display.
 - Contexts talk through public application services or events, never through each other's tables or repositories.
 
+## Decide alone vs ask Jackkie
+Decide alone (note it in the commit message; an ADR if it is hard to reverse):
+- Technical choices: libraries, internal structure, test tools, build setup — within the rules above.
+- Visual design: layout, spacing, typography, the exact light/dark colors for each palette key (UI-07).
+- Names of internal things that are not in the glossary.
+
+Always ask (write it in `docs/domain/open-questions.md`, keep working on what is not blocked, stop at the checkpoint):
+- Business rules and anything a user experiences as behaviour: what happens when…, limits, order, wording of messages.
+- New glossary terms, or changes to a `confirmed` rule.
+- Implement a confirmed answer exactly as confirmed. If you think it is wrong or incomplete, ask; never record your own variant as Jackkie's answer.
+
 ## Work plan
 - Follow `docs/plan.md`. Stop at each checkpoint and let Jackkie review before moving on.
 

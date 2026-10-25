@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-25 — full review after Phase 3
+- Confirmed: CARD-08 — a card save from an outdated view fails with `CardChanged` (Stale screen, 409); version per card (C-39).
+- Revised C-38 (Jackkie): a confirmed merge only runs if the target is unchanged; anything else → 409 with a fresh preview (TAG-15).
+- CLAUDE.md: "Decide alone vs ask Jackkie" section.
+- plan.md: Phase 3/4 bullets match the confirmed commands (C-23, UI-08, TAG-15) and UI-06; Checkpoints 0–3 ticked. CARDTAG-06 says editCard, not tagCard.
+
 ## 2026-10-25 — Phase 3 review
 - Confirmed: READ-06 — tags on a card shown A–Z, same dictionary order as READ-04 (C-37).
 - Confirmed: error names `TagMergeNeedsConfirmation`, `TrashChanged`.

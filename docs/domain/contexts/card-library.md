@@ -68,6 +68,13 @@ Save Dog + new #Animals → card save fails (Dog was trashed on another device)
 → rolled back: no #Animals tag, Dog unchanged
 ```
 
+**CARD-08** `confirmed` — A change based on an outdated view of a card fails instead of overwriting newer changes. Each card has a version; a save whose version is out of date fails with `CardChanged` (Stale screen, 409) and nothing is written. (C-39)
+```
+Phone:  opens Dog's editor (Dog: Active)
+Laptop: moves Dog to trash
+Phone:  taps Save → 409 CardChanged "This card was changed on another device. Refresh." → Dog stays in the Trash
+```
+
 ### Tags
 **TAG-01** `confirmed` — A tag name is normalized before it is checked or saved:
 1. Unicode NFC (see ADR-003)
@@ -155,14 +162,12 @@ PATCH rename pitbull → "Dogs"
 app: "Dogs already exists (2 cards). Merge pitbull (3 cards) into Dogs? Result: 4 cards."
 PATCH rename pitbull → "Dogs", confirmMerge: true → merged
 ```
-If the tags changed between the preview and the confirmed request, the merge re-checks them after taking its lock (C-38):
+If the tags changed between the preview and the confirmed request, the merge re-checks them after taking its lock. What you confirmed is exactly what happens, or you are asked again (C-38, revised 2026-10-25):
 | After the lock | Result |
 |---|---|
 | pitbull is gone | 404 `TagNotFound` |
-| Dogs unchanged | merge, as confirmed |
-| Dogs was renamed (e.g. → Hounds) | always 409 `TagMergeNeedsConfirmation` with a fresh preview: against the tag that now holds "Dogs", or with no merge target if nobody does (the app then retries without `confirmMerge`, which renames) |
-| Dogs was deleted, "Dogs" is free | plain rename pitbull → Dogs |
-| Dogs was deleted, another tag now holds "Dogs" | 409 with a fresh preview against that tag |
+| Dogs unchanged (same tag, same name) | merge, as confirmed |
+| Anything else: Dogs renamed or deleted, another tag now holds "Dogs", or "Dogs" is free | 409 `TagMergeNeedsConfirmation` with a fresh preview: against the tag that holds "Dogs" now, or with no merge target if nobody does (the app then asks "Rename pitbull to Dogs?" and resends without `confirmMerge`) |
 
 ### CardTags
 **CARDTAG-01** `confirmed` — Removing a tag from a card removes only that one CardTag. The tag stays (even with 0 cards) and other cards keep it. No soft delete: the user can add it again in seconds.
@@ -181,7 +186,7 @@ It is the only tag change allowed on a trashed card (supports TAG-09). It never 
 
 **CARDTAG-05** `confirmed` — Adding a tag the card already has, or removing a tag it doesn't have, is a no-op: nothing changes, no event. A double-tap or a retried request is harmless. (C-09)
 
-**CARDTAG-06** `confirmed` — The same tag twice in one input (createCard, tagCard) is kept once. CARDTAG-03 is checked after removing duplicates. Names are compared after TAG-01, case-sensitive (TAG-02). (C-14)
+**CARDTAG-06** `confirmed` — The same tag twice in one input (createCard, editCard) is kept once. CARDTAG-03 is checked after removing duplicates. Names are compared after TAG-01, case-sensitive (TAG-02). (C-14)
 ```
 #Animals #Animals #animals → Animals, animals (2 tags)
 ```
@@ -287,6 +292,7 @@ Names, kinds, HTTP statuses and messages `confirmed` (C-18).
 | `TagNoLongerExists` | CARD-04, TAG-06, TAG-10 | Saving a card with a tag that was deleted or merged away meanwhile (DB foreign key fails) (C-21) | Stale screen | 409 | "This tag no longer exists. Refresh." |
 | `TagMergeNeedsConfirmation` | TAG-15 | Rename onto an existing name without `confirmMerge` | Confirmation | 409 | Merge dialog with the preview counts (TAG-08) |
 | `TrashChanged` | TRASH-11 | Empty trash with a count that no longer matches | Stale screen | 409 | "Trash changed, check again." + refresh |
+| `CardChanged` | CARD-08 | Saving a card that changed since it was loaded (another device or tab) (C-39) | Stale screen | 409 | "This card was changed on another device. Refresh." |
 | `TagNameTaken` | TAG-03 | Two requests create the same tag name at once; the DB unique constraint rejects the second (C-20) | Race | 409 | "This tag already exists. Try again." (rolled back; a retry links the existing tag) |
 | `TagNotOnCard` | CARDTAG-04 | Merge finds a card without tag A (race) | Race | 409 | "Merge failed, try again" (merge rolled back) |
 | `TagMergeNotAllowed` (sameTag) | TAG-08 | Merge a tag into itself | Bug (TAG-14 makes same-name rename a no-op) | 409 | generic "Something went wrong" |
