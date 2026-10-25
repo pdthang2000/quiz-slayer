@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-25 — Phase 3.1
+- Implemented CARD-08 (card version, `CardChanged` 409) and the revised C-38 (TAG-15 table).
+- Commands table: editCard takes the version the editor was shown (CARD-08).
+- New open question C-40 (merge failed by CARD-08: which message). Backlog B-11 (Save vs merge deadlock).
+- DDD review written to docs/reviews/phase-3-ddd.md.
+
 ## 2026-10-25 — full review after Phase 3
 - Confirmed: CARD-08 — a card save from an outdated view fails with `CardChanged` (Stale screen, 409); version per card (C-39).
 - Revised C-38 (Jackkie): a confirmed merge only runs if the target is unchanged; anything else → 409 with a fresh preview (TAG-15).

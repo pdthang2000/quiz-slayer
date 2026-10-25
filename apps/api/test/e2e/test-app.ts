@@ -14,6 +14,7 @@ export type CardBody = {
   back: string;
   tags: Tag[];
   createdAt: string;
+  version: number;
 };
 export type TagWithCount = Tag & { cardCount: number };
 

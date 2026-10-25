@@ -105,21 +105,23 @@ describe('Cards (e2e)', () => {
           front: 'Dog',
           back: 'a mammal that barks',
           tags: ['English', 'Animals'],
+          version: dog.version,
         })
         .expect(200);
       const saved = res.body as CardBody;
       expect(saved.back).toBe('a mammal that barks');
+      expect(saved.version).toBe(dog.version + 1);
       expect(tagNames(saved)).toEqual(['Animals', 'English']);
       expect((await t.tagNamed('pitbull'))?.cardCount).toBe(0); // TAG-04: kept
     });
 
     it('CARD-07: a failed Save leaves no new tag behind (ADR-009)', async () => {
       const dog = await t.createCard('Dog');
-      await t.trash(dog.id); // trashed on another device
+      await t.trash(dog.id);
       const res = await t
         .http()
         .put(`/cards/${dog.id}`)
-        .send({ front: 'Dog', back: 'b', tags: ['Animals'] })
+        .send({ front: 'Dog', back: 'b', tags: ['Animals'], version: 1 }) // current version
         .expect(409);
       expect(res.body.error).toBe('CardIsTrashed');
       expect(await t.tags()).toEqual([]);
@@ -131,18 +133,18 @@ describe('Cards (e2e)', () => {
       await t
         .http()
         .put(`/cards/${dog.id}`)
-        .send({ front: 'Dog', back: 'b', tags })
+        .send({ front: 'Dog', back: 'b', tags, version: dog.version })
         .expect(422);
       expect(await t.tags()).toEqual([]);
     });
 
-    it('TRASH-02: editing a trashed card → 409 CardIsTrashed', async () => {
+    it('TRASH-02: editing a trashed card (at its current version) → 409 CardIsTrashed', async () => {
       const dog = await t.createCard('Dog');
       await t.trash(dog.id);
       const res = await t
         .http()
         .put(`/cards/${dog.id}`)
-        .send({ front: 'Cat', back: 'b', tags: [] })
+        .send({ front: 'Cat', back: 'b', tags: [], version: 1 })
         .expect(409);
       expect(res.body.error).toBe('CardIsTrashed');
     });
@@ -151,9 +153,63 @@ describe('Cards (e2e)', () => {
       const res = await t
         .http()
         .put('/cards/00000000-0000-4000-8000-00000000abcd')
-        .send({ front: 'Cat', back: 'b', tags: [] })
+        .send({ front: 'Cat', back: 'b', tags: [], version: 0 })
         .expect(404);
       expect(res.body.error).toBe('CardNotFound');
+    });
+
+    it('rejects a Save without a version before any use case runs', async () => {
+      const dog = await t.createCard('Dog');
+      await t
+        .http()
+        .put(`/cards/${dog.id}`)
+        .send({ front: 'Cat', back: 'b', tags: [] })
+        .expect(400);
+    });
+  });
+
+  describe('outdated Save (CARD-08)', () => {
+    it('CARD-08: a Save with an old version → 409 CardChanged, card unchanged', async () => {
+      const dog = await t.createCard('Dog', ['Animals'], 'a mammal');
+      const save = (back: string) =>
+        t
+          .http()
+          .put(`/cards/${dog.id}`)
+          .send({
+            front: 'Dog',
+            back,
+            tags: ['Animals'],
+            version: dog.version,
+          });
+      await save('saved on the laptop').expect(200);
+
+      const res = await save('saved on the phone').expect(409);
+      expect(res.body.error).toBe('CardChanged');
+      const stored = (await t.http().get(`/cards/${dog.id}`).expect(200))
+        .body as CardBody;
+      expect(stored.back).toBe('saved on the laptop');
+      expect(stored.version).toBe(1);
+    });
+
+    it('CARD-08: trashed on the laptop, Save on the phone → 409 CardChanged, card stays in the Trash', async () => {
+      const dog = await t.createCard('Dog', ['Animals']); // phone opens the editor
+      await t.trash(dog.id); // laptop
+      const res = await t
+        .http()
+        .put(`/cards/${dog.id}`)
+        .send({
+          front: 'Dog!',
+          back: 'b',
+          tags: ['Animals', 'pitbull'],
+          version: dog.version,
+        })
+        .expect(409);
+      expect(res.body.error).toBe('CardChanged');
+      const trash = (await t.http().get('/trash').expect(200)).body as {
+        items: CardBody[];
+      };
+      expect(trash.items.map((c) => c.front)).toEqual(['Dog']);
+      expect(await t.tagNamed('pitbull')).toBeUndefined(); // ADR-009: rolled back
     });
   });
 

@@ -12,6 +12,8 @@ export type CardSummary = {
   back: string;
   tags: TagSummary[];
   createdAt: Date;
+  /** CARD-08: send it back with an edit. */
+  version: number;
 };
 
 export type TrashedCardSummary = CardSummary & { trashedAt: Date };

@@ -1,6 +1,7 @@
 import { AggregateRoot } from './aggregate-root';
 import { CardBack, CardFront } from './card-text';
 import {
+  CardChanged,
   CardIsNotTrashed,
   CardIsTrashed,
   TagNotOnCard,
@@ -20,6 +21,8 @@ export type CardProps = {
   /** TRASH-12: set by moveToTrash, cleared by restore. */
   trashedAt: Date | null;
   tagIds: TagId[];
+  /** CARD-08: the stored version this card was loaded at. */
+  version: number;
 };
 
 /** A flashcard. Owns its CardTags (the set of tag ids). */
@@ -35,6 +38,8 @@ export class Card extends AggregateRoot<CardEvent> {
     private _state: CardState,
     private _trashedAt: Date | null,
     private readonly _tagIds: Set<TagId>,
+    /** CARD-08: 0 for a new card; the repository saves only if the stored one still matches. */
+    readonly version: number,
   ) {
     super();
   }
@@ -57,6 +62,7 @@ export class Card extends AggregateRoot<CardEvent> {
       'Active',
       null,
       tagIds,
+      0,
     );
     card.record({
       type: 'CardCreated',
@@ -77,6 +83,7 @@ export class Card extends AggregateRoot<CardEvent> {
       props.state,
       props.trashedAt,
       new Set(props.tagIds),
+      props.version,
     );
   }
 
@@ -102,6 +109,11 @@ export class Card extends AggregateRoot<CardEvent> {
 
   hasTag(tagId: TagId): boolean {
     return this._tagIds.has(tagId);
+  }
+
+  /** CARD-08: the client's change is based on the version it was shown. */
+  assertVersion(version: number): void {
+    if (version !== this.version) throw new CardChanged(this.id);
   }
 
   /** TRASH-02: active only. Nothing changed → no event. */

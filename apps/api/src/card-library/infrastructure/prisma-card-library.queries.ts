@@ -42,6 +42,7 @@ function toSummary(row: SummaryRow): CardSummary {
     front: row.front,
     back: row.back,
     createdAt: row.createdAt,
+    version: row.version,
     tags: row.tags
       .map(({ tag }) => ({
         id: TagId(tag.id),

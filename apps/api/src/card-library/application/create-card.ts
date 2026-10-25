@@ -46,7 +46,7 @@ export class CreateCard {
         back,
         tagIds,
       });
-      await this.cards.save(card);
+      await this.cards.add(card);
       return { card, created };
     });
     this.events.publish([

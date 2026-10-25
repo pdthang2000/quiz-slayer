@@ -67,7 +67,7 @@ async function seed() {
   rex.moveToTrash(new Date());
   const max = newCard(user, 'Max', [pitbull]);
   const fido = newCard(user, 'Fido', [dogs]);
-  await cards.saveAll([dog, rex, max, fido]);
+  await cards.addAll([dog, rex, max, fido]);
   return { pitbull, dogs, dog, rex, max, fido };
 }
 
@@ -126,7 +126,7 @@ describe('Tag merge (TAG-08, TAG-09, TAG-10)', () => {
   it('TAG-10: tagging a card with A waits for the merge lock, then fails with TagNoLongerExists (C-21)', async () => {
     const { pitbull, dogs } = await seed();
     const late = newCard(user, 'Late');
-    await cards.save(late);
+    await cards.add(late);
 
     let releaseMerge!: () => void;
     const mergeMayFinish = new Promise<void>((r) => (releaseMerge = r));
@@ -170,7 +170,7 @@ describe('Tag merge (TAG-08, TAG-09, TAG-10)', () => {
     const many = Array.from({ length: 1000 }, (_, i) =>
       newCard(user, `Dog ${i}`, i % 2 === 0 ? [pitbull, dogs] : [pitbull]),
     );
-    await cards.saveAll(many);
+    await cards.addAll(many);
 
     const started = Date.now();
     await merge(pitbull, dogs);

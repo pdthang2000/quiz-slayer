@@ -45,6 +45,7 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | C-37 | In which order are the tags on a card shown? | answered: A–Z, same dictionary order as READ-04 → READ-06 |
 | C-38 | A confirmed merge finds the target renamed or deleted after the preview. What happens? | answered (revised 2026-10-25): anything changed → 409 with a fresh preview; only an unchanged target merges → TAG-15 |
 | C-39 | Two devices change the same card: last save wins, or the outdated save fails? | answered: outdated save fails with `CardChanged` (version per card) → CARD-08 |
+| C-40 | A tag merge fails because one of its cards was saved on another device at the same moment (CARD-08 → `CardChanged`, 409). The standard message is "This card was changed on another device. Refresh." Keep it for the merge dialog, or say something like "Merge failed, try again"? | open |
 | C-16 | The Model and Events sections of card-library.md are `draft` (incl. `TagsMerged`). Confirm them as the Phase 1 design? | answered: confirmed as listed, plus `TagsMerged` |
 
 ## Daily Practice

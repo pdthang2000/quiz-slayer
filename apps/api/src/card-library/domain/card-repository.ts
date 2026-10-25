@@ -12,7 +12,18 @@ export interface CardRepository {
   listTrashed(userId: UserId): Promise<Card[]>;
   /** Active and Trashed cards with this tag. For a tag merge only (TAG-09, TAG-10). */
   findByTag(userId: UserId, tagId: TagId): Promise<Card[]>;
-  /** Throws TagNoLongerExists if a tag id is gone or not the user's (CARD-04, C-21). */
+  /**
+   * Inserts a new card (from Card.create) at version 0.
+   * Throws TagNoLongerExists if a tag id is gone or not the user's (CARD-04, C-21).
+   */
+  add(card: Card): Promise<void>;
+  /** Same as add, in bulk. */
+  addAll(cards: Card[]): Promise<void>;
+  /**
+   * Updates a loaded card only if its stored version is still the one it was loaded at,
+   * then bumps the version; otherwise throws CardChanged (CARD-08). Save a loaded card once.
+   * Throws TagNoLongerExists like add.
+   */
   save(card: Card): Promise<void>;
   /** Same as save, in bulk (TAG-10 merges can touch thousands of cards). */
   saveAll(cards: Card[]): Promise<void>;

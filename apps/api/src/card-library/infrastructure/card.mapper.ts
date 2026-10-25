@@ -18,6 +18,7 @@ export function toCard(row: CardRow): Card {
     state: row.state,
     trashedAt: row.trashedAt,
     tagIds: row.tags.map((t) => TagId(t.tagId)),
+    version: row.version,
   });
 }
 
@@ -27,5 +28,5 @@ export function toCardData(card: Card) {
     back: card.back.value,
     state: card.state,
     trashedAt: card.trashedAt,
-  } satisfies Prisma.CardUpdateInput;
+  } satisfies Prisma.CardUpdateManyMutationInput;
 }

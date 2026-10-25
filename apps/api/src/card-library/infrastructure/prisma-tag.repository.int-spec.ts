@@ -84,7 +84,7 @@ describe('PrismaTagRepository', () => {
     await tags.save(animals);
     const cat = newCard(user, 'Cat', [animals]);
     const fish = newCard(user, 'Fish', [animals]);
-    await cards.saveAll([cat, fish]);
+    await cards.addAll([cat, fish]);
 
     await tags.delete(animals);
 
@@ -104,7 +104,7 @@ describe('PrismaTagRepository', () => {
     const animals = newTag(user, 'Animals');
     await tags.save(animals);
     const cat = newCard(user, 'Cat', [animals]);
-    await cards.save(cat);
+    await cards.add(cat);
 
     animals.rename(TagName.create('Mammals'));
     await tags.save(animals);

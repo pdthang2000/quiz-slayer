@@ -14,7 +14,7 @@ afterAll(() => prisma.onModuleDestroy());
 describe('PrismaCardLibraryQueries', () => {
   it('READ-02: "load more" paging is correct when the DB session is not in UTC', async () => {
     for (let i = 1; i <= 25; i++) {
-      await cards.save(newCard(user, `Card ${i}`)); // own transaction → own created_at
+      await cards.add(newCard(user, `Card ${i}`)); // own transaction → own created_at
       await new Promise((r) => setTimeout(r, 2));
     }
 

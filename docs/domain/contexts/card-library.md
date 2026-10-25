@@ -21,7 +21,7 @@ Started fresh on 2026-10-20. The old Flex Card backend is reference only, not a 
 | Command | On | Notes |
 |---|---|---|
 | createCard(front, back, tagNames) | Card (+ new Tags) | Unknown tag names are created (TAG-05) |
-| editCard(cardId, front, back, tagNames) | Card (+ new Tags) | One request from the card editor's Save (CARD-07). Active only (TRASH-02) |
+| editCard(cardId, version, front, back, tagNames) | Card (+ new Tags) | One request from the card editor's Save (CARD-07). Active only (TRASH-02). `version` = the one the editor was shown (CARD-08) |
 | moveToTrash() / restore() / deletePermanently() | Card | |
 | emptyTrash(expectedCount) | user's trashed cards | TRASH-07, TRASH-11 |
 | renameTag(name, confirmMerge?) | Tag | Existing name → 409 preview, then merge (TAG-08, TAG-10, TAG-15) |

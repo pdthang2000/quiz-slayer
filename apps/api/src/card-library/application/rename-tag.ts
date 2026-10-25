@@ -79,7 +79,8 @@ export class RenameTag {
 
   /**
    * TAG-10 as written in card-library.md. Both tags are reloaded after the lock,
-   * because they may have changed since the preview (C-38, TAG-15).
+   * because they may have changed since the preview. TAG-15 (C-38, revised): only an
+   * unchanged target (same tag, same name) merges; anything else asks again.
    */
   private async merge(
     userId: UserId,
@@ -102,14 +103,7 @@ export class RenameTag {
         return { result: into.id, events: from.pullEvents() };
       }
       const holder = await this.holderOf(userId, name, from);
-      if (into || holder) {
-        // Target renamed → always ask again; target deleted but the name is taken → ask again.
-        throw new TagMergeNeedsConfirmation(await this.preview(from, holder));
-      }
-      // Target deleted and the name is free: a plain rename.
-      from.rename(name);
-      await this.tags.save(from);
-      return { result: from.id, events: from.pullEvents() };
+      throw new TagMergeNeedsConfirmation(await this.preview(from, holder));
     });
     this.events.publish(events);
     return result;

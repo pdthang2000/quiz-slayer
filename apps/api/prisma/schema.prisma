@@ -28,6 +28,8 @@ model Card {
   state     CardState
   /// TRASH-12: set by move to trash, cleared by restore.
   trashedAt DateTime? @map("trashed_at")
+  /// CARD-08: optimistic locking. Inserts start at 0; every save bumps it.
+  version   Int       @default(0)
   createdAt DateTime  @default(now()) @map("created_at")
   updatedAt DateTime  @updatedAt @map("updated_at")
   tags      CardTag[]

@@ -15,7 +15,7 @@ import { EditCard } from '../application/edit-card';
 import { MoveCardToTrash } from '../application/move-card-to-trash';
 import { GetCard, ListCards } from '../application/queries';
 import { CardId, TagId, UserId } from '../domain/ids';
-import { CardInputDto, ListCardsQueryDto } from './dto';
+import { CardInputDto, EditCardDto, ListCardsQueryDto } from './dto';
 
 @Controller('cards')
 export class CardsController {
@@ -58,7 +58,7 @@ export class CardsController {
   async edit(
     @CurrentUser() user: string,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: CardInputDto,
+    @Body() body: EditCardDto,
   ) {
     const userId = UserId(user);
     const cardId = CardId(id);
@@ -68,6 +68,7 @@ export class CardsController {
       front: body.front,
       back: body.back,
       tagNames: body.tags,
+      version: body.version,
     });
     return this.getCard.execute({ userId, cardId });
   }

@@ -16,6 +16,7 @@ import { CardTags } from './card-tags';
 /**
  * CARD-07: the editor's Save sends front, back and the full tag list; only what changed
  * is applied (CARD-06 for the text). ADR-009: new tags and the card in one transaction.
+ * CARD-08: `version` is the one the editor was shown; an outdated one → CardChanged.
  */
 @Injectable()
 export class EditCard {
@@ -33,11 +34,13 @@ export class EditCard {
     front: string;
     back: string;
     tagNames: string[];
+    version: number;
   }): Promise<void> {
     const front = CardFront.create(input.front);
     const back = CardBack.create(input.back);
     const { card, created } = await this.transactions.run(async () => {
       const card = await this.cardTags.load(input.userId, input.cardId);
+      card.assertVersion(input.version); // before CardIsTrashed: trashing bumps the version
       card.edit(front, back); // CardIsTrashed before any tag is created
       const { tagIds, created } = await this.cardTags.resolve(
         input.userId,

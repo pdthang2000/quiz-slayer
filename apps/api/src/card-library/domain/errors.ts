@@ -81,6 +81,14 @@ export class TagNoLongerExists extends DomainError {
   }
 }
 
+/** CARD-08, C-39: the card changed since the client (or this transaction) loaded it. */
+export class CardChanged extends DomainError {
+  readonly code = 'CardChanged';
+  constructor(readonly cardId: CardId) {
+    super(`Card ${cardId} was changed meanwhile`);
+  }
+}
+
 /** TAG-03, C-20: the DB unique constraint rejected a name another request just took. */
 export class TagNameTaken extends DomainError {
   readonly code = 'TagNameTaken';

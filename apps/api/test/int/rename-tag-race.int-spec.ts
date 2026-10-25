@@ -16,7 +16,8 @@ import { PrismaCardLibraryQueries } from '../../src/card-library/infrastructure/
 import { PrismaCardRepository } from '../../src/card-library/infrastructure/prisma-card.repository';
 import { PrismaTagRepository } from '../../src/card-library/infrastructure/prisma-tag.repository';
 
-// C-38 / TAG-15: a confirmed merge re-checks both tags after taking its lock.
+// C-38 (revised) / TAG-15: a confirmed merge re-checks both tags after taking its lock;
+// only an unchanged target merges, anything else → 409 with a fresh preview.
 // `interfere` runs on a second connection right before the lock, i.e. exactly in the
 // window between the user's preview and the merge.
 
@@ -57,7 +58,7 @@ async function seed() {
   const dogs = newTag(user, 'Dogs');
   await tags.save(pitbull);
   await tags.save(dogs);
-  await cards.saveAll([
+  await cards.addAll([
     newCard(user, 'Dog', [pitbull, dogs]),
     newCard(user, 'Rex', [pitbull]),
     newCard(user, 'Fido', [dogs]),
@@ -74,6 +75,14 @@ async function tagNames() {
 }
 
 describe('RenameTag: tags changed between preview and confirmed merge (C-38)', () => {
+  it('TAG-15: target unchanged → merges as confirmed', async () => {
+    const { pitbull, dogs } = await seed();
+    tags.interfere = async () => {}; // the lock is still taken after the preview
+
+    await expect(confirmMerge(pitbull.id)).resolves.toBe(dogs.id);
+    expect(await tagNames()).toEqual(['Dogs']);
+  });
+
   it('TAG-15: target renamed meanwhile, name now free → 409 without a merge target, nothing changed', async () => {
     const { pitbull, dogs } = await seed();
     tags.interfere = async () => {
@@ -113,15 +122,21 @@ describe('RenameTag: tags changed between preview and confirmed merge (C-38)', (
     expect(await tagNames()).toEqual(['Dogs', 'Hounds', 'pitbull']);
   });
 
-  it('TAG-15: target deleted meanwhile, name free → plain rename', async () => {
+  it('TAG-15: target deleted meanwhile, name free → 409 without a merge target, nothing changed', async () => {
     const { pitbull, dogs } = await seed();
     tags.interfere = async () => {
       await otherTags.delete((await otherTags.findById(user, dogs.id))!);
     };
 
-    await expect(confirmMerge(pitbull.id)).resolves.toBe(pitbull.id);
-    expect(await tagNames()).toEqual(['Dogs']);
-    expect((await tags.findById(user, pitbull.id))?.name.value).toBe('Dogs');
+    const error = await confirmMerge(pitbull.id).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(TagMergeNeedsConfirmation);
+    expect((error as TagMergeNeedsConfirmation).preview).toEqual({
+      into: null,
+      intoCount: 0,
+      fromCount: 2,
+      resultCount: 2,
+    });
+    expect(await tagNames()).toEqual(['pitbull']);
   });
 
   it('TAG-15: target deleted meanwhile, another tag took the name → 409 with a fresh preview against it', async () => {

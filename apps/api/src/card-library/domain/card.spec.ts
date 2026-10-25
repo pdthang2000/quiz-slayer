@@ -1,6 +1,7 @@
 import { Card } from './card';
 import { CardBack, CardFront } from './card-text';
 import {
+  CardChanged,
   CardIsNotTrashed,
   CardIsTrashed,
   TagNotOnCard,
@@ -71,6 +72,18 @@ describe('Card', () => {
         'animals',
       ]);
       expect(newCard([...tagIds(20), TagId('tag-0')]).tagIds).toHaveLength(20);
+    });
+  });
+
+  describe('version', () => {
+    it('CARD-08: a new card starts at version 0', () => {
+      expect(newCard().version).toBe(0);
+    });
+
+    it('CARD-08: a change based on an outdated version fails with CardChanged', () => {
+      const card = newCard();
+      expect(() => card.assertVersion(0)).not.toThrow();
+      expect(() => card.assertVersion(1)).toThrow(CardChanged);
     });
   });
 

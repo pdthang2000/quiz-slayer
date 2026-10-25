@@ -36,6 +36,13 @@ export class CardInputDto {
   tags!: string[];
 }
 
+/** CARD-07 + CARD-08: the version the editor was shown. */
+export class EditCardDto extends CardInputDto {
+  @IsInt()
+  @Min(0)
+  version!: number;
+}
+
 export class ListCardsQueryDto {
   /** READ-03 */
   @IsOptional()
