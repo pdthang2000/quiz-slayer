@@ -19,6 +19,7 @@ Status: `confirmed` = decided by Jackkie, `draft` = proposed.
 | Restore | Bring a trashed card back to Active, with its tags. | | confirmed |
 | Trashed at | When a card was moved to the Trash; cleared on restore (TRASH-12). Code: `trashedAt`. | | confirmed |
 | Delete permanently | Remove a trashed card and its CardTags for good. No undo. | | confirmed |
+| Study session | Flipping through a snapshot of the cards the list showed when Study was pressed (STUDY-01, STUDY-02). Nothing is stored in v1. | Study #HSK1 → 50 cards | confirmed |
 | Tag color | A key from a fixed palette, stored on the tag (TAG-12, TAG-13). Code: `TagColor`. | `blue` | confirmed |
 
 ### Card Library events (C-16)
@@ -48,6 +49,7 @@ Names confirmed 2026-10-22. How each error is handled: card-library.md → Error
 | `CardNotFound` / `TagNotFound` | No such card / tag for this user (application layer, 404) | confirmed |
 | `TagNameTaken` | TAG-03 (DB unique constraint hit by a race, C-20) | confirmed |
 | `CardChanged` | CARD-08 (card saved from an outdated view, C-39) | confirmed |
+| `TagChanged` | TAG-16 (tag renamed or deleted from an outdated view, C-44) | confirmed |
 | `TagNoLongerExists` | Card saved with a tag deleted/merged meanwhile (C-21) | confirmed |
 | `TagMergeFailed` | A confirmed merge rolled back because one of its cards was saved on another device at the same moment (C-40) | confirmed |
 | `TagNotOnCard` | CARDTAG-04 (replaceTagForMerge when the card lacks A) | confirmed |

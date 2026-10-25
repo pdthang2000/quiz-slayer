@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-10-25 — tag card lists and one conflict rule
+- Confirmed: CONFLICT-01 — any change from an outdated view of a card, a tag or the Trash fails with 409 and nothing changes (C-44). Card actions all send the card version (CARD-08); tags get a version (TAG-16, `TagChanged`); empty trash also sends the newest "trashed at" (TRASH-11).
+- Confirmed: a tag's card list can remove cards (✕ and checkboxes) and add cards (picker, full cards greyed out), all or nothing, max 100 per action (CARDTAG-07, CARDTAG-08, ADR-011, C-43). UI-05 and UI-14 updated.
+- Backlog B-13: live updates between devices.
+
+## 2026-10-25 — Phase 4 questions
+- Confirmed: Study (STUDY-01..06): studies what the list shows; snapshot when Study is pressed; newest first + Shuffle; side choice (front default); flip + Next only; no limit. Loads ids first, content 20 at a time.
+- Confirmed: UI-09 left side menu (Cards, Tags, Trash); UI-10 list shows front, tap flips, "⋯" menu Edit · Tags · Delete; UI-11 i18n with English default; UI-12 dark mode follows the phone.
+- Backlog B-12: Quizlet-like study modes.
+- Confirmed: UI-09 side drawer; UI-13 ⋯ → Delete moves to Trash at once with an Undo toast (C-42). 
+- Confirmed: UI-14 ⋯ → Tags browses the card's tags with counts; cards load lazily on expand, 20 + Load more (C-41).
+
 ## 2026-10-25 — C-40 and B-11
 - Answered C-40: a merge rolled back by a concurrent card save raises its own error `TagMergeFailed`, "Merge failed, try again." (glossary, Error handling).
 - B-11 fixed now (Jackkie): transactions retry up to 3× on a Postgres deadlock, then 409 `TransactionConflict` "Try again." ADR-008 addendum. Removed from the backlog.

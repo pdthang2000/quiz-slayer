@@ -22,17 +22,27 @@ Started fresh on 2026-10-20. The old Flex Card backend is reference only, not a 
 |---|---|---|
 | createCard(front, back, tagNames) | Card (+ new Tags) | Unknown tag names are created (TAG-05) |
 | editCard(cardId, version, front, back, tagNames) | Card (+ new Tags) | One request from the card editor's Save (CARD-07). Active only (TRASH-02). `version` = the one the editor was shown (CARD-08) |
-| moveToTrash() / restore() / deletePermanently() | Card | |
-| emptyTrash(expectedCount) | user's trashed cards | TRASH-07, TRASH-11 |
-| renameTag(name, confirmMerge?) | Tag | Existing name → 409 preview, then merge (TAG-08, TAG-10, TAG-15) |
-| deleteTag() | Tag | |
+| moveToTrash(version) / restore(version) / deletePermanently(version) | Card | `version` = the one the screen showed (CONFLICT-01) |
+| removeCardsFromTag(tagId, [{cardId, version}]) | Cards | Tag view: ✕ or ticked cards; all or nothing (CARDTAG-07, ADR-011) |
+| addCardsToTag(tagId, [{cardId, version}]) | Cards | Tag view: card picker; all or nothing (CARDTAG-08, ADR-011) |
+| emptyTrash(expectedCount, newestTrashedAt) | user's trashed cards | TRASH-07, TRASH-11 |
+| renameTag(version, name, confirmMerge?) | Tag | Existing name → 409 preview, then merge (TAG-08, TAG-10, TAG-15) |
+| deleteTag(version) | Tag | `version` = the one the screen showed (TAG-16) |
 | replaceTagForMerge(A, B) | Card | Merge only (CARDTAG-04) |
 
-No separate tag/untag commands and no createTag in v1 (C-23, UI-08).
+Tags on one card change through the editor's Save (CARD-07); several cards change through a tag's card list (CARDTAG-07, CARDTAG-08). No createTag in v1 (UI-08).
 
 ---
 
 ## Rules
+
+### Conflicts
+**CONFLICT-01** `confirmed` — Any change made from an outdated view of a card, a tag or the Trash never goes through. The user sees the latest state and decides again. Every change sends what the screen showed (a version, or for the Trash a count and time); if the server has something newer, it answers 409 and changes nothing; the app reloads the screen with the message. One rule for every action, no exceptions. (C-44)
+```
+Phone shows Rex (v7) → Laptop edits Rex (v8) → Phone ✕ Rex in #Dog (sends v7)
+→ 409 CardChanged "Rex was changed on another device" → reload → user decides again
+```
+Covered by: CARD-08 (cards), TAG-16 (tags), TRASH-11 (Trash), TAG-15 (merge target), C-40 (merge vs a card saved at the same moment).
 
 ### Cards
 **CARD-01** `confirmed` — Front and back are both required. Empty after trimming = invalid.
@@ -68,7 +78,7 @@ Save Dog + new #Animals → card save fails (Dog was trashed on another device)
 → rolled back: no #Animals tag, Dog unchanged
 ```
 
-**CARD-08** `confirmed` — A change based on an outdated view of a card fails instead of overwriting newer changes. Each card has a version; a save whose version is out of date fails with `CardChanged` (Stale screen, 409) and nothing is written. (C-39)
+**CARD-08** `confirmed` — A change based on an outdated view of a card fails instead of overwriting newer changes. Each card has a version. Every card action — Save, move to trash, restore, delete permanently, add to / remove from a tag — sends the version the screen showed; out of date → `CardChanged` (Stale screen, 409), nothing is written (CONFLICT-01). (C-39, C-44)
 ```
 Phone:  opens Dog's editor (Dog: Active)
 Laptop: moves Dog to trash
@@ -169,6 +179,12 @@ If the tags changed between the preview and the confirmed request, the merge re-
 | Dogs unchanged (same tag, same name) | merge, as confirmed |
 | Anything else: Dogs renamed or deleted, another tag now holds "Dogs", or "Dogs" is free | 409 `TagMergeNeedsConfirmation` with a fresh preview: against the tag that holds "Dogs" now, or with no merge target if nobody does (the app then asks "Rename pitbull to Dogs?" and resends without `confirmMerge`) |
 
+**TAG-16** `confirmed` — Each tag has a version. Rename and delete send the version the screen showed; out of date → `TagChanged` (Stale screen, 409), nothing changes (CONFLICT-01). A rename, merge or card added/removed through the tag changes its version. (C-44)
+```
+Phone: "Delete #Dog? It's on 3 cards." → Laptop adds 10 cards to #Dog → Phone confirms
+→ 409 TagChanged → reload → "Delete #Dog? It's on 13 cards."
+```
+
 ### CardTags
 **CARDTAG-01** `confirmed` — Removing a tag from a card removes only that one CardTag. The tag stays (even with 0 cards) and other cards keep it. No soft delete: the user can add it again in seconds.
 
@@ -190,6 +206,17 @@ It is the only tag change allowed on a trashed card (supports TAG-09). It never 
 ```
 #Animals #Animals #animals → Animals, animals (2 tags)
 ```
+
+**CARDTAG-07** `confirmed` — A tag's card list can remove cards from the tag: ✕ at the right end of a row removes that card; checkboxes at the left select several, then "Remove (n)". It removes only that tag from those cards. All or nothing (ADR-011); each card sends its version (CARD-08). A toast "Removed from #Dog · Undo" puts them back. Max 100 cards per action, checked by the app and by the API (shape guard). (T-4)
+```
+#Dog (4) ▾                      [Remove (2)]
+ ☑ Rex                       ✕
+ ☐ Max                       ✕
+ ☑ Fido                      ✕
+ [+ Add cards]
+```
+
+**CARDTAG-08** `confirmed` — "+ Add cards" opens a picker: Active cards not already in the tag, with search (READ-03), newest first, 20 at a time + Load more. Cards that already have 20 tags are greyed out and can't be ticked (CARDTAG-03). Adding is all or nothing (ADR-011): if a card filled up or changed meanwhile, nothing is added (`TooManyTags` naming the card, or `CardChanged`). Max 100 cards per action, checked by the app and by the API. (T-1, T-2, T-4)
 
 ### Trash
 **TRASH-01** `confirmed` — Deleting a card moves it to the Trash. It is not gone.
@@ -216,7 +243,10 @@ restore → 你好 [HSK1, greeting]
 
 **TRASH-10** `confirmed` — Moving a trashed card to the trash fails with `CardIsTrashed`. Restoring or deleting permanently an active card fails with `CardIsNotTrashed` (the latter follows from TRASH-09). The UI never offers these, so if one happens it is a bug or a stale screen. (C-10)
 
-**TRASH-11** `confirmed` — "Empty trash" sends the count the user saw. If the Trash now holds a different number of cards, nothing is deleted and it fails with 409 (Stale screen): "Trash changed, check again." (C-26)
+**TRASH-11** `confirmed` — "Empty trash" sends the count the user saw and the newest "trashed at" time the screen showed. If the Trash now holds a different number of cards, or a newer trashed card, nothing is deleted and it fails with 409 (Stale screen): "Trash changed, check again." (C-26, C-44)
+```
+Dialog: "Delete 2 cards forever?" (A, B) → Laptop restores A, trashes C → still 2, but C is newer → 409
+```
 ```
 Dialog: "Delete 47 cards forever?" → another device trashes 1 more → 48 in Trash
 → confirm sends 47 → 409, nothing deleted → app refreshes the Trash
@@ -262,7 +292,7 @@ Dog [pitbull, Animals, động vật, apple] → Animals, apple, động vật, 
 
 **UI-04** `confirmed` — On a card, the user can only add or remove tags. No renaming from the card.
 
-**UI-05** `confirmed` — The Tag list is where tags are renamed (TAG-11) and deleted (TAG-06).
+**UI-05** `confirmed` — The Tag list is where tags are renamed (TAG-11) and deleted (TAG-06). A tag's card list (from the Tag list or ⋯ → Tags) is where cards are added to or removed from that tag (CARDTAG-07, CARDTAG-08).
 
 **UI-06** `confirmed` — Tag list shows tags as colored buttons. Long-press on a tag opens a bottom sheet with: Show cards, Rename, Delete (mobile form of the original tooltip idea). Tag color: TAG-12.
 
@@ -273,6 +303,55 @@ Dog [pitbull, Animals, động vật, apple] → Animals, apple, động vật, 
 ---
 
 **UI-08** `confirmed` — No "New tag" button in v1. Tags are created only by typing them on a card (TAG-05). (C-24)
+
+**UI-09** `confirmed` — Navigation is a menu on the left (a side drawer opened with ☰), with three items: Cards, Tags, Trash. No bottom tab bar. (U-1)
+```
+☰ ┌──────────┐
+  │ Cards    │
+  │ Tags     │
+  │ Trash    │
+  └──────────┘
+```
+
+**UI-10** `confirmed` — The card list shows the front only. Tapping a card flips it in place to show the back. Each card has a "⋯" button that opens a menu: Edit, Tags, Delete. (U-2)
+```
+[ 你好      ⋯ ]  tap → [ xin chào  ⋯ ]
+                 ⋯   → Edit · Tags · Delete
+```
+**UI-14** `confirmed` — "⋯ → Tags" shows this card's tags, each with its count of Active cards (TRASH-03), in READ-06 order. It loads only the tags and their counts. Expanding a tag loads that tag's cards (Active, newest first, READ-02) 20 at a time with a "Load more" button — fetched only when expanded. An expanded tag's card list also allows removing and adding cards (CARDTAG-07, CARDTAG-08). (C-41)
+```
+[ 你好  ⋯ ] → Tags →  ▸ #greeting (12)   ▸ #HSK1 (50)
+tap ▸ #greeting  →  loads: Hello, 你好, Xin chào … (20)  [Load more]
+```
+
+**UI-13** `confirmed` — "⋯ → Delete" moves the card to the Trash at once, without a dialog (it can be restored, TRASH-01). A short toast shows "Moved to Trash · Undo"; Undo restores the card (TRASH-04). (C-42)
+
+**UI-11** `confirmed` — All app text goes through i18n, ready for more languages; English is the default and only language in v1. Messages for errors are app strings looked up by error code (the server's message is for logs). Card content can be in any language. (U-3)
+
+**UI-12** `confirmed` — Dark mode follows the phone's setting. (U-4)
+
+### Study
+Flip through cards one by one. v1 has no scoring and stores nothing.
+```
+Cards → filter #HSK1 → Study → 你好 → tap → xin chào → Next → …
+```
+
+**STUDY-01** `confirmed` — Study uses exactly the cards the card list shows: the selected tag chips (READ-05) and the search (READ-03). Nothing selected → all Active cards. (S-1)
+
+**STUDY-02** `confirmed` — A study session uses the cards that matched when Study was pressed. Cards added later are not in it; a card trashed or deleted meanwhile is skipped. (S-1)
+```
+Start Study #HSK1 (50 cards) → add a new #HSK1 card on the laptop → not in this session
+```
+
+**STUDY-03** `confirmed` — Order: newest first by default (like the list); a Shuffle button randomizes the order over all cards of the session. (S-2)
+
+**STUDY-04** `confirmed` — The user chooses which side is shown first; the default is the front. (S-3)
+
+**STUDY-05** `confirmed` — v1: flip and Next only. No "know / don't know", no score, nothing stored. A Quizlet-like study experience comes later (backlog B-12). (S-4)
+
+**STUDY-06** `confirmed` — No limit on cards per session; the user can stop anytime. (S-5)
+
+How a session loads (technical, C): the app first loads only the matching card ids (small even for thousands of cards), orders or shuffles them on the phone, then fetches card content 20 at a time, fetching the next batch before it is needed.
 
 ## Error handling
 
@@ -292,7 +371,8 @@ Names, kinds, HTTP statuses and messages `confirmed` (C-18).
 | `TagNoLongerExists` | CARD-04, TAG-06, TAG-10 | Saving a card with a tag that was deleted or merged away meanwhile (DB foreign key fails) (C-21) | Stale screen | 409 | "This tag no longer exists. Refresh." |
 | `TagMergeNeedsConfirmation` | TAG-15 | Rename onto an existing name without `confirmMerge` | Confirmation | 409 | Merge dialog with the preview counts (TAG-08) |
 | `TrashChanged` | TRASH-11 | Empty trash with a count that no longer matches | Stale screen | 409 | "Trash changed, check again." + refresh |
-| `CardChanged` | CARD-08 | Saving a card that changed since it was loaded (another device or tab) (C-39) | Stale screen | 409 | "This card was changed on another device. Refresh." |
+| `CardChanged` | CARD-08 | Any card action from a view older than the card (another device or tab) (C-39, C-44) | Stale screen | 409 | "This card was changed on another device. Refresh." |
+| `TagChanged` | TAG-16 | Rename or delete a tag that changed since the screen loaded it (C-44) | Stale screen | 409 | "This tag was changed on another device. Refresh." |
 | `TagNameTaken` | TAG-03 | Two requests create the same tag name at once; the DB unique constraint rejects the second (C-20) | Race | 409 | "This tag already exists. Try again." (rolled back; a retry links the existing tag) |
 | `TagMergeFailed` | TAG-10, CARD-08 | A confirmed merge finds one of its cards saved on another device meanwhile (C-40) | Race | 409 | "Merge failed, try again." (merge rolled back; a retry almost always works) |
 | `TransactionConflict` (technical) | — | Postgres kept aborting the transaction (deadlock), even after 3 automatic retries (B-11, ADR-008) | Race | 409 | "Try again." |

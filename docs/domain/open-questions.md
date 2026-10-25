@@ -45,6 +45,10 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | C-37 | In which order are the tags on a card shown? | answered: A–Z, same dictionary order as READ-04 → READ-06 |
 | C-38 | A confirmed merge finds the target renamed or deleted after the preview. What happens? | answered (revised 2026-10-25): anything changed → 409 with a fresh preview; only an unchanged target merges → TAG-15 |
 | C-39 | Two devices change the same card: last save wins, or the outdated save fails? | answered: outdated save fails with `CardChanged` (version per card) → CARD-08 |
+| C-41 | Card "⋯" → Tags: what opens? (e.g. a sheet with the chip input for this card's tags only, saved with the same Save as CARD-07) | answered: browse this card's tags with Active counts; a tag's cards load only when expanded, 20 + Load more → UI-14 |
+| C-42 | Card "⋯" → Delete: move to Trash at once (it can be restored), or ask first? (was U-5) | answered: Trash at once + \"Moved to Trash · Undo\" toast → UI-13 |
+| C-43 | Change which cards a tag is on from the tag's card list, not only from the card editor? | answered: yes — remove (✕ / checkboxes) and add (picker); full cards greyed out; all or nothing; max 100 per action → CARDTAG-07, CARDTAG-08, ADR-011 |
+| C-44 | Conflicts: which actions must fail when made from an outdated view? | answered: all of them — one rule for cards, tags and the Trash → CONFLICT-01, CARD-08, TAG-16, TRASH-11 |
 | C-40 | A tag merge fails because one of its cards was saved on another device at the same moment (CARD-08). Which message? | answered: the merge's own error `TagMergeFailed`, "Merge failed, try again." (409, Race) → Error handling |
 | C-16 | The Model and Events sections of card-library.md are `draft` (incl. `TagsMerged`). Confirm them as the Phase 1 design? | answered: confirmed as listed, plus `TagsMerged` |
 
