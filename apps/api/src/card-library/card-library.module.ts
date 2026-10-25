@@ -11,7 +11,18 @@ import { DeleteTag } from './application/delete-tag';
 import { EditCard } from './application/edit-card';
 import { EmptyTrash } from './application/empty-trash';
 import { MoveCardToTrash } from './application/move-card-to-trash';
-import { GetCard, ListCards, ListTags, ListTrash } from './application/queries';
+import { AddCardsToTag } from './application/add-cards-to-tag';
+import {
+  GetCard,
+  GetCardsByIds,
+  ListCards,
+  ListCardsToAddToTag,
+  ListStudyCardIds,
+  ListTags,
+  ListTagsOfCard,
+  ListTrash,
+} from './application/queries';
+import { RemoveCardsFromTag } from './application/remove-cards-from-tag';
 import { RenameTag } from './application/rename-tag';
 import { RestoreCard } from './application/restore-card';
 import {
@@ -39,7 +50,13 @@ import { PrismaTagRepository } from './infrastructure/prisma-tag.repository';
     EmptyTrash,
     RenameTag,
     DeleteTag,
+    AddCardsToTag,
+    RemoveCardsFromTag,
     ListCards,
+    ListStudyCardIds,
+    GetCardsByIds,
+    ListCardsToAddToTag,
+    ListTagsOfCard,
     GetCard,
     ListTrash,
     ListTags,

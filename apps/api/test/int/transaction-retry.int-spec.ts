@@ -30,7 +30,7 @@ function signal() {
 describe('Transaction retry (B-11)', () => {
   it('B-11: a Save and a merge that deadlock both succeed, the aborted one after a retry', async () => {
     const pitbull = newTag(user, 'pitbull');
-    await new PrismaTagRepository(prisma).save(pitbull);
+    await new PrismaTagRepository(prisma).add(pitbull);
     const rex = newCard(user, 'Rex');
     await new PrismaCardRepository(prisma).add(rex);
 

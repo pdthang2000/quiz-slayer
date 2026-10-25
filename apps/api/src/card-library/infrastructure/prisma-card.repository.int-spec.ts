@@ -23,8 +23,8 @@ describe('PrismaCardRepository', () => {
   it('saves and loads a card with its tags', async () => {
     const animals = newTag(user, 'Animals');
     const pitbull = newTag(user, 'pitbull');
-    await tags.save(animals);
-    await tags.save(pitbull);
+    await tags.add(animals);
+    await tags.add(pitbull);
     const dog = newCard(user, 'Dog', [animals, pitbull], 'a mammal that barks');
     await cards.add(dog);
 
@@ -40,8 +40,8 @@ describe('PrismaCardRepository', () => {
   it('saving again updates the card and its CardTags', async () => {
     const animals = newTag(user, 'Animals');
     const pitbull = newTag(user, 'pitbull');
-    await tags.save(animals);
-    await tags.save(pitbull);
+    await tags.add(animals);
+    await tags.add(pitbull);
     const dog = newCard(user, 'Dog', [animals]);
     await cards.add(dog);
 
@@ -86,8 +86,8 @@ describe('PrismaCardRepository', () => {
   it('TRASH-04: restore brings the tags back', async () => {
     const hsk1 = newTag(user, 'HSK1');
     const greeting = newTag(user, 'greeting');
-    await tags.save(hsk1);
-    await tags.save(greeting);
+    await tags.add(hsk1);
+    await tags.add(greeting);
     const nihao = newCard(user, '你好', [hsk1, greeting]);
     await cards.add(nihao);
 
@@ -106,8 +106,8 @@ describe('PrismaCardRepository', () => {
   it('TRASH-06: a tag deleted while the card was trashed is gone after restore', async () => {
     const hsk1 = newTag(user, 'HSK1');
     const greeting = newTag(user, 'greeting');
-    await tags.save(hsk1);
-    await tags.save(greeting);
+    await tags.add(hsk1);
+    await tags.add(greeting);
     const nihao = newCard(user, '你好', [hsk1, greeting]);
     nihao.moveToTrash(new Date());
     await cards.add(nihao);
@@ -122,7 +122,7 @@ describe('PrismaCardRepository', () => {
 
   it('TRASH-05: deleting permanently removes the card and its CardTags', async () => {
     const hsk1 = newTag(user, 'HSK1');
-    await tags.save(hsk1);
+    await tags.add(hsk1);
     const nihao = newCard(user, '你好', [hsk1]);
     nihao.moveToTrash(new Date());
     await cards.add(nihao);
@@ -139,7 +139,7 @@ describe('PrismaCardRepository', () => {
 
   it('CARDTAG-01: removing a tag from a card deletes only that CardTag', async () => {
     const animals = newTag(user, 'Animals');
-    await tags.save(animals);
+    await tags.add(animals);
     const dog = newCard(user, 'Dog', [animals]);
     const cat = newCard(user, 'Cat', [animals]);
     await cards.addAll([dog, cat]);
@@ -156,7 +156,7 @@ describe('PrismaCardRepository', () => {
 
   it('TAG-04: a tag with 0 cards is kept', async () => {
     const animals = newTag(user, 'Animals');
-    await tags.save(animals);
+    await tags.add(animals);
     const dog = newCard(user, 'Dog', [animals]);
     await cards.add(dog);
 
@@ -170,8 +170,8 @@ describe('PrismaCardRepository', () => {
   it('TAG-09: findByTag returns Active and Trashed cards with the tag', async () => {
     const pitbull = newTag(user, 'pitbull');
     const other = newTag(user, 'other');
-    await tags.save(pitbull);
-    await tags.save(other);
+    await tags.add(pitbull);
+    await tags.add(other);
     const dog = newCard(user, 'Dog', [pitbull]);
     const rex = newCard(user, 'Rex', [pitbull]);
     rex.moveToTrash(new Date());
@@ -184,7 +184,7 @@ describe('PrismaCardRepository', () => {
 
   it("CARD-04: a card cannot be linked to another user's tag", async () => {
     const theirs = newTag(newUserId(), 'Animals');
-    await tags.save(theirs);
+    await tags.add(theirs);
     const dog = newCard(user, 'Dog');
     await cards.add(dog);
 
@@ -204,7 +204,7 @@ describe('PrismaCardRepository', () => {
 
   it('C-21: saving a card with a deleted tag throws TagNoLongerExists', async () => {
     const animals = newTag(user, 'Animals');
-    await tags.save(animals);
+    await tags.add(animals);
     const dog = newCard(user, 'Dog');
     dog.addTag(animals.id);
     await tags.delete(animals);
@@ -213,7 +213,7 @@ describe('PrismaCardRepository', () => {
 
   it('addAll writes many cards and their CardTags', async () => {
     const animals = newTag(user, 'Animals');
-    await tags.save(animals);
+    await tags.add(animals);
     const many = Array.from({ length: 50 }, (_, i) =>
       newCard(user, `Card ${i}`, i % 2 === 0 ? [animals] : []),
     );
@@ -278,7 +278,7 @@ describe('PrismaCardRepository', () => {
 
   it('CARD-08: a failed saveAll writes nothing (no card, no CardTag)', async () => {
     const animals = newTag(user, 'Animals');
-    await tags.save(animals);
+    await tags.add(animals);
     const dog = newCard(user, 'Dog');
     const cat = newCard(user, 'Cat');
     await cards.addAll([dog, cat]);

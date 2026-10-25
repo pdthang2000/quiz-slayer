@@ -35,7 +35,7 @@ export class EditCard {
     back: string;
     tagNames: string[];
     version: number;
-  }): Promise<void> {
+  }): Promise<{ version: number }> {
     const front = CardFront.create(input.front);
     const back = CardBack.create(input.back);
     const { card, created } = await this.transactions.run(async () => {
@@ -54,5 +54,6 @@ export class EditCard {
       ...created.flatMap((t) => t.pullEvents()),
       ...card.pullEvents(),
     ]);
+    return { version: card.version + 1 };
   }
 }

@@ -37,6 +37,8 @@ model Card {
   /// Target of card_tag's (card_id, user_id) foreign key (CARD-04, C-22).
   @@unique([id, userId])
   @@index([userId, state])
+  /// READ-02, CARDTAG-08: Active cards newest first.
+  @@index([userId, state, createdAt])
   @@map("card")
 }
 
@@ -47,6 +49,8 @@ model Tag {
   name      String
   /// TAG-13 palette key, validated by TagColor.
   color     String
+  /// TAG-16: optimistic locking. Inserts start at 0; every tag change bumps it.
+  version   Int       @default(0)
   createdAt DateTime  @default(now()) @map("created_at")
   cards     CardTag[]
 

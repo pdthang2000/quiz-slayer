@@ -12,7 +12,7 @@ import type { CardRepository } from '../domain/card-repository';
 import { CardId, UserId } from '../domain/ids';
 import { CardTags } from './card-tags';
 
-/** TRASH-05, TRASH-09, TRASH-10 */
+/** TRASH-05, TRASH-09, TRASH-10. CARD-08: `version` = the one the screen showed. */
 @Injectable()
 export class DeleteCardPermanently {
   constructor(
@@ -23,9 +23,14 @@ export class DeleteCardPermanently {
     private readonly cardTags: CardTags,
   ) {}
 
-  async execute(input: { userId: UserId; cardId: CardId }): Promise<void> {
+  async execute(input: {
+    userId: UserId;
+    cardId: CardId;
+    version: number;
+  }): Promise<void> {
     const card = await this.transactions.run(async () => {
       const card = await this.cardTags.load(input.userId, input.cardId);
+      card.assertVersion(input.version);
       card.deletePermanently();
       await this.cards.delete(card);
       return card;

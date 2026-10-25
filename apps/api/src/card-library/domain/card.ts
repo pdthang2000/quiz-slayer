@@ -130,7 +130,7 @@ export class Card extends AggregateRoot<CardEvent> {
     this.assertActive();
     if (this._tagIds.has(tagId)) return;
     if (this._tagIds.size >= Card.MAX_TAGS)
-      throw new TooManyTags(Card.MAX_TAGS);
+      throw new TooManyTags(Card.MAX_TAGS, this.id);
     this._tagIds.add(tagId);
     this.record({
       type: 'CardTagged',

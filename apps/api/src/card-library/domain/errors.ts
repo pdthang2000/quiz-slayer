@@ -45,11 +45,18 @@ export class InvalidTagColor extends DomainError {
   }
 }
 
-/** CARDTAG-03 */
+/** CARDTAG-03. `cardId` names the card that is full (CARDTAG-08), when it exists already. */
 export class TooManyTags extends DomainError {
   readonly code = 'TooManyTags';
-  constructor(readonly max: number) {
-    super(`A card has at most ${max} tags`);
+  constructor(
+    readonly max: number,
+    readonly cardId?: CardId,
+  ) {
+    super(
+      cardId
+        ? `Card ${cardId} already has ${max} tags`
+        : `A card has at most ${max} tags`,
+    );
   }
 }
 
@@ -86,6 +93,14 @@ export class CardChanged extends DomainError {
   readonly code = 'CardChanged';
   constructor(readonly cardId: CardId) {
     super(`Card ${cardId} was changed meanwhile`);
+  }
+}
+
+/** TAG-16, C-44: the tag changed since the client (or this transaction) loaded it. */
+export class TagChanged extends DomainError {
+  readonly code = 'TagChanged';
+  constructor(readonly tagId: TagId) {
+    super(`Tag ${tagId} was changed meanwhile`);
   }
 }
 

@@ -60,8 +60,8 @@ async function snapshot() {
 async function seed() {
   const pitbull = newTag(user, 'pitbull', 'red');
   const dogs = newTag(user, 'Dogs', 'green');
-  await tags.save(pitbull);
-  await tags.save(dogs);
+  await tags.add(pitbull);
+  await tags.add(dogs);
   const dog = newCard(user, 'Dog', [pitbull, dogs]);
   const rex = newCard(user, 'Rex', [pitbull]);
   rex.moveToTrash(new Date());
@@ -165,8 +165,8 @@ describe('Tag merge (TAG-08, TAG-09, TAG-10)', () => {
   it('TAG-10: merging a tag on 1000 cards succeeds', async () => {
     const pitbull = newTag(user, 'pitbull');
     const dogs = newTag(user, 'Dogs');
-    await tags.save(pitbull);
-    await tags.save(dogs);
+    await tags.add(pitbull);
+    await tags.add(dogs);
     const many = Array.from({ length: 1000 }, (_, i) =>
       newCard(user, `Dog ${i}`, i % 2 === 0 ? [pitbull, dogs] : [pitbull]),
     );

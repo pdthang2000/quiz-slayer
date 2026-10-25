@@ -15,7 +15,7 @@ import { EmptyTrash } from '../application/empty-trash';
 import { ListTrash } from '../application/queries';
 import { RestoreCard } from '../application/restore-card';
 import { CardId, UserId } from '../domain/ids';
-import { EmptyTrashDto, TrashQueryDto } from './dto';
+import { EmptyTrashDto, TrashQueryDto, VersionDto } from './dto';
 
 @Controller('trash')
 export class TrashController {
@@ -26,6 +26,7 @@ export class TrashController {
     private readonly emptyTrash: EmptyTrash,
   ) {}
 
+  /** TRASH-12. `total` and `newestTrashedAt` are what the empty-trash dialog sends back (TRASH-11). */
   @Get()
   list(@CurrentUser() user: string, @Query() query: TrashQueryDto) {
     return this.listTrash.execute({
@@ -34,36 +35,46 @@ export class TrashController {
     });
   }
 
+  /** TRASH-07, TRASH-11 */
   @Post('empty')
   @HttpCode(204)
   async empty(@CurrentUser() user: string, @Body() body: EmptyTrashDto) {
     await this.emptyTrash.execute({
       userId: UserId(user),
       expectedCount: body.expectedCount,
+      newestTrashedAt:
+        body.newestTrashedAt === null ? null : new Date(body.newestTrashedAt),
     });
   }
 
+  /** TRASH-04, CARD-08. Returns the new version. */
   @Post(':id/restore')
-  @HttpCode(204)
+  @HttpCode(200)
   async restore(
     @CurrentUser() user: string,
     @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: VersionDto,
   ) {
-    await this.restoreCard.execute({
+    const { version } = await this.restoreCard.execute({
       userId: UserId(user),
       cardId: CardId(id),
+      version: body.version,
     });
+    return { id, version };
   }
 
+  /** TRASH-05, CARD-08 */
   @Delete(':id')
   @HttpCode(204)
   async deletePermanently(
     @CurrentUser() user: string,
     @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: VersionDto,
   ) {
     await this.deleteCardPermanently.execute({
       userId: UserId(user),
       cardId: CardId(id),
+      version: body.version,
     });
   }
 }

@@ -1,5 +1,5 @@
 import { AggregateRoot } from './aggregate-root';
-import { TagMergeNotAllowed } from './errors';
+import { TagChanged, TagMergeNotAllowed } from './errors';
 import { TagEvent } from './events';
 import { TagId, UserId } from './ids';
 import { TagColor } from './tag-color';
@@ -10,6 +10,8 @@ export type TagProps = {
   userId: UserId;
   name: TagName;
   color: TagColor;
+  /** TAG-16: the stored version this tag was loaded at. */
+  version: number;
 };
 
 /**
@@ -23,13 +25,15 @@ export class Tag extends AggregateRoot<TagEvent> {
     readonly userId: UserId,
     private _name: TagName,
     readonly color: TagColor,
+    /** TAG-16: 0 for a new tag; the repository changes it only if the stored one still matches. */
+    readonly version: number,
   ) {
     super();
   }
 
   /** TAG-12: the caller passes TagColor.random() for a new tag. */
-  static create(props: TagProps): Tag {
-    const tag = new Tag(props.id, props.userId, props.name, props.color);
+  static create(props: Omit<TagProps, 'version'>): Tag {
+    const tag = new Tag(props.id, props.userId, props.name, props.color, 0);
     tag.record({
       type: 'TagCreated',
       tagId: tag.id,
@@ -41,11 +45,22 @@ export class Tag extends AggregateRoot<TagEvent> {
 
   /** Rebuilds a stored tag. No rules re-run, no events. */
   static reconstitute(props: TagProps): Tag {
-    return new Tag(props.id, props.userId, props.name, props.color);
+    return new Tag(
+      props.id,
+      props.userId,
+      props.name,
+      props.color,
+      props.version,
+    );
   }
 
   get name(): TagName {
     return this._name;
+  }
+
+  /** TAG-16, CONFLICT-01: the client's change is based on the version it was shown. */
+  assertVersion(version: number): void {
+    if (version !== this.version) throw new TagChanged(this.id);
   }
 
   /** TAG-11 (cards untouched), TAG-12 (color kept), TAG-14 (same name → no-op). */

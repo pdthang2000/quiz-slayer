@@ -1,4 +1,4 @@
-import { TagMergeNotAllowed } from './errors';
+import { TagChanged, TagMergeNotAllowed } from './errors';
 import { TagId, UserId } from './ids';
 import { Tag } from './tag';
 import { TagColor } from './tag-color';
@@ -88,6 +88,16 @@ describe('Tag', () => {
     const mine = newTag('a', 'Dogs', 'user-1');
     const theirs = newTag('b', 'Dogs', 'user-2');
     expect(() => mine.mergeInto(theirs)).toThrow(TagMergeNotAllowed);
+  });
+
+  it('TAG-16: a new tag starts at version 0', () => {
+    expect(newTag('t1', 'Animals').version).toBe(0);
+  });
+
+  it('TAG-16: a change based on an outdated version fails with TagChanged', () => {
+    const tag = newTag('t1', 'Animals');
+    expect(() => tag.assertVersion(0)).not.toThrow();
+    expect(() => tag.assertVersion(3)).toThrow(TagChanged);
   });
 
   it('TAG-06: deleting a tag records TagDeleted', () => {

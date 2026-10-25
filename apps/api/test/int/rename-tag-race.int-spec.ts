@@ -8,6 +8,7 @@ import {
 import { CardBack, CardFront } from '../../src/card-library/domain/card-text';
 import { RenameTag } from '../../src/card-library/application/rename-tag';
 import { Card } from '../../src/card-library/domain/card';
+import { TagChanged } from '../../src/card-library/domain/errors';
 import { TagId, UserId } from '../../src/card-library/domain/ids';
 import { TagName } from '../../src/card-library/domain/tag-name';
 import {
@@ -73,8 +74,8 @@ afterAll(async () => {
 async function seed() {
   const pitbull = newTag(user, 'pitbull');
   const dogs = newTag(user, 'Dogs');
-  await tags.save(pitbull);
-  await tags.save(dogs);
+  await tags.add(pitbull);
+  await tags.add(dogs);
   await cards.addAll([
     newCard(user, 'Dog', [pitbull, dogs]),
     newCard(user, 'Rex', [pitbull]),
@@ -83,8 +84,15 @@ async function seed() {
   return { pitbull, dogs };
 }
 
+/** The preview showed pitbull at version 0. */
 const confirmMerge = (tagId: TagId) =>
-  renameTag.execute({ userId: user, tagId, name: 'Dogs', confirmMerge: true });
+  renameTag.execute({
+    userId: user,
+    tagId,
+    version: 0,
+    name: 'Dogs',
+    confirmMerge: true,
+  });
 
 async function tagNames() {
   const rows = await prisma.db.tag.findMany({ orderBy: { name: 'asc' } });
@@ -96,8 +104,23 @@ describe('RenameTag: tags changed between preview and confirmed merge (C-38)', (
     const { pitbull, dogs } = await seed();
     tags.interfere = async () => {}; // the lock is still taken after the preview
 
-    await expect(confirmMerge(pitbull.id)).resolves.toBe(dogs.id);
+    // TAG-16: the merge changes the target's version.
+    await expect(confirmMerge(pitbull.id)).resolves.toEqual({
+      id: dogs.id,
+      version: 1,
+    });
     expect(await tagNames()).toEqual(['Dogs']);
+  });
+
+  it('TAG-16: the tag being renamed changed meanwhile → TagChanged, nothing merged', async () => {
+    const { pitbull } = await seed();
+    tags.interfere = async () => {
+      const p = (await otherTags.findById(user, pitbull.id))!;
+      await otherTags.save(p); // e.g. cards added through #pitbull on the laptop
+    };
+
+    await expect(confirmMerge(pitbull.id)).rejects.toBeInstanceOf(TagChanged);
+    expect(await tagNames()).toEqual(['Dogs', 'pitbull']);
   });
 
   it('TAG-15: target renamed meanwhile, name now free → 409 without a merge target, nothing changed', async () => {
@@ -126,7 +149,7 @@ describe('RenameTag: tags changed between preview and confirmed merge (C-38)', (
       const d = (await otherTags.findById(user, dogs.id))!;
       d.rename(TagName.create('Hounds'));
       await otherTags.save(d);
-      await otherTags.save(newDogs); // empty new "Dogs"
+      await otherTags.add(newDogs); // empty new "Dogs"
     };
 
     const error = await confirmMerge(pitbull.id).catch((e: unknown) => e);
@@ -161,7 +184,7 @@ describe('RenameTag: tags changed between preview and confirmed merge (C-38)', (
     const newDogs = newTag(user, 'Dogs');
     tags.interfere = async () => {
       await otherTags.delete((await otherTags.findById(user, dogs.id))!);
-      await otherTags.save(newDogs);
+      await otherTags.add(newDogs);
     };
 
     const error = await confirmMerge(pitbull.id).catch((e: unknown) => e);

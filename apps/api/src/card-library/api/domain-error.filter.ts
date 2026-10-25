@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { TagMergeNeedsConfirmation, TrashChanged } from '../application/errors';
-import { DomainError, TagMergeNotAllowed } from '../domain/errors';
+import { DomainError, TagMergeNotAllowed, TooManyTags } from '../domain/errors';
 
 type Mapping = {
   status: HttpStatus;
@@ -28,7 +28,10 @@ const MAPPINGS: Record<string, Mapping> = {
   InvalidCardBack: { status: HttpStatus.BAD_REQUEST, details: withReason },
   InvalidTagName: { status: HttpStatus.BAD_REQUEST, details: withReason },
   InvalidTagColor: { status: HttpStatus.BAD_REQUEST, bug: true },
-  TooManyTags: { status: HttpStatus.UNPROCESSABLE_ENTITY },
+  TooManyTags: {
+    status: HttpStatus.UNPROCESSABLE_ENTITY,
+    details: (e) => ({ cardId: (e as TooManyTags).cardId ?? null }), // CARDTAG-08
+  },
   CardIsTrashed: { status: HttpStatus.CONFLICT },
   CardIsNotTrashed: { status: HttpStatus.CONFLICT },
   TagNoLongerExists: { status: HttpStatus.CONFLICT },
@@ -44,9 +47,11 @@ const MAPPINGS: Record<string, Mapping> = {
     details: (e) => ({
       expectedCount: (e as TrashChanged).expectedCount,
       actualCount: (e as TrashChanged).actualCount,
+      actualNewestTrashedAt: (e as TrashChanged).actualNewestTrashedAt,
     }),
   },
   CardChanged: { status: HttpStatus.CONFLICT },
+  TagChanged: { status: HttpStatus.CONFLICT },
   TagNameTaken: { status: HttpStatus.CONFLICT },
   TagNotOnCard: { status: HttpStatus.CONFLICT },
   TagMergeFailed: { status: HttpStatus.CONFLICT },

@@ -27,8 +27,14 @@ export interface CardRepository {
   save(card: Card): Promise<void>;
   /** Same as save, in bulk (TAG-10 merges can touch thousands of cards). */
   saveAll(cards: Card[]): Promise<void>;
-  /** TRASH-05: removes the card and its CardTags, only while it is still Trashed (TRASH-09). */
+  /**
+   * TRASH-05: removes the card and its CardTags, only while it is still Trashed (TRASH-09)
+   * and at the loaded version (CARD-08); otherwise CardChanged.
+   */
   delete(card: Card): Promise<void>;
-  /** Same as delete, in bulk (ADR-010). */
+  /**
+   * Empty trash (ADR-010): removes the cards that are still Trashed, skipping any restored
+   * meanwhile (TRASH-09). The TRASH-11 check in the same transaction guards the rest.
+   */
   deleteAll(cards: Card[]): Promise<void>;
 }

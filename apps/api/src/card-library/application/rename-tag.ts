@@ -25,8 +25,10 @@ import {
   TagMergeNeedsConfirmation,
   TagNotFound,
 } from './errors';
+import type { TagVersion } from './versions';
 
 /**
+ * TAG-16: `version` = the one the screen showed; checked first (TagChanged).
  * TAG-11 rename, TAG-14 same name → no-op. An existing name means a merge
  * (TAG-08): never silent (TAG-15), then one transaction (TAG-10, ADR-004).
  */
@@ -41,29 +43,33 @@ export class RenameTag {
     @Inject(EVENT_PUBLISHER) private readonly events: EventPublisher,
   ) {}
 
-  /** Returns the tag that carries the name afterwards (the target after a merge). */
+  /** Returns the tag that carries the name afterwards (the target after a merge) and its version. */
   async execute(input: {
     userId: UserId;
     tagId: TagId;
+    version: number;
     name: string;
     confirmMerge?: boolean;
-  }): Promise<TagId> {
+  }): Promise<TagVersion> {
     const name = TagName.create(input.name);
     const tag = await this.tags.findById(input.userId, input.tagId);
     if (!tag) throw new TagNotFound(input.tagId);
+    tag.assertVersion(input.version);
 
     const into = await this.tags.findByName(input.userId, name);
     if (!into || into.id === tag.id) {
-      tag.rename(name); // TAG-14: same name → no-op, no event
-      await this.tags.save(tag); // TAG-03 race → TagNameTaken
+      // TAG-14: same name → no-op, no event, nothing written.
+      if (tag.name.equals(name)) return { id: tag.id, version: tag.version };
+      tag.rename(name);
+      await this.tags.save(tag); // TAG-03 race → TagNameTaken; TAG-16 race → TagChanged
       this.events.publish(tag.pullEvents());
-      return tag.id;
+      return { id: tag.id, version: tag.version + 1 };
     }
 
     if (!input.confirmMerge) {
       throw new TagMergeNeedsConfirmation(await this.preview(tag, into));
     }
-    return this.merge(input.userId, tag.id, into.id, name);
+    return this.merge(input.userId, tag.id, input.version, into.id, name);
   }
 
   /** TAG-15: Active cards only (TRASH-03). `into` null → no merge target (C-38). */
@@ -91,13 +97,15 @@ export class RenameTag {
   private async merge(
     userId: UserId,
     fromId: TagId,
+    fromVersion: number,
     intoId: TagId,
     name: TagName,
-  ): Promise<TagId> {
+  ): Promise<TagVersion> {
     const { result, events } = await this.transactions.run(async () => {
       await this.tags.lockForMerge(userId, [fromId, intoId]);
       const from = await this.tags.findById(userId, fromId);
       if (!from) throw new TagNotFound(fromId);
+      from.assertVersion(fromVersion); // TAG-16
       const into = await this.tags.findById(userId, intoId);
 
       if (into && into.name.equals(name)) {
@@ -114,7 +122,11 @@ export class RenameTag {
         }
         from.mergeInto(into); // TagsMerged (C-17)
         await this.tags.delete(from);
-        return { result: into.id, events: from.pullEvents() };
+        await this.tags.save(into); // TAG-16: the merge changes the target's version
+        return {
+          result: { id: into.id, version: into.version + 1 },
+          events: from.pullEvents(),
+        };
       }
       const holder = await this.holderOf(userId, name, from);
       throw new TagMergeNeedsConfirmation(await this.preview(from, holder));

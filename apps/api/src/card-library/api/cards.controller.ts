@@ -13,9 +13,22 @@ import { CurrentUser } from '../../shared/api/current-user.decorator';
 import { CreateCard } from '../application/create-card';
 import { EditCard } from '../application/edit-card';
 import { MoveCardToTrash } from '../application/move-card-to-trash';
-import { GetCard, ListCards } from '../application/queries';
+import {
+  GetCard,
+  GetCardsByIds,
+  ListCards,
+  ListStudyCardIds,
+  ListTagsOfCard,
+} from '../application/queries';
 import { CardId, TagId, UserId } from '../domain/ids';
-import { CardInputDto, EditCardDto, ListCardsQueryDto } from './dto';
+import {
+  CardIdsQueryDto,
+  CardInputDto,
+  EditCardDto,
+  ListCardsQueryDto,
+  StudyIdsQueryDto,
+  VersionDto,
+} from './dto';
 
 @Controller('cards')
 export class CardsController {
@@ -25,6 +38,9 @@ export class CardsController {
     private readonly moveCardToTrash: MoveCardToTrash,
     private readonly listCards: ListCards,
     private readonly getCard: GetCard,
+    private readonly listStudyCardIds: ListStudyCardIds,
+    private readonly getCardsByIds: GetCardsByIds,
+    private readonly listTagsOfCard: ListTagsOfCard,
   ) {}
 
   @Post()
@@ -49,9 +65,41 @@ export class CardsController {
     });
   }
 
+  /** STUDY-01, STUDY-02: the session's card ids for the list's filter (same q/tag as GET /cards). */
+  @Get('study-ids')
+  async studyIds(
+    @CurrentUser() user: string,
+    @Query() query: StudyIdsQueryDto,
+  ) {
+    const ids = await this.listStudyCardIds.execute({
+      userId: UserId(user),
+      search: query.q,
+      tagIds: query.tag?.map(TagId),
+    });
+    return { ids };
+  }
+
+  /** STUDY-02: ?id=…&id=… (max 20), in that order; trashed or deleted cards are left out. */
+  @Get('by-ids')
+  byIds(@CurrentUser() user: string, @Query() query: CardIdsQueryDto) {
+    return this.getCardsByIds.execute({
+      userId: UserId(user),
+      cardIds: query.id.map(CardId),
+    });
+  }
+
   @Get(':id')
   get(@CurrentUser() user: string, @Param('id', ParseUUIDPipe) id: string) {
     return this.getCard.execute({ userId: UserId(user), cardId: CardId(id) });
+  }
+
+  /** UI-14: the card's tags with Active counts. A tag's cards: GET /cards?tag=<id>. */
+  @Get(':id/tags')
+  tags(@CurrentUser() user: string, @Param('id', ParseUUIDPipe) id: string) {
+    return this.listTagsOfCard.execute({
+      userId: UserId(user),
+      cardId: CardId(id),
+    });
   }
 
   @Put(':id')
@@ -73,15 +121,19 @@ export class CardsController {
     return this.getCard.execute({ userId, cardId });
   }
 
+  /** TRASH-01, CARD-08. Returns the new version (UI-13: Undo restores with it). */
   @Post(':id/trash')
-  @HttpCode(204)
+  @HttpCode(200)
   async trash(
     @CurrentUser() user: string,
     @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: VersionDto,
   ) {
-    await this.moveCardToTrash.execute({
+    const { version } = await this.moveCardToTrash.execute({
       userId: UserId(user),
       cardId: CardId(id),
+      version: body.version,
     });
+    return { id, version };
   }
 }

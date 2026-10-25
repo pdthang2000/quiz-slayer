@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { TagNameTaken } from '../domain/errors';
+import { TagChanged, TagNameTaken } from '../domain/errors';
 import { TagId, UserId } from '../domain/ids';
 import { Tag } from '../domain/tag';
 import { TagName } from '../domain/tag-name';
@@ -52,17 +52,16 @@ export class PrismaTagRepository implements TagRepository {
   }
 
   /** TAG-03, C-20: a unique violation on (user_id, name) becomes TagNameTaken. */
-  async save(tag: Tag): Promise<void> {
+  async add(tag: Tag): Promise<void> {
     try {
-      await this.prisma.db.tag.upsert({
-        where: { id: tag.id },
-        create: {
+      await this.prisma.db.tag.create({
+        data: {
           id: tag.id,
           userId: tag.userId,
           name: tag.name.value,
           color: tag.color.value,
+          version: 0,
         },
-        update: { name: tag.name.value },
       });
     } catch (error) {
       if (isUniqueViolation(error)) throw new TagNameTaken(tag.name.value);
@@ -70,11 +69,30 @@ export class PrismaTagRepository implements TagRepository {
     }
   }
 
-  /** TAG-06, TAG-07, TRASH-06: hard delete; card_tag rows go with it (ON DELETE CASCADE). */
+  /** TAG-16: WHERE version = loaded version, then +1. TAG-03, C-20 as in add. */
+  async save(tag: Tag): Promise<void> {
+    let count: number;
+    try {
+      ({ count } = await this.prisma.db.tag.updateMany({
+        where: { id: tag.id, userId: tag.userId, version: tag.version },
+        data: { name: tag.name.value, version: { increment: 1 } },
+      }));
+    } catch (error) {
+      if (isUniqueViolation(error)) throw new TagNameTaken(tag.name.value);
+      throw error;
+    }
+    if (count === 0) throw new TagChanged(tag.id);
+  }
+
+  /**
+   * TAG-06, TAG-07, TRASH-06: hard delete; card_tag rows go with it (ON DELETE CASCADE).
+   * TAG-16: only at the loaded version.
+   */
   async delete(tag: Tag): Promise<void> {
-    await this.prisma.db.tag.deleteMany({
-      where: { id: tag.id, userId: tag.userId },
+    const { count } = await this.prisma.db.tag.deleteMany({
+      where: { id: tag.id, userId: tag.userId, version: tag.version },
     });
+    if (count === 0) throw new TagChanged(tag.id);
   }
 
   /**

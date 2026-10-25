@@ -51,13 +51,21 @@ export class TagMergeFailed extends DomainError {
   }
 }
 
-/** TRASH-11: the Trash no longer holds the count the user confirmed. */
+/**
+ * TRASH-11: the Trash no longer holds the count the user confirmed, or it holds a card
+ * trashed after the newest one the screen showed (C-44).
+ */
 export class TrashChanged extends DomainError {
   readonly code = 'TrashChanged';
   constructor(
     readonly expectedCount: number,
     readonly actualCount: number,
+    readonly expectedNewestTrashedAt: Date | null,
+    readonly actualNewestTrashedAt: Date | null,
   ) {
-    super(`Trash holds ${actualCount} cards, not ${expectedCount}`);
+    super(
+      `Trash holds ${actualCount} cards (newest ${actualNewestTrashedAt?.toISOString() ?? 'none'}), ` +
+        `not ${expectedCount} (newest ${expectedNewestTrashedAt?.toISOString() ?? 'none'})`,
+    );
   }
 }

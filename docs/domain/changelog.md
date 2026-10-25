@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-25 — Phase 3.2 (backend)
+- Implemented CONFLICT-01: every card action sends its version (CARD-08), tags have versions (TAG-16, `TagChanged`), empty trash sends the newest "trashed at" (TRASH-11).
+- Implemented CARDTAG-07 / CARDTAG-08 (ADR-011), the tag picker, Study reads (STUDY-01/02) and UI-14 reads.
+- New open question C-45 (does a card Save change the tag's version?).
+
 ## 2026-10-25 — tag card lists and one conflict rule
 - Confirmed: CONFLICT-01 — any change from an outdated view of a card, a tag or the Trash fails with 409 and nothing changes (C-44). Card actions all send the card version (CARD-08); tags get a version (TAG-16, `TagChanged`); empty trash also sends the newest "trashed at" (TRASH-11).
 - Confirmed: a tag's card list can remove cards (✕ and checkboxes) and add cards (picker, full cards greyed out), all or nothing, max 100 per action (CARDTAG-07, CARDTAG-08, ADR-011, C-43). UI-05 and UI-14 updated.

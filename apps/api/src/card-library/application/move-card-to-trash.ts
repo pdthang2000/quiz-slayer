@@ -12,7 +12,7 @@ import type { CardRepository } from '../domain/card-repository';
 import { CardId, UserId } from '../domain/ids';
 import { CardTags } from './card-tags';
 
-/** TRASH-01, TRASH-10, TRASH-12 */
+/** TRASH-01, TRASH-10, TRASH-12. CARD-08: `version` = the one the screen showed. Returns the new version. */
 @Injectable()
 export class MoveCardToTrash {
   constructor(
@@ -23,13 +23,19 @@ export class MoveCardToTrash {
     private readonly cardTags: CardTags,
   ) {}
 
-  async execute(input: { userId: UserId; cardId: CardId }): Promise<void> {
+  async execute(input: {
+    userId: UserId;
+    cardId: CardId;
+    version: number;
+  }): Promise<{ version: number }> {
     const card = await this.transactions.run(async () => {
       const card = await this.cardTags.load(input.userId, input.cardId);
+      card.assertVersion(input.version);
       card.moveToTrash(new Date());
       await this.cards.save(card);
       return card;
     });
     this.events.publish(card.pullEvents());
+    return { version: card.version + 1 };
   }
 }

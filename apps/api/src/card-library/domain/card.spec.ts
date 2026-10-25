@@ -153,6 +153,18 @@ describe('Card', () => {
       expect(card.tagIds).toHaveLength(20);
     });
 
+    it('CARDTAG-08: a full card rejects one more tag with TooManyTags naming the card', () => {
+      const card = newCard(tagIds(20));
+      let error: unknown;
+      try {
+        card.addTag(TagId('one-more'));
+      } catch (e) {
+        error = e;
+      }
+      expect(error).toBeInstanceOf(TooManyTags);
+      expect((error as TooManyTags).cardId).toBe('card-1');
+    });
+
     it('CARDTAG-05: adding a tag the card has, or removing one it lacks, is a no-op with no event', () => {
       const card = newCard(tagIds(20));
       card.addTag(TagId('tag-0')); // no TooManyTags: nothing is added

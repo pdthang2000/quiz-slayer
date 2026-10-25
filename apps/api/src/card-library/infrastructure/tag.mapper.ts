@@ -10,5 +10,6 @@ export function toTag(row: TagRow): Tag {
     userId: UserId(row.userId),
     name: TagName.create(row.name),
     color: TagColor.from(row.color),
+    version: row.version,
   });
 }

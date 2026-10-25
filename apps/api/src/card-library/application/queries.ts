@@ -4,8 +4,10 @@ import {
   type CardLibraryQueries,
   CardSummary,
   Page,
+  TagPickerCard,
   TagWithCount,
   TrashedCardSummary,
+  TrashState,
 } from './card-library-queries';
 import { CardId, TagId, UserId } from '../domain/ids';
 import { CardNotFound } from './errors';
@@ -56,7 +58,7 @@ export class ListTrash {
   execute(input: {
     userId: UserId;
     cursor?: string;
-  }): Promise<Page<TrashedCardSummary> & { total: number }> {
+  }): Promise<Page<TrashedCardSummary> & TrashState> {
     return this.queries.listTrashedCards(input.userId, input.cursor);
   }
 }
@@ -70,5 +72,77 @@ export class ListTags {
 
   execute(input: { userId: UserId }): Promise<TagWithCount[]> {
     return this.queries.listTagsWithActiveCounts(input.userId);
+  }
+}
+
+/** STUDY-01, STUDY-02: the session's card ids, taken when Study is pressed. */
+@Injectable()
+export class ListStudyCardIds {
+  constructor(
+    @Inject(CARD_LIBRARY_QUERIES) private readonly queries: CardLibraryQueries,
+  ) {}
+
+  execute(input: {
+    userId: UserId;
+    search?: string;
+    tagIds?: TagId[];
+  }): Promise<CardId[]> {
+    return this.queries.listActiveCardIds(input.userId, input);
+  }
+}
+
+/** STUDY-02: card content by ids, a batch at a time; trashed or deleted cards are skipped. */
+@Injectable()
+export class GetCardsByIds {
+  constructor(
+    @Inject(CARD_LIBRARY_QUERIES) private readonly queries: CardLibraryQueries,
+  ) {}
+
+  execute(input: {
+    userId: UserId;
+    cardIds: CardId[];
+  }): Promise<CardSummary[]> {
+    return this.queries.findActiveCardsByIds(input.userId, input.cardIds);
+  }
+}
+
+/** CARDTAG-08: the "+ Add cards" picker. */
+@Injectable()
+export class ListCardsToAddToTag {
+  constructor(
+    @Inject(CARD_LIBRARY_QUERIES) private readonly queries: CardLibraryQueries,
+  ) {}
+
+  execute(input: {
+    userId: UserId;
+    tagId: TagId;
+    search?: string;
+    cursor?: string;
+  }): Promise<Page<TagPickerCard>> {
+    return this.queries.listActiveCardsWithoutTag(
+      input.userId,
+      input.tagId,
+      input,
+    );
+  }
+}
+
+/** UI-14: "⋯ → Tags" — the card's tags with Active counts. A tag's cards: ListCards with that tag. */
+@Injectable()
+export class ListTagsOfCard {
+  constructor(
+    @Inject(CARD_LIBRARY_QUERIES) private readonly queries: CardLibraryQueries,
+  ) {}
+
+  async execute(input: {
+    userId: UserId;
+    cardId: CardId;
+  }): Promise<TagWithCount[]> {
+    const tags = await this.queries.listTagsOfActiveCard(
+      input.userId,
+      input.cardId,
+    );
+    if (!tags) throw new CardNotFound(input.cardId);
+    return tags;
   }
 }
