@@ -23,8 +23,8 @@ Started fresh on 2026-10-20. The old Flex Card backend is reference only, not a 
 | createCard(front, back, tagNames) | Card (+ new Tags) | Unknown tag names are created (TAG-05) |
 | editCard(cardId, version, front, back, tagNames) | Card (+ new Tags) | One request from the card editor's Save (CARD-07). Active only (TRASH-02). `version` = the one the editor was shown (CARD-08) |
 | moveToTrash(version) / restore(version) / deletePermanently(version) | Card | `version` = the one the screen showed (CONFLICT-01) |
-| removeCardsFromTag(tagId, [{cardId, version}]) | Cards | Tag view: ✕ or ticked cards; all or nothing (CARDTAG-07, ADR-011) |
-| addCardsToTag(tagId, [{cardId, version}]) | Cards | Tag view: card picker; all or nothing (CARDTAG-08, ADR-011) |
+| removeCardsFromTag(tagId, tagVersion, [{cardId, version}]) | Cards | Tag view: ✕ or ticked cards; all or nothing (CARDTAG-07, ADR-011) |
+| addCardsToTag(tagId, tagVersion, [{cardId, version}]) | Cards | Tag view: card picker; all or nothing (CARDTAG-08, ADR-011) |
 | emptyTrash(expectedCount, newestTrashedAt) | user's trashed cards | TRASH-07, TRASH-11 |
 | renameTag(version, name, confirmMerge?) | Tag | Existing name → 409 preview, then merge (TAG-08, TAG-10, TAG-15) |
 | deleteTag(version) | Tag | `version` = the one the screen showed (TAG-16) |
@@ -179,7 +179,7 @@ If the tags changed between the preview and the confirmed request, the merge re-
 | Dogs unchanged (same tag, same name) | merge, as confirmed |
 | Anything else: Dogs renamed or deleted, another tag now holds "Dogs", or "Dogs" is free | 409 `TagMergeNeedsConfirmation` with a fresh preview: against the tag that holds "Dogs" now, or with no merge target if nobody does (the app then asks "Rename pitbull to Dogs?" and resends without `confirmMerge`) |
 
-**TAG-16** `confirmed` — Each tag has a version. Rename and delete send the version the screen showed; out of date → `TagChanged` (Stale screen, 409), nothing changes (CONFLICT-01). A rename, merge or card added/removed through the tag changes its version. (C-44)
+**TAG-16** `confirmed` — Each tag has a version: it changes whenever the tag's name or its list of Active cards changes — rename, merge (the target), cards added or removed through the tag's list, an editor Save that adds or removes the tag, and moving to trash or restoring a card that has the tag. Rename, delete, and adding or removing cards through the tag's list send the tag version the screen showed; out of date → `TagChanged` (Stale screen, 409), nothing changes (CONFLICT-01). (C-44, C-45, C-46)
 ```
 Phone: "Delete #Dog? It's on 3 cards." → Laptop adds 10 cards to #Dog → Phone confirms
 → 409 TagChanged → reload → "Delete #Dog? It's on 13 cards."
@@ -207,7 +207,7 @@ It is the only tag change allowed on a trashed card (supports TAG-09). It never 
 #Animals #Animals #animals → Animals, animals (2 tags)
 ```
 
-**CARDTAG-07** `confirmed` — A tag's card list can remove cards from the tag: ✕ at the right end of a row removes that card; checkboxes at the left select several, then "Remove (n)". It removes only that tag from those cards. All or nothing (ADR-011); each card sends its version (CARD-08). A toast "Removed from #Dog · Undo" puts them back. Max 100 cards per action, checked by the app and by the API (shape guard). (T-4)
+**CARDTAG-07** `confirmed` — A tag's card list can remove cards from the tag: ✕ at the right end of a row removes that card; checkboxes at the left select several, then "Remove (n)". It removes only that tag from those cards. All or nothing (ADR-011); each card sends its version (CARD-08) and the action sends the tag's version (TAG-16). A toast "Removed from #Dog · Undo" puts them back. Max 100 cards per action, checked by the app and by the API (shape guard). (T-4)
 ```
 #Dog (4) ▾                      [Remove (2)]
  ☑ Rex                       ✕
@@ -216,7 +216,7 @@ It is the only tag change allowed on a trashed card (supports TAG-09). It never 
  [+ Add cards]
 ```
 
-**CARDTAG-08** `confirmed` — "+ Add cards" opens a picker: Active cards not already in the tag, with search (READ-03), newest first, 20 at a time + Load more. Cards that already have 20 tags are greyed out and can't be ticked (CARDTAG-03). Adding is all or nothing (ADR-011): if a card filled up or changed meanwhile, nothing is added (`TooManyTags` naming the card, or `CardChanged`). Max 100 cards per action, checked by the app and by the API. (T-1, T-2, T-4)
+**CARDTAG-08** `confirmed` — "+ Add cards" opens a picker: Active cards not already in the tag, with search (READ-03), newest first, 20 at a time + Load more. Cards that already have 20 tags are greyed out and can't be ticked (CARDTAG-03). Adding is all or nothing (ADR-011): if a card filled up or changed meanwhile, or the tag changed, nothing is added (`TooManyTags` naming the card, `CardChanged`, or `TagChanged`). Max 100 cards per action, checked by the app and by the API. (T-1, T-2, T-4)
 
 ### Trash
 **TRASH-01** `confirmed` — Deleting a card moves it to the Trash. It is not gone.

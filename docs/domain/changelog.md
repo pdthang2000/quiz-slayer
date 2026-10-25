@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-25 — Phase 3.2 review
+- Confirmed: a tag's version changes with its name or its list of Active cards, from any path (editor Save, trash/restore, tag list, merge) (TAG-16, C-45).
+- Confirmed: adding/removing cards through a tag's list also sends the tag's version (TAG-16, CARDTAG-07/08, C-46).
+
 ## 2026-10-25 — Phase 3.2 (backend)
 - Implemented CONFLICT-01: every card action sends its version (CARD-08), tags have versions (TAG-16, `TagChanged`), empty trash sends the newest "trashed at" (TRASH-11).
 - Implemented CARDTAG-07 / CARDTAG-08 (ADR-011), the tag picker, Study reads (STUDY-01/02) and UI-14 reads.
