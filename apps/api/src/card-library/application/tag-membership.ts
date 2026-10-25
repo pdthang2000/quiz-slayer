@@ -13,6 +13,7 @@ import type { CardVersion, TagVersion } from './versions';
  * Each card: version check (CARD-08), then `change` (card.addTag / card.removeTag, which
  * check TRASH-02, CARDTAG-03 and treat no change as a no-op, CARDTAG-05). Only changed
  * cards are saved; the tag's version goes up if any card changed (TAG-16).
+ * C-46: the tag's version the screen showed is checked first (TagChanged).
  * Any error rolls everything back.
  */
 export async function changeTagMembership(
@@ -26,6 +27,7 @@ export async function changeTagMembership(
   input: {
     userId: UserId;
     tagId: TagId;
+    tagVersion: number;
     cards: { cardId: CardId; version: number }[];
   },
   change: (card: Card, tagId: TagId) => void,
@@ -33,6 +35,7 @@ export async function changeTagMembership(
   const { tag, changed, cards } = await deps.transactions.run(async () => {
     const tag = await deps.tags.findById(input.userId, input.tagId);
     if (!tag) throw new TagNotFound(input.tagId);
+    tag.assertVersion(input.tagVersion);
     const changed: Card[] = [];
     const cards: CardVersion[] = [];
     for (const item of uniqueByCard(input.cards)) {

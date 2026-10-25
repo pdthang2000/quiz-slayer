@@ -56,6 +56,11 @@ export class CardTags {
     return { tagIds, created };
   }
 
+  /** TAG-16: the Active cards of these tags changed (call in the same transaction). */
+  tagsChanged(userId: UserId, tagIds: TagId[]): Promise<void> {
+    return this.tags.markCardsChanged(userId, tagIds);
+  }
+
   /**
    * Loads a card in either state, so the domain decides what is allowed
    * (e.g. editing a trashed card → CardIsTrashed, not "not found").

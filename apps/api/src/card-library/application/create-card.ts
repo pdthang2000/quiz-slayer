@@ -15,7 +15,10 @@ import { CardBack, CardFront } from '../domain/card-text';
 import { CardId, UserId } from '../domain/ids';
 import { CardTags } from './card-tags';
 
-/** TAG-05: unknown tag names are created. ADR-009: tags and card in one transaction. */
+/**
+ * TAG-05: unknown tag names are created. ADR-009: tags and card in one transaction.
+ * TAG-16: every tag the new card gets (new or existing) changes its version.
+ */
 @Injectable()
 export class CreateCard {
   constructor(
@@ -47,6 +50,7 @@ export class CreateCard {
         tagIds,
       });
       await this.cards.add(card);
+      await this.cardTags.tagsChanged(input.userId, card.tagIds);
       return { card, created };
     });
     this.events.publish([

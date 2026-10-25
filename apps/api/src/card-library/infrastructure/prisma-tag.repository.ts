@@ -84,6 +84,19 @@ export class PrismaTagRepository implements TagRepository {
     if (count === 0) throw new TagChanged(tag.id);
   }
 
+  /** TAG-16. Rows are locked in id order so concurrent card changes don't deadlock (B-11). */
+  async markCardsChanged(userId: UserId, tagIds: TagId[]): Promise<void> {
+    const ids = [...new Set(tagIds)];
+    if (ids.length === 0) return;
+    await this.prisma.db.$executeRaw`
+      UPDATE tag SET version = version + 1
+      WHERE id IN (
+        SELECT id FROM tag
+        WHERE user_id = ${userId}::uuid AND id = ANY(${ids}::uuid[])
+        ORDER BY id
+        FOR UPDATE)`;
+  }
+
   /**
    * TAG-06, TAG-07, TRASH-06: hard delete; card_tag rows go with it (ON DELETE CASCADE).
    * TAG-16: only at the loaded version.

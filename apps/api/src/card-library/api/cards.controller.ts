@@ -10,6 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { CurrentUser } from '../../shared/api/current-user.decorator';
+import { IfMatchVersion } from '../../shared/api/if-match-version.decorator';
 import { CreateCard } from '../application/create-card';
 import { EditCard } from '../application/edit-card';
 import { MoveCardToTrash } from '../application/move-card-to-trash';
@@ -24,10 +25,8 @@ import { CardId, TagId, UserId } from '../domain/ids';
 import {
   CardIdsQueryDto,
   CardInputDto,
-  EditCardDto,
   ListCardsQueryDto,
   StudyIdsQueryDto,
-  VersionDto,
 } from './dto';
 
 @Controller('cards')
@@ -102,11 +101,13 @@ export class CardsController {
     });
   }
 
+  /** CARD-07, CARD-08: If-Match = the version the editor was shown. */
   @Put(':id')
   async edit(
     @CurrentUser() user: string,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: EditCardDto,
+    @IfMatchVersion() version: number,
+    @Body() body: CardInputDto,
   ) {
     const userId = UserId(user);
     const cardId = CardId(id);
@@ -116,7 +117,7 @@ export class CardsController {
       front: body.front,
       back: body.back,
       tagNames: body.tags,
-      version: body.version,
+      version,
     });
     return this.getCard.execute({ userId, cardId });
   }
@@ -127,13 +128,13 @@ export class CardsController {
   async trash(
     @CurrentUser() user: string,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: VersionDto,
+    @IfMatchVersion() version: number,
   ) {
-    const { version } = await this.moveCardToTrash.execute({
+    const result = await this.moveCardToTrash.execute({
       userId: UserId(user),
       cardId: CardId(id),
-      version: body.version,
+      version,
     });
-    return { id, version };
+    return { id, version: result.version };
   }
 }

@@ -1,4 +1,4 @@
-import { CardBody, createTestApp, tagNames } from './e2e/test-app';
+import { CardBody, createTestApp, tagNames, ifMatch } from './e2e/test-app';
 
 describe('Tags (e2e)', () => {
   let t: Awaited<ReturnType<typeof createTestApp>>;
@@ -125,7 +125,8 @@ describe('Tags (e2e)', () => {
     const res = await t
       .http()
       .patch('/tags/00000000-0000-4000-8000-00000000abcd')
-      .send({ name: 'x', version: 0 })
+      .set('If-Match', ifMatch(0))
+      .send({ name: 'x' })
       .expect(404);
     expect(res.body.error).toBe('TagNotFound');
   });
@@ -133,7 +134,12 @@ describe('Tags (e2e)', () => {
   it('rejects a rename or delete without a version before any use case runs', async () => {
     await t.createCard('Cat', ['Animals']);
     const animals = (await t.tagNamed('Animals'))!;
-    await t.http().patch(`/tags/${animals.id}`).send({ name: 'x' }).expect(400);
-    await t.http().delete(`/tags/${animals.id}`).expect(400);
+    await t.http().patch(`/tags/${animals.id}`).send({ name: 'x' }).expect(428);
+    await t.http().delete(`/tags/${animals.id}`).expect(428);
+    await t
+      .http()
+      .delete(`/tags/${animals.id}`)
+      .set('If-Match', 'abc')
+      .expect(400);
   });
 });

@@ -1,4 +1,10 @@
-import { CardBody, createTestApp, tagNames, tick } from './e2e/test-app';
+import {
+  CardBody,
+  createTestApp,
+  ifMatch,
+  tagNames,
+  tick,
+} from './e2e/test-app';
 
 describe('Trash (e2e)', () => {
   let t: Awaited<ReturnType<typeof createTestApp>>;
@@ -70,7 +76,7 @@ describe('Trash (e2e)', () => {
     const res = await t
       .http()
       .delete(`/trash/${dog.id}`)
-      .send({ version: dog.version })
+      .set('If-Match', ifMatch(dog.version))
       .expect(409);
     expect(res.body.error).toBe('CardIsNotTrashed');
   });
@@ -80,14 +86,14 @@ describe('Trash (e2e)', () => {
     const res1 = await t
       .http()
       .post(`/trash/${dog.id}/restore`)
-      .send({ version: dog.version })
+      .set('If-Match', ifMatch(dog.version))
       .expect(409);
     expect(res1.body.error).toBe('CardIsNotTrashed');
     const { version } = await t.trash(dog.id);
     const res2 = await t
       .http()
       .post(`/cards/${dog.id}/trash`)
-      .send({ version })
+      .set('If-Match', ifMatch(version))
       .expect(409);
     expect(res2.body.error).toBe('CardIsTrashed');
   });

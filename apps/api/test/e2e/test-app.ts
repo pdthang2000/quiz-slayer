@@ -76,21 +76,21 @@ export async function createTestApp() {
     async trash(id: string) {
       const res = await http()
         .post(`/cards/${id}/trash`)
-        .send({ version: await version(id) })
+        .set('If-Match', ifMatch(await version(id)))
         .expect(200);
       return res.body as { id: string; version: number };
     },
     async restore(id: string) {
       const res = await http()
         .post(`/trash/${id}/restore`)
-        .send({ version: await version(id) })
+        .set('If-Match', ifMatch(await version(id)))
         .expect(200);
       return res.body as { id: string; version: number };
     },
     async deletePermanently(id: string) {
       await http()
         .delete(`/trash/${id}`)
-        .send({ version: await version(id) })
+        .set('If-Match', ifMatch(await version(id)))
         .expect(204);
     },
     async emptyTrash() {
@@ -108,18 +108,22 @@ export async function createTestApp() {
       const tag = (await this.tagNamed(name))!;
       const res = await http()
         .patch(`/tags/${tag.id}`)
-        .send({ name: to, version: tag.version, confirmMerge });
+        .set('If-Match', ifMatch(tag.version))
+        .send({ name: to, confirmMerge });
       return { status: res.status, body: res.body as Record<string, unknown> };
     },
     async deleteTag(name: string) {
       const tag = (await this.tagNamed(name))!;
       await http()
         .delete(`/tags/${tag.id}`)
-        .send({ version: tag.version })
+        .set('If-Match', ifMatch(tag.version))
         .expect(204);
     },
   };
 }
+
+/** CONFLICT-01: the version the screen showed, as an ETag for If-Match. */
+export const ifMatch = (version: number) => `"${version}"`;
 
 export const tagNames = (card: CardBody) => card.tags.map((t) => t.name).sort();
 

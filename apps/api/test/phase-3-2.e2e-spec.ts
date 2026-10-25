@@ -4,6 +4,7 @@ import {
   TagWithCount,
   tagNames,
   tick,
+  ifMatch,
 } from './e2e/test-app';
 
 type Page<T> = { items: T[]; nextCursor: string | null };
@@ -20,23 +21,23 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
   beforeEach(() => t.reset());
   afterAll(() => t.close());
 
-  const addCards = (tagId: string, cards: { id: string; version: number }[]) =>
+  /** The tag list screen: If-Match = the tag version it showed (C-46), card versions in the body. */
+  type Shown = { id: string; version: number };
+  const membershipBody = (cards: Shown[]) => ({
+    cards: cards.map((c) => ({ cardId: c.id, version: c.version })),
+  });
+  const addCards = (tag: Shown, cards: Shown[]) =>
     t
       .http()
-      .post(`/tags/${tagId}/cards`)
-      .send({
-        cards: cards.map((c) => ({ cardId: c.id, version: c.version })),
-      });
-  const removeCards = (
-    tagId: string,
-    cards: { id: string; version: number }[],
-  ) =>
+      .post(`/tags/${tag.id}/cards`)
+      .set('If-Match', ifMatch(tag.version))
+      .send(membershipBody(cards));
+  const removeCards = (tag: Shown, cards: Shown[]) =>
     t
       .http()
-      .delete(`/tags/${tagId}/cards`)
-      .send({
-        cards: cards.map((c) => ({ cardId: c.id, version: c.version })),
-      });
+      .post(`/tags/${tag.id}/cards/remove`)
+      .set('If-Match', ifMatch(tag.version))
+      .send(membershipBody(cards));
   const card = async (id: string) =>
     (await t.http().get(`/cards/${id}`).expect(200)).body as CardBody;
 
@@ -47,12 +48,8 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
       await t
         .http()
         .put(`/cards/${shown.id}`)
-        .send({
-          front: 'Rex!',
-          back: 'back',
-          tags: ['Dog'],
-          version: shown.version,
-        })
+        .set('If-Match', ifMatch(shown.version))
+        .send({ front: 'Rex!', back: 'back', tags: ['Dog'] })
         .expect(200);
       return shown;
     }
@@ -62,7 +59,8 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
       const res = await t
         .http()
         .put(`/cards/${shown.id}`)
-        .send({ front: 'Phone', back: 'b', tags: [], version: shown.version })
+        .set('If-Match', ifMatch(shown.version))
+        .send({ front: 'Phone', back: 'b', tags: [] })
         .expect(409);
       expect(res.body.error).toBe('CardChanged');
       expect((await card(shown.id)).front).toBe('Rex!');
@@ -73,7 +71,7 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
       const res = await t
         .http()
         .post(`/cards/${shown.id}/trash`)
-        .send({ version: shown.version })
+        .set('If-Match', ifMatch(shown.version))
         .expect(409);
       expect(res.body.error).toBe('CardChanged');
       expect(await t.listFronts()).toEqual(['Rex!']);
@@ -87,7 +85,7 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
       const res = await t
         .http()
         .post(`/trash/${dog.id}/restore`)
-        .send({ version: trashed.version })
+        .set('If-Match', ifMatch(trashed.version))
         .expect(409);
       expect(res.body.error).toBe('CardChanged');
       expect((await t.trashPage()).total).toBe(1);
@@ -101,7 +99,7 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
       const res = await t
         .http()
         .delete(`/trash/${dog.id}`)
-        .send({ version: trashed.version })
+        .set('If-Match', ifMatch(trashed.version))
         .expect(409);
       expect(res.body.error).toBe('CardChanged');
       expect((await t.trashPage()).total).toBe(1);
@@ -110,7 +108,7 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
     it('CONFLICT-01: remove from a tag (CARD-08)', async () => {
       const shown = await rexEditedElsewhere();
       const dogTag = (await t.tagNamed('Dog'))!;
-      const res = await removeCards(dogTag.id, [shown]).expect(409);
+      const res = await removeCards(dogTag, [shown]).expect(409);
       expect(res.body.error).toBe('CardChanged');
       expect(tagNames(await card(shown.id))).toEqual(['Dog']);
     });
@@ -119,7 +117,7 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
       const shown = await rexEditedElsewhere();
       await t.createCard('Other', ['Cat']);
       const cat = (await t.tagNamed('Cat'))!;
-      const res = await addCards(cat.id, [shown]).expect(409);
+      const res = await addCards(cat, [shown]).expect(409);
       expect(res.body.error).toBe('CardChanged');
       expect(tagNames(await card(shown.id))).toEqual(['Dog']);
     });
@@ -131,7 +129,8 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
       const res = await t
         .http()
         .patch(`/tags/${shown.id}`)
-        .send({ name: 'Hounds', version: shown.version })
+        .set('If-Match', ifMatch(shown.version))
+        .send({ name: 'Hounds' })
         .expect(409);
       expect(res.body.error).toBe('TagChanged');
       expect((await t.tags()).map((x) => x.name)).toEqual(['Dogs']);
@@ -144,7 +143,7 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
       const res = await t
         .http()
         .delete(`/tags/${shown.id}`)
-        .send({ version: shown.version })
+        .set('If-Match', ifMatch(shown.version))
         .expect(409);
       expect(res.body.error).toBe('TagChanged');
       expect(await t.tagNamed('Dogs')).toBeDefined();
@@ -177,7 +176,8 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
       const edited = await t
         .http()
         .put(`/cards/${dog.id}`)
-        .send({ front: 'Dog!', back: 'b', tags: [], version: 2 })
+        .set('If-Match', ifMatch(2))
+        .send({ front: 'Dog!', back: 'b', tags: [] })
         .expect(200);
       expect((edited.body as CardBody).version).toBe(3);
     });
@@ -191,12 +191,12 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
 
       const more = [];
       for (let i = 0; i < 10; i++) more.push(await t.createCard(`Pup ${i}`));
-      await addCards(dialog.id, more).expect(200); // laptop
+      await addCards(dialog, more).expect(200); // laptop
 
       const res = await t
         .http()
         .delete(`/tags/${dialog.id}`)
-        .send({ version: dialog.version })
+        .set('If-Match', ifMatch(dialog.version))
         .expect(409);
       expect(res.body.error).toBe('TagChanged');
       const fresh = (await t.tagNamed('Dog'))!;
@@ -204,21 +204,21 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
       await t
         .http()
         .delete(`/tags/${fresh.id}`)
-        .send({ version: fresh.version })
+        .set('If-Match', ifMatch(fresh.version))
         .expect(204);
     });
 
     it('TAG-16: tag versions are in the tag list and on cards; cards added or removed through the tag bump it', async () => {
       const rex = await t.createCard('Rex', ['Dog']);
       const before = (await t.tagNamed('Dog'))!;
-      expect(before.version).toBe(0);
-      expect(rex.tags[0].version).toBe(0);
-      const res = await removeCards(before.id, [rex]).expect(200);
+      expect(before.version).toBe(1); // createCard gave it a card (TAG-16)
+      expect(rex.tags[0].version).toBe(1);
+      const res = await removeCards(before, [rex]).expect(200);
       expect((res.body as MembershipResult).tag).toEqual({
         id: before.id,
-        version: 1,
+        version: 2,
       });
-      expect((await t.tagNamed('Dog'))!.version).toBe(1);
+      expect((await t.tagNamed('Dog'))!.version).toBe(2);
     });
   });
 
@@ -229,7 +229,7 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
       const fido = await t.createCard('Fido', ['Dog']);
       const dog = (await t.tagNamed('Dog'))!;
 
-      const res = await removeCards(dog.id, [rex, fido]).expect(200);
+      const res = await removeCards(dog, [rex, fido]).expect(200);
       expect((res.body as MembershipResult).cards).toEqual([
         { id: rex.id, version: 1 },
         { id: fido.id, version: 1 },
@@ -246,29 +246,25 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
       await t
         .http()
         .put(`/cards/${max.id}`)
-        .send({
-          front: 'Max!',
-          back: 'back',
-          tags: ['Dog'],
-          version: max.version,
-        })
+        .set('If-Match', ifMatch(max.version))
+        .send({ front: 'Max!', back: 'back', tags: ['Dog'] })
         .expect(200); // laptop
 
-      const res = await removeCards(dog.id, [rex, max]).expect(409);
+      const res = await removeCards(dog, [rex, max]).expect(409);
       expect(res.body.error).toBe('CardChanged');
       expect(tagNames(await card(rex.id))).toEqual(['Dog']);
       expect(await t.tagNamed('Dog')).toMatchObject({
         cardCount: 2,
-        version: 0,
+        version: dog.version, // unchanged
       });
     });
 
     it('CARDTAG-07: Undo puts them back with the returned versions', async () => {
       const rex = await t.createCard('Rex', ['Dog']);
       const dog = (await t.tagNamed('Dog'))!;
-      const removed = (await removeCards(dog.id, [rex]).expect(200))
+      const removed = (await removeCards(dog, [rex]).expect(200))
         .body as MembershipResult;
-      await addCards(dog.id, removed.cards).expect(200);
+      await addCards(removed.tag, removed.cards).expect(200);
       expect(tagNames(await card(rex.id))).toEqual(['Dog']);
     });
 
@@ -277,7 +273,7 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
       const max = await t.createCard('Max');
       const fido = await t.createCard('Fido', ['pet']);
       const dog = (await t.tagNamed('Dog'))!;
-      await addCards(dog.id, [max, fido]).expect(200);
+      await addCards(dog, [max, fido]).expect(200);
       expect((await t.tagNamed('Dog'))?.cardCount).toBe(3);
       expect(tagNames(await card(fido.id))).toEqual(['Dog', 'pet']);
     });
@@ -291,12 +287,12 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
       );
       const dog = (await t.tagNamed('Dog'))!;
 
-      const res = await addCards(dog.id, [max, full]).expect(422);
+      const res = await addCards(dog, [max, full]).expect(422);
       expect(res.body).toMatchObject({ error: 'TooManyTags', cardId: full.id });
       expect(tagNames(await card(max.id))).toEqual([]);
       expect(await t.tagNamed('Dog')).toMatchObject({
         cardCount: 1,
-        version: 0,
+        version: dog.version, // unchanged
       });
     });
 
@@ -305,7 +301,7 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
       const old = await t.createCard('Old');
       const { version } = await t.trash(old.id);
       const dog = (await t.tagNamed('Dog'))!;
-      const res = await addCards(dog.id, [{ id: old.id, version }]).expect(409);
+      const res = await addCards(dog, [{ id: old.id, version }]).expect(409);
       expect(res.body.error).toBe('CardIsTrashed');
     });
 
@@ -357,8 +353,8 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
         id: '00000000-0000-4000-8000-000000000abc',
         version: 0,
       }));
-      await removeCards(dog.id, many).expect(400);
-      await addCards(dog.id, many).expect(400);
+      await removeCards(dog, many).expect(400);
+      await addCards(dog, many).expect(400);
     });
   });
 
@@ -450,7 +446,7 @@ describe('Phase 3.2 (e2e): conflicts, tag card lists, Study, card tags', () => {
       await t
         .http()
         .post(`/trash/${dog.id}/restore`)
-        .send({ version: moved.version })
+        .set('If-Match', ifMatch(moved.version))
         .expect(200);
       expect(await t.listFronts()).toEqual(['Dog']);
     });

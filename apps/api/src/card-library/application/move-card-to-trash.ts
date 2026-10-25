@@ -33,6 +33,7 @@ export class MoveCardToTrash {
       card.assertVersion(input.version);
       card.moveToTrash(new Date());
       await this.cards.save(card);
+      await this.cardTags.tagsChanged(input.userId, card.tagIds); // TAG-16: Active cards changed
       return card;
     });
     this.events.publish(card.pullEvents());

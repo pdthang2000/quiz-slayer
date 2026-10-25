@@ -1,4 +1,10 @@
-import { CardBody, createTestApp, tagNames, tick } from './e2e/test-app';
+import {
+  CardBody,
+  createTestApp,
+  tagNames,
+  tick,
+  ifMatch,
+} from './e2e/test-app';
 
 describe('Cards (e2e)', () => {
   let t: Awaited<ReturnType<typeof createTestApp>>;
@@ -101,11 +107,11 @@ describe('Cards (e2e)', () => {
       const res = await t
         .http()
         .put(`/cards/${dog.id}`)
+        .set('If-Match', ifMatch(dog.version))
         .send({
           front: 'Dog',
           back: 'a mammal that barks',
           tags: ['English', 'Animals'],
-          version: dog.version,
         })
         .expect(200);
       const saved = res.body as CardBody;
@@ -121,7 +127,8 @@ describe('Cards (e2e)', () => {
       const res = await t
         .http()
         .put(`/cards/${dog.id}`)
-        .send({ front: 'Dog', back: 'b', tags: ['Animals'], version: 1 }) // current version
+        .set('If-Match', ifMatch(1))
+        .send({ front: 'Dog', back: 'b', tags: ['Animals'] }) // current version
         .expect(409);
       expect(res.body.error).toBe('CardIsTrashed');
       expect(await t.tags()).toEqual([]);
@@ -133,7 +140,8 @@ describe('Cards (e2e)', () => {
       await t
         .http()
         .put(`/cards/${dog.id}`)
-        .send({ front: 'Dog', back: 'b', tags, version: dog.version })
+        .set('If-Match', ifMatch(dog.version))
+        .send({ front: 'Dog', back: 'b', tags })
         .expect(422);
       expect(await t.tags()).toEqual([]);
     });
@@ -144,7 +152,8 @@ describe('Cards (e2e)', () => {
       const res = await t
         .http()
         .put(`/cards/${dog.id}`)
-        .send({ front: 'Cat', back: 'b', tags: [], version: 1 })
+        .set('If-Match', ifMatch(1))
+        .send({ front: 'Cat', back: 'b', tags: [] })
         .expect(409);
       expect(res.body.error).toBe('CardIsTrashed');
     });
@@ -153,7 +162,8 @@ describe('Cards (e2e)', () => {
       const res = await t
         .http()
         .put('/cards/00000000-0000-4000-8000-00000000abcd')
-        .send({ front: 'Cat', back: 'b', tags: [], version: 0 })
+        .set('If-Match', ifMatch(0))
+        .send({ front: 'Cat', back: 'b', tags: [] })
         .expect(404);
       expect(res.body.error).toBe('CardNotFound');
     });
@@ -164,7 +174,7 @@ describe('Cards (e2e)', () => {
         .http()
         .put(`/cards/${dog.id}`)
         .send({ front: 'Cat', back: 'b', tags: [] })
-        .expect(400);
+        .expect(428); // If-Match missing
     });
   });
 
@@ -175,12 +185,8 @@ describe('Cards (e2e)', () => {
         t
           .http()
           .put(`/cards/${dog.id}`)
-          .send({
-            front: 'Dog',
-            back,
-            tags: ['Animals'],
-            version: dog.version,
-          });
+          .set('If-Match', ifMatch(dog.version))
+          .send({ front: 'Dog', back, tags: ['Animals'] });
       await save('saved on the laptop').expect(200);
 
       const res = await save('saved on the phone').expect(409);
@@ -197,12 +203,8 @@ describe('Cards (e2e)', () => {
       const res = await t
         .http()
         .put(`/cards/${dog.id}`)
-        .send({
-          front: 'Dog!',
-          back: 'b',
-          tags: ['Animals', 'pitbull'],
-          version: dog.version,
-        })
+        .set('If-Match', ifMatch(dog.version))
+        .send({ front: 'Dog!', back: 'b', tags: ['Animals', 'pitbull'] })
         .expect(409);
       expect(res.body.error).toBe('CardChanged');
       const trash = (await t.http().get('/trash').expect(200)).body as {

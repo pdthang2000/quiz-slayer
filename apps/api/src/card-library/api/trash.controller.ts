@@ -10,12 +10,13 @@ import {
   Query,
 } from '@nestjs/common';
 import { CurrentUser } from '../../shared/api/current-user.decorator';
+import { IfMatchVersion } from '../../shared/api/if-match-version.decorator';
 import { DeleteCardPermanently } from '../application/delete-card-permanently';
 import { EmptyTrash } from '../application/empty-trash';
 import { ListTrash } from '../application/queries';
 import { RestoreCard } from '../application/restore-card';
 import { CardId, UserId } from '../domain/ids';
-import { EmptyTrashDto, TrashQueryDto, VersionDto } from './dto';
+import { EmptyTrashDto, TrashQueryDto } from './dto';
 
 @Controller('trash')
 export class TrashController {
@@ -53,14 +54,14 @@ export class TrashController {
   async restore(
     @CurrentUser() user: string,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: VersionDto,
+    @IfMatchVersion() version: number,
   ) {
-    const { version } = await this.restoreCard.execute({
+    const result = await this.restoreCard.execute({
       userId: UserId(user),
       cardId: CardId(id),
-      version: body.version,
+      version,
     });
-    return { id, version };
+    return { id, version: result.version };
   }
 
   /** TRASH-05, CARD-08 */
@@ -69,12 +70,12 @@ export class TrashController {
   async deletePermanently(
     @CurrentUser() user: string,
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: VersionDto,
+    @IfMatchVersion() version: number,
   ) {
     await this.deleteCardPermanently.execute({
       userId: UserId(user),
       cardId: CardId(id),
-      version: body.version,
+      version,
     });
   }
 }

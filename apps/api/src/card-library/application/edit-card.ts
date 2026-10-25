@@ -17,6 +17,7 @@ import { CardTags } from './card-tags';
  * CARD-07: the editor's Save sends front, back and the full tag list; only what changed
  * is applied (CARD-06 for the text). ADR-009: new tags and the card in one transaction.
  * CARD-08: `version` is the one the editor was shown; an outdated one → CardChanged.
+ * TAG-16: every tag added to or removed from the card changes its version.
  */
 @Injectable()
 export class EditCard {
@@ -46,8 +47,14 @@ export class EditCard {
         input.userId,
         input.tagNames,
       );
+      const before = new Set(card.tagIds);
       card.setTags(tagIds);
+      const after = new Set(card.tagIds);
       await this.cards.save(card);
+      await this.cardTags.tagsChanged(input.userId, [
+        ...[...before].filter((id) => !after.has(id)),
+        ...[...after].filter((id) => !before.has(id)),
+      ]);
       return { card, created };
     });
     this.events.publish([

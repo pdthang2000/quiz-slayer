@@ -33,6 +33,7 @@ export class AddCardsToTag {
   execute(input: {
     userId: UserId;
     tagId: TagId;
+    tagVersion: number;
     cards: { cardId: CardId; version: number }[];
   }): Promise<{ tag: TagVersion; cards: CardVersion[] }> {
     const deps = {

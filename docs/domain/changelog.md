@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-25 — Phase 3.3 (backend)
+- Implemented TAG-16 for every path (C-45): editor Save, createCard, trash and restore change the versions of the tags whose Active cards changed, in the same transaction.
+- Implemented C-46: tag-list add/remove check the tag's version.
+- API (technical): every version travels in the If-Match header; tag-list remove is POST /tags/:id/cards/remove (no DELETE carries a body).
+
 ## 2026-10-25 — Phase 3.2 review
 - Confirmed: a tag's version changes with its name or its list of Active cards, from any path (editor Save, trash/restore, tag list, merge) (TAG-16, C-45).
 - Confirmed: adding/removing cards through a tag's list also sends the tag's version (TAG-16, CARDTAG-07/08, C-46).

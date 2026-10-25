@@ -22,6 +22,12 @@ export interface TagRepository {
    * Save a loaded tag once. Throws TagNameTaken if another tag of the user has the name (TAG-03, C-20).
    */
   save(tag: Tag): Promise<void>;
+  /**
+   * TAG-16: these tags' lists of Active cards changed (a card gained or lost them, or was
+   * trashed or restored), so their versions go up. No version check: the card change is the
+   * command. Locks the rows in id order; run it in the card change's transaction (ADR-008).
+   */
+  markCardsChanged(userId: UserId, tagIds: TagId[]): Promise<void>;
   /** TAG-06: removes the tag and all its CardTags. TagChanged like save (TAG-16). */
   delete(tag: Tag): Promise<void>;
   /** TAG-10: locks the tag rows until the transaction ends. Must run inside one (ADR-008). */

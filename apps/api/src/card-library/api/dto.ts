@@ -49,13 +49,6 @@ export class CardInputDto {
   tags!: string[];
 }
 
-/** CARD-07 + CARD-08: the version the editor was shown. */
-export class EditCardDto extends CardInputDto {
-  @IsInt()
-  @Min(0)
-  version!: number;
-}
-
 export class ListCardsQueryDto {
   /** READ-03 */
   @IsOptional()
@@ -80,13 +73,6 @@ export class TrashQueryDto {
   cursor?: string;
 }
 
-/** CONFLICT-01: the version the screen showed (CARD-08, TAG-16). */
-export class VersionDto {
-  @IsInt()
-  @Min(0)
-  version!: number;
-}
-
 /** TRASH-11: the count and the newest "trashed at" the dialog showed (null: empty Trash). */
 export class EmptyTrashDto {
   @IsInt()
@@ -99,7 +85,7 @@ export class EmptyTrashDto {
 }
 
 /** TAG-15, TAG-16 */
-export class RenameTagDto extends VersionDto {
+export class RenameTagDto {
   @IsString()
   name!: string;
 
@@ -117,7 +103,7 @@ export class CardVersionDto {
   version!: number;
 }
 
-/** CARDTAG-07, CARDTAG-08 */
+/** CARDTAG-07, CARDTAG-08. The tag's version goes in If-Match (TAG-16, C-46). */
 export class TagCardsDto {
   @IsArray()
   @ArrayMinSize(1)

@@ -33,6 +33,7 @@ export class RestoreCard {
       card.assertVersion(input.version);
       card.restore();
       await this.cards.save(card);
+      await this.cardTags.tagsChanged(input.userId, card.tagIds); // TAG-16: Active cards changed
       return card;
     });
     this.events.publish(card.pullEvents());

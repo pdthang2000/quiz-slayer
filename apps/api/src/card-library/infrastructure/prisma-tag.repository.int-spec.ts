@@ -153,6 +153,36 @@ describe('PrismaTagRepository', () => {
     expect(await tags.findById(user, tag.id)).not.toBeNull();
   });
 
+  it('TAG-16: markCardsChanged bumps the listed tags of the user, once each, and only those', async () => {
+    const dog = newTag(user, 'Dog');
+    const cat = newTag(user, 'Cat');
+    const theirs = newTag(newUserId(), 'Dog');
+    await tags.add(dog);
+    await tags.add(cat);
+    await tags.add(theirs);
+
+    await tags.markCardsChanged(user, [dog.id, dog.id, theirs.id]);
+
+    expect((await load(dog.id)).version).toBe(1);
+    expect((await load(cat.id)).version).toBe(0);
+    const other = await prisma.db.tag.findUniqueOrThrow({
+      where: { id: theirs.id },
+    });
+    expect(other.version).toBe(0);
+  });
+
+  it('TAG-16: markCardsChanged rolls back with the card change it belongs to', async () => {
+    const dog = newTag(user, 'Dog');
+    await tags.add(dog);
+    await expect(
+      prisma.runInTransaction(async () => {
+        await tags.markCardsChanged(user, [dog.id]);
+        throw new Error('card save failed');
+      }),
+    ).rejects.toThrow('card save failed');
+    expect((await load(dog.id)).version).toBe(0);
+  });
+
   it('lockForMerge refuses to run outside a transaction', async () => {
     const tag = newTag(user, 'Animals');
     await tags.add(tag);
