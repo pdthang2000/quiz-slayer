@@ -1,38 +1,42 @@
 import { CardId, TagId, UserId } from './ids';
 
 export type CardCreated = {
-  type: 'CardCreated';
-  cardId: CardId;
-  userId: UserId;
-  tagIds: TagId[];
+  readonly type: 'CardCreated';
+  readonly cardId: CardId;
+  readonly userId: UserId;
+  readonly tagIds: readonly TagId[];
 };
-export type CardEdited = { type: 'CardEdited'; cardId: CardId; userId: UserId };
+export type CardEdited = {
+  readonly type: 'CardEdited';
+  readonly cardId: CardId;
+  readonly userId: UserId;
+};
 export type CardTagged = {
-  type: 'CardTagged';
-  cardId: CardId;
-  userId: UserId;
-  tagId: TagId;
+  readonly type: 'CardTagged';
+  readonly cardId: CardId;
+  readonly userId: UserId;
+  readonly tagId: TagId;
 };
 export type CardUntagged = {
-  type: 'CardUntagged';
-  cardId: CardId;
-  userId: UserId;
-  tagId: TagId;
+  readonly type: 'CardUntagged';
+  readonly cardId: CardId;
+  readonly userId: UserId;
+  readonly tagId: TagId;
 };
 export type CardMovedToTrash = {
-  type: 'CardMovedToTrash';
-  cardId: CardId;
-  userId: UserId;
+  readonly type: 'CardMovedToTrash';
+  readonly cardId: CardId;
+  readonly userId: UserId;
 };
 export type CardRestored = {
-  type: 'CardRestored';
-  cardId: CardId;
-  userId: UserId;
+  readonly type: 'CardRestored';
+  readonly cardId: CardId;
+  readonly userId: UserId;
 };
 export type CardDeletedPermanently = {
-  type: 'CardDeletedPermanently';
-  cardId: CardId;
-  userId: UserId;
+  readonly type: 'CardDeletedPermanently';
+  readonly cardId: CardId;
+  readonly userId: UserId;
 };
 
 export type CardEvent =
@@ -45,25 +49,29 @@ export type CardEvent =
   | CardDeletedPermanently;
 
 export type TagCreated = {
-  type: 'TagCreated';
-  tagId: TagId;
-  userId: UserId;
-  name: string;
+  readonly type: 'TagCreated';
+  readonly tagId: TagId;
+  readonly userId: UserId;
+  readonly name: string;
 };
 export type TagRenamed = {
-  type: 'TagRenamed';
-  tagId: TagId;
-  userId: UserId;
-  from: string;
-  to: string;
+  readonly type: 'TagRenamed';
+  readonly tagId: TagId;
+  readonly userId: UserId;
+  readonly from: string;
+  readonly to: string;
 };
-export type TagDeleted = { type: 'TagDeleted'; tagId: TagId; userId: UserId };
+export type TagDeleted = {
+  readonly type: 'TagDeleted';
+  readonly tagId: TagId;
+  readonly userId: UserId;
+};
 /** TAG-10: one event for the whole merge, no per-card CardTagged / CardUntagged. */
 export type TagsMerged = {
-  type: 'TagsMerged';
-  userId: UserId;
-  tagId: TagId;
-  intoTagId: TagId;
+  readonly type: 'TagsMerged';
+  readonly userId: UserId;
+  readonly tagId: TagId;
+  readonly intoTagId: TagId;
 };
 
 export type TagEvent = TagCreated | TagRenamed | TagDeleted | TagsMerged;
