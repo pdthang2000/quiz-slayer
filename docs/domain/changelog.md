@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-25 — Phase 3 review
+- Confirmed: READ-06 — tags on a card shown A–Z, same dictionary order as READ-04 (C-37).
+- Confirmed: error names `TagMergeNeedsConfirmation`, `TrashChanged`.
+- Confirmed: C-33..C-36 as recorded (TRASH-12 paging, READ-05 AND, ADR-010, READ-04 dictionary order).
+- CLAUDE.md: all times in UTC; query interfaces and read types live in application/; infrastructure may depend on domain/ and the application/ query interfaces only (lint rule updated).
+- Backlog B-10: outbox for domain events before Daily Practice listens.
+- Confirmed: a confirmed merge re-checks the tags after its lock; target renamed → always 409 with a fresh preview (TAG-15, C-38).
+- Code (F1): a merge reloads both tags after the lock; F2: card-list cursor compared in UTC; F3: DTO guard of 100 tags (shape only, CARDTAG-03 stays in the domain).
+
 ## 2026-10-23 — Phase 3 (application + API)
 - ADR-010 (accepted, C-35): empty trash in one transaction.
 - Code: use cases createCard, editCard (CARD-07), moveToTrash, restore, deletePermanently, emptyTrash (TRASH-11), renameTag (TAG-15 preview, TAG-10 merge), deleteTag; queries for card list/search (READ-02/03/05), card detail, Trash (TRASH-12), Tag list (READ-04).

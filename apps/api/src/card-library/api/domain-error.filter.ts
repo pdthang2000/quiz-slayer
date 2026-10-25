@@ -36,7 +36,7 @@ const MAPPINGS: Record<string, Mapping> = {
     status: HttpStatus.CONFLICT,
     details: (e) => {
       const { into, ...counts } = (e as TagMergeNeedsConfirmation).preview;
-      return { into: into.name, intoId: into.id, ...counts };
+      return { into: into?.name ?? null, intoId: into?.id ?? null, ...counts };
     },
   },
   TrashChanged: {

@@ -12,13 +12,13 @@ import {
   CARD_REPOSITORY,
   TAG_REPOSITORY,
 } from '../card-library.tokens';
-import type { CardLibraryQueries } from '../domain/card-library-queries';
+import type { CardLibraryQueries } from './card-library-queries';
 import type { CardRepository } from '../domain/card-repository';
 import { TagId, UserId } from '../domain/ids';
 import { Tag } from '../domain/tag';
 import { TagName } from '../domain/tag-name';
 import type { TagRepository } from '../domain/tag-repository';
-import { TagMergeNeedsConfirmation, TagNotFound } from './errors';
+import { MergePreview, TagMergeNeedsConfirmation, TagNotFound } from './errors';
 
 /**
  * TAG-11 rename, TAG-14 same name → no-op. An existing name means a merge
@@ -57,36 +57,71 @@ export class RenameTag {
     if (!input.confirmMerge) {
       throw new TagMergeNeedsConfirmation(await this.preview(tag, into));
     }
-    await this.merge(input.userId, tag, into);
-    return into.id;
+    return this.merge(input.userId, tag.id, into.id, name);
   }
 
-  /** TAG-15: Active cards only (TRASH-03). */
-  private async preview(from: Tag, into: Tag) {
+  /** TAG-15: Active cards only (TRASH-03). `into` null → no merge target (C-38). */
+  private async preview(from: Tag, into: Tag | null): Promise<MergePreview> {
     const userId = from.userId;
+    const ids = into ? [from.id, into.id] : [from.id];
     const [intoCount, fromCount, resultCount] = await Promise.all([
-      this.queries.countActiveCardsWithAnyTag(userId, [into.id]),
+      into ? this.queries.countActiveCardsWithAnyTag(userId, [into.id]) : 0,
       this.queries.countActiveCardsWithAnyTag(userId, [from.id]),
-      this.queries.countActiveCardsWithAnyTag(userId, [from.id, into.id]),
+      this.queries.countActiveCardsWithAnyTag(userId, ids),
     ]);
     return {
-      into: { id: into.id, name: into.name.value },
+      into: into ? { id: into.id, name: into.name.value } : null,
       intoCount,
       fromCount,
       resultCount,
     };
   }
 
-  /** TAG-10 as written in card-library.md. */
-  private async merge(userId: UserId, from: Tag, into: Tag): Promise<void> {
-    await this.transactions.run(async () => {
-      await this.tags.lockForMerge(userId, [from.id, into.id]);
-      const affected = await this.cards.findByTag(userId, from.id); // TAG-09
-      for (const card of affected) card.replaceTagForMerge(from.id, into.id);
-      await this.cards.saveAll(affected);
-      from.mergeInto(into); // TagsMerged (C-17)
-      await this.tags.delete(from);
+  /**
+   * TAG-10 as written in card-library.md. Both tags are reloaded after the lock,
+   * because they may have changed since the preview (C-38, TAG-15).
+   */
+  private async merge(
+    userId: UserId,
+    fromId: TagId,
+    intoId: TagId,
+    name: TagName,
+  ): Promise<TagId> {
+    const { result, events } = await this.transactions.run(async () => {
+      await this.tags.lockForMerge(userId, [fromId, intoId]);
+      const from = await this.tags.findById(userId, fromId);
+      if (!from) throw new TagNotFound(fromId);
+      const into = await this.tags.findById(userId, intoId);
+
+      if (into && into.name.equals(name)) {
+        const affected = await this.cards.findByTag(userId, from.id); // TAG-09
+        for (const card of affected) card.replaceTagForMerge(from.id, into.id);
+        await this.cards.saveAll(affected);
+        from.mergeInto(into); // TagsMerged (C-17)
+        await this.tags.delete(from);
+        return { result: into.id, events: from.pullEvents() };
+      }
+      const holder = await this.holderOf(userId, name, from);
+      if (into || holder) {
+        // Target renamed → always ask again; target deleted but the name is taken → ask again.
+        throw new TagMergeNeedsConfirmation(await this.preview(from, holder));
+      }
+      // Target deleted and the name is free: a plain rename.
+      from.rename(name);
+      await this.tags.save(from);
+      return { result: from.id, events: from.pullEvents() };
     });
-    this.events.publish(from.pullEvents());
+    this.events.publish(events);
+    return result;
+  }
+
+  /** The tag that holds `name` now, other than `from` itself. */
+  private async holderOf(
+    userId: UserId,
+    name: TagName,
+    from: Tag,
+  ): Promise<Tag | null> {
+    const holder = await this.tags.findByName(userId, name);
+    return holder && holder.id !== from.id ? holder : null;
   }
 }

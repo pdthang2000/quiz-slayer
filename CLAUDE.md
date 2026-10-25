@@ -44,12 +44,12 @@ QuizSlayer/
 ```
 apps/api/src/<context>/
   domain/           aggregates, value objects, domain events, domain errors, repository interfaces
-  application/      use cases (one class per command/query), transactions
+  application/      use cases (one class per command/query), transactions, query interfaces + read types (screen data)
   infrastructure/   Prisma repositories + mappers
   api/              Nest controllers, DTOs, exception filters
   <context>.module.ts
 ```
-Dependencies point inward only: api → application → domain; infrastructure → domain. Never domain → anything else.
+Dependencies point inward only: api → application → domain; infrastructure → domain, plus the application/ query interfaces (`application/*-queries.ts`) it implements, nothing else from application/. Never domain → anything else. Enforced by ESLint `no-restricted-imports` on `domain/` and `infrastructure/`.
 
 ## Keep the framework out of the domain (strict)
 NestJS and Prisma make it tempting to mix framework code into the domain. Don't:
@@ -69,6 +69,7 @@ NestJS and Prisma make it tempting to mix framework code into the domain. Don't:
 - Every rule ID (e.g. `TAG-03`) has at least one test whose name starts with the rule ID: `it('TAG-03: rejects a duplicate tag name for the same user')`.
 - Domain tests are plain unit tests: no Nest testing module, no DB.
 - Reads that return or count cards must say which card state they want (`findActive`, `findTrashed`). No `findAll`.
+- All times are stored and compared in UTC. The app converts to local time for display.
 - Contexts talk through public application services or events, never through each other's tables or repositories.
 
 ## Work plan

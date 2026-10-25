@@ -155,6 +155,14 @@ PATCH rename pitbull → "Dogs"
 app: "Dogs already exists (2 cards). Merge pitbull (3 cards) into Dogs? Result: 4 cards."
 PATCH rename pitbull → "Dogs", confirmMerge: true → merged
 ```
+If the tags changed between the preview and the confirmed request, the merge re-checks them after taking its lock (C-38):
+| After the lock | Result |
+|---|---|
+| pitbull is gone | 404 `TagNotFound` |
+| Dogs unchanged | merge, as confirmed |
+| Dogs was renamed (e.g. → Hounds) | always 409 `TagMergeNeedsConfirmation` with a fresh preview: against the tag that now holds "Dogs", or with no merge target if nobody does (the app then retries without `confirmMerge`, which renames) |
+| Dogs was deleted, "Dogs" is free | plain rename pitbull → Dogs |
+| Dogs was deleted, another tag now holds "Dogs" | 409 with a fresh preview against that tag |
 
 ### CardTags
 **CARDTAG-01** `confirmed` — Removing a tag from a card removes only that one CardTag. The tag stays (even with 0 cards) and other cards keep it. No soft delete: the user can add it again in seconds.
@@ -237,6 +245,11 @@ animals, Animals, apple, dog, động vật, HSK1, 动物
 
 **READ-05** `confirmed` — With several tag chips selected, the card list shows cards that have all of them (AND); each chip narrows the list. Combined with search (READ-03), both must match. (C-34)
 
+**READ-06** `confirmed` — The tags on a card are shown A–Z, in the same dictionary order as READ-04 (ignoring case and accents). (C-37)
+```
+Dog [pitbull, Animals, động vật, apple] → Animals, apple, động vật, pitbull
+```
+
 ### UI
 **UI-01** `confirmed` — Tags are entered with a chip input. Enter commits a chip. Spaces are allowed inside a chip. `#` is display only, not part of the name.
 
@@ -272,8 +285,8 @@ Names, kinds, HTTP statuses and messages `confirmed` (C-18).
 | `CardIsTrashed` | TRASH-02, CARDTAG-02, TRASH-10 | Edit / tag / trash a card that is in the Trash | Stale screen | 409 | "This card is in the Trash. Restore it first." + refresh |
 | `CardIsNotTrashed` | TRASH-10 | Restore / delete permanently an active card | Stale screen | 409 | "This card is no longer in the Trash." + refresh |
 | `TagNoLongerExists` | CARD-04, TAG-06, TAG-10 | Saving a card with a tag that was deleted or merged away meanwhile (DB foreign key fails) (C-21) | Stale screen | 409 | "This tag no longer exists. Refresh." |
-| `TagMergeNeedsConfirmation` (name draft) | TAG-15 | Rename onto an existing name without `confirmMerge` | Confirmation | 409 | Merge dialog with the preview counts (TAG-08) |
-| `TrashChanged` (name draft) | TRASH-11 | Empty trash with a count that no longer matches | Stale screen | 409 | "Trash changed, check again." + refresh |
+| `TagMergeNeedsConfirmation` | TAG-15 | Rename onto an existing name without `confirmMerge` | Confirmation | 409 | Merge dialog with the preview counts (TAG-08) |
+| `TrashChanged` | TRASH-11 | Empty trash with a count that no longer matches | Stale screen | 409 | "Trash changed, check again." + refresh |
 | `TagNameTaken` | TAG-03 | Two requests create the same tag name at once; the DB unique constraint rejects the second (C-20) | Race | 409 | "This tag already exists. Try again." (rolled back; a retry links the existing tag) |
 | `TagNotOnCard` | CARDTAG-04 | Merge finds a card without tag A (race) | Race | 409 | "Merge failed, try again" (merge rolled back) |
 | `TagMergeNotAllowed` (sameTag) | TAG-08 | Merge a tag into itself | Bug (TAG-14 makes same-name rename a no-op) | 409 | generic "Something went wrong" |

@@ -1,8 +1,8 @@
-import { CardId, TagId, UserId } from './ids';
-import { TagColorKey } from './tag-color';
+import { CardId, TagId, UserId } from '../domain/ids';
+import { TagColorKey } from '../domain/tag-color';
 
-// Read side: plain data for screens, not aggregates. Defined here (not in application/)
-// because infrastructure may only depend on the domain (CLAUDE.md).
+// Read side: plain data for screens, not aggregates. Infrastructure implements this
+// interface; it is the only part of application/ that infrastructure may import (CLAUDE.md).
 
 export type TagSummary = { id: TagId; name: string; color: TagColorKey };
 

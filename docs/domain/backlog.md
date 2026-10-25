@@ -13,3 +13,4 @@ Ideas agreed for later. Not v1 unless moved.
 | B-07 | Report / moderation of public Quiz Sets — before any public launch | Question Bank | 2026-10-22 |
 | B-08 | Web app | Frontend | 2026-10-22 |
 | B-09 | Try AWS Lambda hosting (serverless-express adapter, Neon/RDS, EventBridge for B-04) as a learning project | Infrastructure | 2026-10-22 (H-01) |
+| B-10 | Transactional outbox for domain events, before any listener depends on them (Daily Practice, Phase 6). Today events are published after commit and only logged; a crash between commit and publish would lose them. | Cross-cutting | 2026-10-25 (Phase 3 review) |

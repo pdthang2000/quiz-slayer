@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { EVENT_PUBLISHER } from './application/event-publisher';
-import { LoggingEventPublisher } from './infrastructure/logging-event-publisher';
+import { LoggingEventPublisher } from '../events/logging-event-publisher';
 
 @Global()
 @Module({

@@ -43,8 +43,8 @@ Names confirmed 2026-10-22. How each error is handled: card-library.md → Error
 | `TooManyTags` | CARDTAG-03 | confirmed |
 | `CardIsTrashed` | TRASH-02, CARDTAG-02, TRASH-10 | confirmed |
 | `CardIsNotTrashed` | TRASH-10 | confirmed |
-| `TagMergeNeedsConfirmation` | TAG-15 (rename onto an existing name without `confirmMerge`) | draft (name) |
-| `TrashChanged` | TRASH-11 (empty trash count no longer matches) | draft (name) |
+| `TagMergeNeedsConfirmation` | TAG-15 (rename onto an existing name without `confirmMerge`) | confirmed |
+| `TrashChanged` | TRASH-11 (empty trash count no longer matches) | confirmed |
 | `CardNotFound` / `TagNotFound` | No such card / tag for this user (application layer, 404) | confirmed |
 | `TagNameTaken` | TAG-03 (DB unique constraint hit by a race, C-20) | confirmed |
 | `TagNoLongerExists` | Card saved with a tag deleted/merged meanwhile (C-21) | confirmed |

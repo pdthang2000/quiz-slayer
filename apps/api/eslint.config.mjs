@@ -66,6 +66,31 @@ export default tseslint.config(
     },
   },
   {
+    // infrastructure/ → domain/, plus the application/ query interfaces it implements
+    // (application/*-queries.ts). Nothing else from application/, nothing from api/ (CLAUDE.md).
+    // Must come after the Prisma block: for infrastructure files that block does not apply.
+    files: ['src/**/infrastructure/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: [
+                '**/application/**',
+                '!**/application/*-queries',
+                '**/api',
+                '**/api/**',
+              ],
+              message:
+                'infrastructure/ may import domain/ and application/*-queries only.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // Keep the framework out of the domain (CLAUDE.md). Never disable this rule.
     // The '../../' patterns assume domain/ stays flat. If it gets subfolders,
     // switch to eslint-plugin-boundaries or dependency-cruiser.

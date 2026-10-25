@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { EventPublisher } from '../application/event-publisher';
+import { EventPublisher } from '../shared/application/event-publisher';
 
 /** No listeners yet (Daily Practice comes in Phase 6), so events are only logged. */
 @Injectable()

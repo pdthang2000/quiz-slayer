@@ -6,7 +6,7 @@ import {
   Page,
   TagWithCount,
   TrashedCardSummary,
-} from '../domain/card-library-queries';
+} from './card-library-queries';
 import { CardId, TagId, UserId } from '../domain/ids';
 import { CardNotFound } from './errors';
 

@@ -42,6 +42,8 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | C-34 | Card list with several tag chips selected: cards with all of them, or with any of them? | answered: cards with all selected chips (AND) → READ-05 |
 | C-35 | Empty trash deletes many cards: one transaction, all or nothing (another exception to "one aggregate per transaction", needs an ADR)? | answered: one transaction, all or nothing → TRASH-11, ADR-010 |
 | C-36 | Tag list "A–Z" (READ-04): ignore case and accents (Animals, apple, động vật next to dog), or plain character order (all capitals first, accented letters after z)? | answered: dictionary order, ignoring case and accents → READ-04 |
+| C-37 | In which order are the tags on a card shown? | answered: A–Z, same dictionary order as READ-04 → READ-06 |
+| C-38 | A confirmed merge finds the target renamed or deleted after the preview. What happens? | answered: target renamed → always 409 with a fresh preview (no merge target if the name is free); target deleted → plain rename if the name is free → TAG-15 |
 | C-16 | The Model and Events sections of card-library.md are `draft` (incl. `TagsMerged`). Confirm them as the Phase 1 design? | answered: confirmed as listed, plus `TagsMerged` |
 
 ## Daily Practice

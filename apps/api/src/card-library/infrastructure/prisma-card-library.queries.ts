@@ -8,7 +8,7 @@ import {
   PAGE_SIZE,
   TagWithCount,
   TrashedCardSummary,
-} from '../domain/card-library-queries';
+} from '../application/card-library-queries';
 import { CardId, TagId, UserId } from '../domain/ids';
 import { TagColorKey } from '../domain/tag-color';
 
@@ -28,6 +28,9 @@ function decodeCursor(cursor: string): { at: Date; id: string } {
   return { at: new Date(Number(millis)), id };
 }
 
+/** READ-04, READ-06: ICU root collation, the same as "und-x-icu" in the Tag list query. */
+const dictionaryOrder = new Intl.Collator('und');
+
 /** LIKE wildcards in user input are matched literally. */
 function escapeLike(text: string): string {
   return text.replace(/[\\%_]/g, (c) => `\\${c}`);
@@ -45,7 +48,7 @@ function toSummary(row: SummaryRow): CardSummary {
         name: tag.name,
         color: tag.color as TagColorKey,
       }))
-      .sort((a, b) => a.name.localeCompare(b.name)),
+      .sort((a, b) => dictionaryOrder.compare(a.name, b.name)), // READ-06
   };
 }
 
@@ -80,7 +83,11 @@ export class PrismaCardLibraryQueries implements CardLibraryQueries {
     // READ-02: newest created first, "load more" after the cursor.
     if (filter.cursor) {
       const { at, id } = decodeCursor(filter.cursor);
-      conditions.push(Prisma.sql`(c.created_at, c.id) < (${at}, ${id}::uuid)`);
+      // UTC on both sides (CLAUDE.md): created_at is a UTC timestamp without time zone,
+      // so compare with a UTC timestamp, not a timestamptz shifted by the session time zone.
+      conditions.push(
+        Prisma.sql`(c.created_at, c.id) < (${at.toISOString()}::timestamp, ${id}::uuid)`,
+      );
     }
     const ids = await this.prisma.db.$queryRaw<{ id: string }[]>`
       SELECT c.id FROM card c

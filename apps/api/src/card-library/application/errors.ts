@@ -18,7 +18,8 @@ export class TagNotFound extends DomainError {
 }
 
 export type MergePreview = {
-  into: { id: TagId; name: string };
+  /** null: the target was renamed and nobody holds the name now (C-38). */
+  into: { id: TagId; name: string } | null;
   intoCount: number;
   fromCount: number;
   resultCount: number;
@@ -29,7 +30,9 @@ export class TagMergeNeedsConfirmation extends DomainError {
   readonly code = 'TagMergeNeedsConfirmation';
   constructor(readonly preview: MergePreview) {
     super(
-      `Renaming onto "${preview.into.name}" merges two tags; confirm first`,
+      preview.into
+        ? `Renaming onto "${preview.into.name}" merges two tags; confirm first`
+        : 'The merge target changed; check again',
     );
   }
 }

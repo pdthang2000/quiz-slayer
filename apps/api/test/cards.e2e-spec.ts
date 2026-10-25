@@ -75,6 +75,21 @@ describe('Cards (e2e)', () => {
       expect(await t.tags()).toEqual([]);
     });
 
+    it('CARDTAG-06: 21 copies of one tag name pass the request guard and count once', async () => {
+      const card = await t.createCard('Dog', Array(21).fill('Animals'));
+      expect(tagNames(card)).toEqual(['Animals']);
+    });
+
+    it('request guard: more than 100 tags in one request → 400 before any use case runs', async () => {
+      const tags = Array.from({ length: 101 }, (_, i) => `t${i}`);
+      await t
+        .http()
+        .post('/cards')
+        .send({ front: 'Dog', back: 'b', tags })
+        .expect(400);
+      expect(await t.tags()).toEqual([]);
+    });
+
     it('rejects a malformed request before any use case runs', async () => {
       await t.http().post('/cards').send({ front: 'Dog' }).expect(400);
     });
@@ -177,6 +192,30 @@ describe('Cards (e2e)', () => {
       await t.createCard('Cat', ['Animals']);
       await t.trash(dog.id);
       expect((await t.tagNamed('Animals'))?.cardCount).toBe(1);
+    });
+
+    it('READ-06: the tags on a card are A–Z, in the same order as the Tag list (READ-04)', async () => {
+      const names = [
+        'pitbull',
+        'Animals',
+        'động vật',
+        'apple',
+        '动物',
+        'animals',
+        'HSK1',
+      ];
+      const card = await t.createCard('Dog', names);
+      const expected = [
+        'animals',
+        'Animals',
+        'apple',
+        'động vật',
+        'HSK1',
+        'pitbull',
+        '动物',
+      ];
+      expect(card.tags.map((x) => x.name)).toEqual(expected);
+      expect((await t.tags()).map((x) => x.name)).toEqual(expected);
     });
 
     it('READ-02: newest created first, 20 at a time, "load more" with the cursor', async () => {
