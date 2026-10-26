@@ -1,4 +1,4 @@
-import { ApiError, request, toQueryString } from './client';
+import { ApiError, REQUEST_TIMEOUT_MS, request, toQueryString } from './client';
 
 const fetchMock = jest.fn();
 globalThis.fetch = fetchMock as unknown as typeof fetch;
@@ -58,5 +58,38 @@ describe('API client', () => {
       status: 0,
       code: 'Network',
     });
+  });
+
+  it('no answer within 15 s → the request is aborted with code Network', async () => {
+    jest.useFakeTimers();
+    try {
+      fetchMock.mockImplementationOnce(
+        (_url: string, init: RequestInit) =>
+          new Promise((_, reject) =>
+            init.signal!.addEventListener('abort', () =>
+              reject(new DOMException('Aborted', 'AbortError')),
+            ),
+          ),
+      );
+      const result = request('GET', '/cards').catch((e: unknown) => e);
+      expect(REQUEST_TIMEOUT_MS).toBe(15_000);
+      jest.advanceTimersByTime(14_999);
+      expect(fetchMock.mock.calls[0][1].signal.aborted).toBe(false);
+      jest.advanceTimersByTime(1);
+      expect(await result).toMatchObject({ status: 0, code: 'Network' });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it("a non-JSON error body (a proxy's HTML 502) → code Http502", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 502,
+      text: () => Promise.resolve('<html><body>Bad Gateway</body></html>'),
+    });
+    const error = await request('GET', '/cards').catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({ status: 502, code: 'Http502' });
   });
 });

@@ -17,7 +17,8 @@ const MAX_SUGGESTIONS = 8;
 
 /**
  * UI-01: chip input. Enter commits a chip; spaces are allowed inside a chip; `#` is only
- * shown, never typed into the name. The server normalizes and checks names (TAG-01).
+ * shown, never part of the name, so any leading `#` the user types is dropped (C-50).
+ * The server normalizes and checks names (TAG-01).
  * UI-02: suggestions filter all tags on the phone, ignoring case, so "Animals" shows up
  * while typing "anim" before anyone creates "animals".
  */
@@ -27,7 +28,7 @@ export function TagChipInput({ value, onChange, allTags, error }: Props) {
   const [text, setText] = useState('');
 
   const suggestions = useMemo(() => {
-    const query = text.trim().toLocaleLowerCase();
+    const query = text.trim().replace(/^#+/, '').toLocaleLowerCase();
     if (!query) return [];
     return allTags
       .filter(
@@ -40,7 +41,7 @@ export function TagChipInput({ value, onChange, allTags, error }: Props) {
   const colorOf = (name: string) => allTags.find((tag) => tag.name === name)?.color;
 
   const commit = (name: string) => {
-    const chip = name.trim();
+    const chip = name.trim().replace(/^#+/, '').trim();
     setText('');
     if (!chip || value.includes(chip)) return; // the same text twice is one chip
     onChange([...value, chip]);

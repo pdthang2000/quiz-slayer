@@ -58,6 +58,22 @@ describe('error messages', () => {
     expect(errorMessageKey(new Error('boom'))).toBe('errors.generic');
   });
 
+  it('UI-16: app messages that are not in the error table', () => {
+    expect(i18n.t(errorMessageKey(new ApiError(0, 'Network', {})))).toBe(
+      "Can't reach the server. Check your connection.",
+    );
+    expect(i18n.t(errorMessageKey(error('CardNotFound')))).toBe(
+      'This card no longer exists.',
+    );
+    expect(i18n.t('cards.empty')).toBe('No cards yet. Tap + to add one.');
+    expect(i18n.t('cards.emptyFiltered')).toBe('No cards match.');
+    expect(i18n.t('cards.restored')).toBe('Card restored');
+  });
+
+  it('UI-15: the discard prompt says "Discard changes?"', () => {
+    expect(i18n.t('editor.discardTitle')).toBe('Discard changes?');
+  });
+
   it('CONFLICT-01: stale-screen errors reload the screen; others do not', () => {
     for (const code of ['CardChanged', 'TagChanged', 'TrashChanged', 'CardIsTrashed']) {
       expect(isStale(error(code))).toBe(true);

@@ -50,6 +50,35 @@ describe('TagChipInput', () => {
     expect(onChange).toHaveBeenCalledWith(['pit bull']);
   });
 
+  it('UI-01: a leading # is dropped before the chip is committed', async () => {
+    const onChange = jest.fn();
+    await render(<TagChipInput value={[]} onChange={onChange} allTags={[]} />);
+    const input = screen.getByTestId('tag-input');
+    await fireEvent.changeText(input, '#Dog');
+    await fireEvent(input, 'submitEditing');
+    expect(onChange).toHaveBeenLastCalledWith(['Dog']);
+    await fireEvent.changeText(input, ' ##pit bull');
+    await fireEvent(input, 'submitEditing');
+    expect(onChange).toHaveBeenLastCalledWith(['pit bull']);
+  });
+
+  it('UI-01: a chip of only # is not committed', async () => {
+    const onChange = jest.fn();
+    await render(<TagChipInput value={[]} onChange={onChange} allTags={[]} />);
+    const input = screen.getByTestId('tag-input');
+    await fireEvent.changeText(input, '##');
+    await fireEvent(input, 'submitEditing');
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('UI-02: typing "#anim" still suggests Animals', async () => {
+    await render(
+      <TagChipInput value={[]} onChange={() => {}} allTags={[tag('Animals')]} />,
+    );
+    await fireEvent.changeText(screen.getByTestId('tag-input'), '#anim');
+    expect(screen.getByText('#Animals')).toBeTruthy();
+  });
+
   it('UI-01: tapping a chip removes it', async () => {
     const onChange = jest.fn();
     await render(

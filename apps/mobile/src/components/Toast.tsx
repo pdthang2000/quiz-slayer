@@ -21,7 +21,7 @@ type Show = (options: ToastOptions) => void;
 
 const ToastContext = createContext<Show>(() => {});
 
-/** How long a toast stays (technical default; see open question C-47). */
+/** How long a toast stays (UI-13, C-48). */
 export const TOAST_MS = 5000;
 
 /** One toast at a time, at the bottom of the screen. */

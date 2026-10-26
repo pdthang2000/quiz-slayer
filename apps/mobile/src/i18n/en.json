@@ -33,7 +33,9 @@
     "back": "Back",
     "tags": "Tags",
     "tagPlaceholder": "Add a tag, press Enter",
-    "removeTag": "Remove tag {{name}}"
+    "removeTag": "Remove tag {{name}}",
+    "discardTitle": "Discard changes?",
+    "discard": "Discard"
   },
   "errors": {
     "InvalidCardFront": {
@@ -56,7 +58,7 @@
     "TagMergeFailed": "Merge failed, try again.",
     "TagNotOnCard": "Merge failed, try again",
     "TransactionConflict": "Try again.",
-    "CardNotFound": "Card not found",
+    "CardNotFound": "This card no longer exists.",
     "TagNotFound": "Tag not found",
     "Network": "Can't reach the server. Check your connection.",
     "generic": "Something went wrong"

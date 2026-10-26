@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -9,7 +10,7 @@ import {
   Text,
   TextInput,
 } from 'react-native';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams, usePreventRemove } from 'expo-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { cardsApi, type CardInput } from '../../api/cards';
@@ -62,6 +63,7 @@ export default function CardEditor() {
  * CARD-07: one Save sends front, back and the full tag list.
  * CARD-08: an edit sends the version this form was filled from; if the card changed
  * elsewhere the server answers CardChanged, and the editor reloads the card.
+ * UI-15: leaving with unsaved changes (Cancel, Back, swipe down) asks "Discard changes?".
  */
 function EditorForm({ card, reload }: { card: Card | null; reload: () => void }) {
   const { t } = useTranslation();
@@ -76,6 +78,31 @@ function EditorForm({ card, reload }: { card: Card | null; reload: () => void })
     tags: card?.tags.map((tag) => tag.name) ?? [],
   });
   const [error, setError] = useState<unknown>(null);
+  const [leaving, setLeaving] = useState<'saved' | 'discarded' | null>(null);
+
+  const changed =
+    form.front !== (card?.front ?? '') ||
+    form.back !== (card?.back ?? '') ||
+    !sameNames(form.tags, card?.tags.map((tag) => tag.name) ?? []);
+
+  usePreventRemove(changed && !leaving, ({ repeat }) => {
+    Alert.alert(t('editor.discardTitle'), undefined, [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('editor.discard'),
+        style: 'destructive',
+        onPress: () => {
+          setLeaving('discarded');
+          repeat();
+        },
+      },
+    ]);
+  });
+
+  // Leave only after the re-render that turned the discard prompt off.
+  useEffect(() => {
+    if (leaving === 'saved') router.back();
+  }, [leaving]);
 
   const save = useMutation({
     mutationFn: (input: CardInput) =>
@@ -85,7 +112,7 @@ function EditorForm({ card, reload }: { card: Card | null; reload: () => void })
         queryClient.invalidateQueries({ queryKey: keys.cards }),
         queryClient.invalidateQueries({ queryKey: keys.tags }), // UI-02: new tags
       ]);
-      router.back();
+      setLeaving('saved');
     },
     onError: (e) => {
       setError(e);
@@ -195,6 +222,10 @@ function EditorForm({ card, reload }: { card: Card | null; reload: () => void })
       </ScrollView>
     </KeyboardAvoidingView>
   );
+}
+
+function sameNames(a: string[], b: string[]) {
+  return a.length === b.length && a.every((name, i) => name === b[i]);
 }
 
 function FieldError({ message, color }: { message: string | null; color: string }) {
