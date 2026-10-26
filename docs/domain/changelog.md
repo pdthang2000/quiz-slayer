@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-26 — Phase 4a review
+- Confirmed: app drops a leading "#" in the chip input (UI-01, C-50); "Discard changes?" only with unsaved changes (UI-15, C-49); Undo toast 5 s (UI-13, C-48); app messages (UI-16, C-47).
+- phase-3.1 tag stays where it is.
+
 ## 2026-10-26 — Phase 4a (mobile: Cards)
 - apps/mobile scaffolded (Expo SDK 58); stack in ADR-012. Repo pins Node 24 (`.nvmrc`).
 - Cards screen: front-only rows that flip on tap, ⋯ Edit · Tags · Delete, Undo toast, search, tag chip filter, load more, pull to refresh. Card editor with chip input and autocomplete. Versions sent in If-Match.

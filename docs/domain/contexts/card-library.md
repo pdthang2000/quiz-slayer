@@ -286,7 +286,7 @@ Dog [pitbull, Animals, động vật, apple] → Animals, apple, động vật, 
 ```
 
 ### UI
-**UI-01** `confirmed` — Tags are entered with a chip input. Enter commits a chip. Spaces are allowed inside a chip. `#` is display only, not part of the name.
+**UI-01** `confirmed` — Tags are entered with a chip input. Enter commits a chip. Spaces are allowed inside a chip. `#` is display only, not part of the name. The app drops any leading `#` the user types (`#Dog` → `Dog`, `##Dog` → `Dog`). (C-50)
 
 **UI-02** `confirmed` — Tag autocomplete: load all of the user's tags once, filter on the client, case-insensitive match (so `Animals` shows up before the user creates `animals`). Refresh the list after a tag is created, renamed or deleted. Server-side search with debounce only if a user gets thousands of tags.
 
@@ -324,11 +324,22 @@ Dog [pitbull, Animals, động vật, apple] → Animals, apple, động vật, 
 tap ▸ #greeting  →  loads: Hello, 你好, Xin chào … (20)  [Load more]
 ```
 
-**UI-13** `confirmed` — "⋯ → Delete" moves the card to the Trash at once, without a dialog (it can be restored, TRASH-01). A short toast shows "Moved to Trash · Undo"; Undo restores the card (TRASH-04). (C-42)
+**UI-13** `confirmed` — "⋯ → Delete" moves the card to the Trash at once, without a dialog (it can be restored, TRASH-01). A short toast shows "Moved to Trash · Undo"; Undo restores the card (TRASH-04). (C-42) The toast stays 5 seconds. (C-48)
 
 **UI-11** `confirmed` — All app text goes through i18n, ready for more languages; English is the default and only language in v1. Messages for errors are app strings looked up by error code (the server's message is for logs). Card content can be in any language. (U-3)
 
 **UI-12** `confirmed` — Dark mode follows the phone's setting. (U-4)
+
+**UI-15** `confirmed` — Leaving the card editor (Cancel or Back) with unsaved changes asks "Discard changes?" first. With no changes it leaves at once. (C-49)
+
+**UI-16** `confirmed` — App messages that are not in the error table (C-47):
+| When | Message |
+|---|---|
+| No network / no answer | "Can't reach the server. Check your connection." |
+| `CardNotFound` | "This card no longer exists." |
+| Empty card list | "No cards yet. Tap + to add one." |
+| Empty card list with a filter | "No cards match." |
+| After Undo | "Card restored" |
 
 ### Study
 Flip through cards one by one. v1 has no scoring and stores nothing.
