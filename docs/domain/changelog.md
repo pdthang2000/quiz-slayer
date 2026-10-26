@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-26 — Phase 4a (mobile: Cards)
+- apps/mobile scaffolded (Expo SDK 58); stack in ADR-012. Repo pins Node 24 (`.nvmrc`).
+- Cards screen: front-only rows that flip on tap, ⋯ Edit · Tags · Delete, Undo toast, search, tag chip filter, load more, pull to refresh. Card editor with chip input and autocomplete. Versions sent in If-Match.
+- rules:coverage also counts the app's tests (UI rules).
+- New open questions C-47..C-50 (app text, toast time, discard prompt, leading "#").
+
 ## 2026-10-25 — Phase 3.3 (backend)
 - Implemented TAG-16 for every path (C-45): editor Save, createCard, trash and restore change the versions of the tags whose Active cards changed, in the same transaction.
 - Implemented C-46: tag-list add/remove check the tag's version.

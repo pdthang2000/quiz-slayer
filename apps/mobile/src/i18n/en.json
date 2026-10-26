@@ -1,0 +1,64 @@
+{
+  "nav": {
+    "cards": "Cards",
+    "tags": "Tags",
+    "trash": "Trash"
+  },
+  "common": {
+    "loadMore": "Load more",
+    "cancel": "Cancel",
+    "save": "Save",
+    "undo": "Undo",
+    "retry": "Try again",
+    "comingSoon": "Coming in the next slice."
+  },
+  "cards": {
+    "title": "Cards",
+    "searchPlaceholder": "Search cards",
+    "empty": "No cards yet. Tap + to add one.",
+    "emptyFiltered": "No cards match.",
+    "new": "New card",
+    "edit": "Edit card",
+    "menu": {
+      "title": "Card",
+      "edit": "Edit",
+      "tags": "Tags",
+      "delete": "Delete"
+    },
+    "movedToTrash": "Moved to Trash",
+    "restored": "Card restored"
+  },
+  "editor": {
+    "front": "Front",
+    "back": "Back",
+    "tags": "Tags",
+    "tagPlaceholder": "Add a tag, press Enter",
+    "removeTag": "Remove tag {{name}}"
+  },
+  "errors": {
+    "InvalidCardFront": {
+      "empty": "Front is required",
+      "tooLong": "Front is max 500 characters"
+    },
+    "InvalidCardBack": {
+      "empty": "Back is required",
+      "tooLong": "Back is max 3000 characters"
+    },
+    "InvalidTagName": "Tags use letters, numbers, spaces, - and _ (max 50)",
+    "TooManyTags": "A card can have at most 20 tags",
+    "CardIsTrashed": "This card is in the Trash. Restore it first.",
+    "CardIsNotTrashed": "This card is no longer in the Trash.",
+    "TagNoLongerExists": "This tag no longer exists. Refresh.",
+    "TrashChanged": "Trash changed, check again.",
+    "CardChanged": "This card was changed on another device. Refresh.",
+    "TagChanged": "This tag was changed on another device. Refresh.",
+    "TagNameTaken": "This tag already exists. Try again.",
+    "TagMergeFailed": "Merge failed, try again.",
+    "TagNotOnCard": "Merge failed, try again",
+    "TransactionConflict": "Try again.",
+    "CardNotFound": "Card not found",
+    "TagNotFound": "Tag not found",
+    "Network": "Can't reach the server. Check your connection.",
+    "generic": "Something went wrong"
+  }
+}

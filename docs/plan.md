@@ -86,10 +86,13 @@ Source: `docs/domain/contexts/card-library.md`. Tests first, named by rule ID.
 React Native with Expo (ADR-006), online-only. Scaffold `apps/mobile` in the workspace and give it its own CLAUDE.md (UI only; no business rules; never import `apps/api`). Test on Jackkie's iPhone (local build, free Apple ID); friends get an Android APK.
 UI-06 is already in mobile form (long-press + bottom sheet).
 Hosting for testing outside home Wi-Fi: a VPS running Nest + Postgres in Docker (H-01). At home, the phone uses the Mac's LAN IP.
-- Card list + editor with chip input (UI-01) and client-side autocomplete (UI-02).
-- Tag list as colored buttons; long-press opens a bottom sheet: Show cards, Rename, Delete (UI-06, UI-05).
-- Confirm dialogs: delete tag with count (UI-03), merge preview (TAG-08), empty trash with count (TRASH-07).
-- Trash tab.
+Stack: ADR-012 (Expo SDK 58, Expo Router drawer, TanStack Query, i18next). API client sends versions in `If-Match` (CONFLICT-01), maps every error code to an i18n message (UI-11), reloads the screen on `CardChanged` / `TagChanged` / `TrashChanged`; screens reload on return; pull to refresh on every list.
+
+Built in four slices. After each: tests, lint, tsc, commit, tag, then stop so Jackkie tries it on his iPhone (Expo Go).
+- **4a Cards** — list (front only, tap flips, ⋯ Edit · Tags · Delete, UI-10; Undo toast, UI-13), search + tag chip filter (READ-02/03/05), load more, editor with chip input + autocomplete (UI-01, UI-02, CARD-07, CARD-08). → tag `phase-4a`
+- **4b Tags** — Tag list A–Z as colored buttons, long-press bottom sheet Show cards · Rename · Delete (UI-03, UI-05, UI-06, TAG-15 merge dialog), ⋯ → Tags view (UI-14), a tag's card list with ✕ / checkboxes / Remove (n) and the "+ Add cards" picker (CARDTAG-07/08, 100 cap in the app). → tag `phase-4b`
+- **4c Trash** — newest trashed first, load more, total, restore, delete permanently, empty trash dialog with count (TRASH-07, TRASH-11, TRASH-12). → tag `phase-4c`
+- **4d Study** (STUDY-01..06) — from the current list filter, ids first then content 20 at a time, newest first + Shuffle, choose the starting side, flip + Next. → tag `phase-4d`
 
 🔍 **Checkpoint 4**
 - [ ] You use it yourself for real study for a week.

@@ -18,14 +18,15 @@ function* specFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const path = join(dir, entry.name);
     if (entry.isDirectory() && entry.name !== 'node_modules') yield* specFiles(path);
-    else if (/\.((e2e|int)-)?spec\.ts$/.test(entry.name)) yield path;
+    else if (/\.((e2e|int)-)?spec\.ts$|\.test\.tsx?$/.test(entry.name)) yield path;
   }
 }
 
 // it('TAG-03: ...') / test("TAG-03: ...") / it.each(...)('TAG-03: ...'), possibly wrapped by prettier.
 const testName = /\b(?:it|test)(?:\.\w+)?\(\s*['"`]([A-Z]+-\d+):/g;
 const tests = new Map();
-for (const dir of ['src', 'test']) {
+// The API's specs, plus the mobile app's tests (UI rules, apps/mobile/src/**/*.test.ts(x)).
+for (const dir of ['src', 'test', '../mobile/src']) {
   for (const file of specFiles(join(apiRoot, dir))) {
     for (const [, id] of readFileSync(file, 'utf8').matchAll(testName)) {
       const files = tests.get(id) ?? new Set();

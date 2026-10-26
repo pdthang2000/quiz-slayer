@@ -51,6 +51,10 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | C-44 | Conflicts: which actions must fail when made from an outdated view? | answered: all of them — one rule for cards, tags and the Trash → CONFLICT-01, CARD-08, TAG-16, TRASH-11 |
 | C-45 | TAG-16 says a tag's version changes when cards are added/removed *through the tag*. Should a card editor Save that adds or removes #Dog (CARD-07) change #Dog's version too? Today it doesn't, so "Delete #Dog? It's on 3 cards" still goes through if a card got #Dog in the editor meanwhile. | answered: yes — any change to the tag's name or its Active cards bumps its version (incl. editor Save and trash/restore) → TAG-16 |
 | C-46 | Adding/removing cards through a tag's list: check the tag's version too, or only the cards'? | answered: both → TAG-16, CARDTAG-07, CARDTAG-08 |
+| C-47 | App text not in the error table (phase 4a, written by the agent, please confirm or reword): no network "Can't reach the server. Check your connection."; `CardNotFound` "Card not found"; empty list "No cards yet. Tap + to add one." / with a filter "No cards match."; after Undo "Card restored". | open |
+| C-48 | How long does the "Moved to Trash · Undo" toast stay (UI-13)? Provisional: 5 seconds. | open |
+| C-49 | Card editor: Cancel with unsaved changes — leave at once, or ask "Discard changes?" first? Provisional: leave at once. | open |
+| C-50 | Chip input: the user types "#Dog". Provisional: sent as typed, so the server answers `InvalidTagName` ("#" is not allowed, TAG-01). Or should the app drop a leading "#" since it is display only (UI-01)? | open |
 | C-40 | A tag merge fails because one of its cards was saved on another device at the same moment (CARD-08). Which message? | answered: the merge's own error `TagMergeFailed`, "Merge failed, try again." (409, Race) → Error handling |
 | C-16 | The Model and Events sections of card-library.md are `draft` (incl. `TagsMerged`). Confirm them as the Phase 1 design? | answered: confirmed as listed, plus `TagsMerged` |
 
