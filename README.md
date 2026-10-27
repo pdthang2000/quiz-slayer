@@ -2,9 +2,10 @@
 
 Study app: flashcards + "10 Quizzes per day" for IELTS, TOEIC, HSK and more.
 
-Status: Phase 3 (application + API) at Checkpoint 3. See `docs/plan.md`.
+Status: Phase 4 (mobile app), slice 4a done. See `docs/plan.md`.
 
 ## Run locally
+Node 24 (`nvm use`, reads `.nvmrc`).
 ```
 pnpm install
 cp apps/api/.env.example apps/api/.env
@@ -15,6 +16,7 @@ pnpm test:int                      # integration tests, uses database quizslayer
 pnpm test:e2e                      # HTTP tests, same database
 pnpm --filter @quizslayer/api start:dev
 ```
+Mobile app (iOS Simulator or iPhone with Expo Go): see `apps/mobile/README.md`.
 
 ## How we work
 1. Model the business with the agent (`/domain-interview`), one question at a time.
