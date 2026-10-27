@@ -1,14 +1,11 @@
 import '../i18n';
 import { useEffect } from 'react';
 import { AppState, Platform } from 'react-native';
-import { Stack } from 'expo-router';
+// expo-router ships its own React Navigation; its ThemeProvider is the one its
+// navigators (drawer, headers) read. The one from @react-navigation/native is not.
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import {
-  DarkTheme,
-  DefaultTheme,
-  ThemeProvider,
-} from '@react-navigation/native';
 import {
   focusManager,
   QueryClient,
