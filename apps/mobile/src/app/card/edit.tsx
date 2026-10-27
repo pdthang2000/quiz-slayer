@@ -177,6 +177,8 @@ function EditorForm({ card, reload }: { card: Card | null; reload: () => void })
         }}
       />
       <ScrollView
+        // iOS 26+ draws the modal header over the content; let iOS inset below it.
+        contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
       >
