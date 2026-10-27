@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-27 — Theme option
+- Confirmed: Settings at the bottom of the drawer with Appearance System / Light / Dark, kept on this phone only (UI-17, C-51). UI-09 and UI-12 updated to point to it.
+
 ## 2026-10-26 — Phase 4a review
 - Confirmed: app drops a leading "#" in the chip input (UI-01, C-50); "Discard changes?" only with unsaved changes (UI-15, C-49); Undo toast 5 s (UI-13, C-48); app messages (UI-16, C-47).
 - phase-3.1 tag stays where it is.

@@ -304,7 +304,7 @@ Dog [pitbull, Animals, động vật, apple] → Animals, apple, động vật, 
 
 **UI-08** `confirmed` — No "New tag" button in v1. Tags are created only by typing them on a card (TAG-05). (C-24)
 
-**UI-09** `confirmed` — Navigation is a menu on the left (a side drawer opened with ☰), with three items: Cards, Tags, Trash. No bottom tab bar. (U-1)
+**UI-09** `confirmed` — Navigation is a menu on the left (a side drawer opened with ☰), with three items: Cards, Tags, Trash. No bottom tab bar. (U-1) A Settings item sits apart at the bottom of the drawer (UI-17, C-51).
 ```
 ☰ ┌──────────┐
   │ Cards    │
@@ -328,7 +328,13 @@ tap ▸ #greeting  →  loads: Hello, 你好, Xin chào … (20)  [Load more]
 
 **UI-11** `confirmed` — All app text goes through i18n, ready for more languages; English is the default and only language in v1. Messages for errors are app strings looked up by error code (the server's message is for logs). Card content can be in any language. (U-3)
 
-**UI-12** `confirmed` — Dark mode follows the phone's setting. (U-4)
+**UI-12** `confirmed` — Dark mode follows the phone's setting. (U-4) This is the default; the user can choose Light or Dark instead (UI-17, C-51).
+
+**UI-17** `confirmed` — Settings → Appearance: System (default, follows the phone), Light, Dark. The choice is kept on this phone only, not on the account. (C-51)
+```
+☰ drawer: Cards · Tags · Trash ……… ⚙ Settings
+Settings → Appearance: (•) System  ( ) Light  ( ) Dark
+```
 
 **UI-15** `confirmed` — Leaving the card editor (Cancel or Back) with unsaved changes asks "Discard changes?" first. With no changes it leaves at once. (C-49)
 

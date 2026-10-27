@@ -2,7 +2,8 @@
   "nav": {
     "cards": "Cards",
     "tags": "Tags",
-    "trash": "Trash"
+    "trash": "Trash",
+    "settings": "Settings"
   },
   "common": {
     "loadMore": "Load more",
@@ -62,5 +63,11 @@
     "TagNotFound": "Tag not found",
     "Network": "Can't reach the server. Check your connection.",
     "generic": "Something went wrong"
+  },
+  "settings": {
+    "appearance": "Appearance",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
   }
 }

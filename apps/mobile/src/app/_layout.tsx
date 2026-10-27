@@ -17,6 +17,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { ToastProvider } from '../components/Toast';
 import { useTheme } from '../theme';
+import { AppearanceProvider } from '../theme/appearance';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,20 +56,22 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider value={navTheme}>
-          <ToastProvider>
-            <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-            <Stack>
-              <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-              <Stack.Screen
-                name="card/edit"
-                options={{ presentation: 'modal', title: t('cards.edit') }}
-              />
-            </Stack>
-          </ToastProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
+      <AppearanceProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider value={navTheme}>
+            <ToastProvider>
+              <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+              <Stack>
+                <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+                <Stack.Screen
+                  name="card/edit"
+                  options={{ presentation: 'modal', title: t('cards.edit') }}
+                />
+              </Stack>
+            </ToastProvider>
+          </ThemeProvider>
+        </QueryClientProvider>
+      </AppearanceProvider>
     </GestureHandlerRootView>
   );
 }
