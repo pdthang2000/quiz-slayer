@@ -25,14 +25,19 @@ EXPO_PUBLIC_API_URL=http://localhost:3000 npx expo start --ios
 - Opens the Simulator, installs Expo Go in it (first time only) and loads the app.
 - Do not add `--localhost`: Metro then listens on IPv6 only and Expo Go says "Could not connect to the server".
 - The first run downloads Expo Go from GitHub. Some networks block GitHub (`curl https://github.com` resets); use another network once, after that it stays installed.
-- Shortcuts: Cmd+Shift+H home screen, Cmd+D Expo dev menu, Cmd+Shift+A toggle dark mode (UI-12).
+- Shortcuts: Cmd+Shift+H home screen, Cmd+D Expo dev menu, Cmd+Shift+A toggle the phone's dark mode (UI-12; the app follows it only while Settings → Appearance is System).
+- Expo opens the app on the booted device. To pick one: `xcrun simctl list devices available`, then `xcrun simctl boot <id>` before `expo start`.
 
-Needs Xcode (Mac App Store) with the iOS Simulator, and once:
+Needs Xcode (Mac App Store), and once:
 ```
 sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
 sudo xcodebuild -license accept
 sudo xcodebuild -runFirstLaunch
+xcodebuild -downloadPlatform iOS     # current iOS Simulator runtime, about 8 GB
 ```
+- In Xcode 27 the Simulator window is the **DeviceHub** app (`/Applications/Xcode.app/Contents/Applications/DeviceHub.app`); there is no separate Simulator.app.
+- Use a device on the current iOS runtime (e.g. iPhone 18 Pro, iOS 27). An old runtime (iOS 17.5) ran the app but did not take mouse clicks in DeviceHub.
+- `xcodebuild -downloadPlatform iOS` can answer "No downloadable was found" on a network that blocks Apple's or GitHub's servers; try another network.
 
 ## 2b. Run on an iPhone with Expo Go
 1. Install **Expo Go** from the App Store. The iPhone must be on the same Wi-Fi as the Mac.

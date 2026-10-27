@@ -19,7 +19,8 @@ Read the root `CLAUDE.md` first; it applies here too. This file adds the app-spe
 - All text goes through i18n (`src/i18n/`, UI-11). No literal UI strings in components. English is the only language in v1.
 - Error messages are looked up by the server's error code (`errors.<Code>`); the server's `message` is for logs only.
 - Times arrive in UTC; convert to local time only for display.
-- Dark mode follows the phone (UI-12): colors come from the theme, never hard-coded in screens.
+- Dark mode follows the phone by default (UI-12); the user can pick Light or Dark in Settings (UI-17). Colors come from the theme, never hard-coded in screens.
+- Navigation pieces (`ThemeProvider`, `DarkTheme`, `Drawer`, `DrawerItemList`, `usePreventRemove`…) come from `expo-router` or `expo-router/drawer`, never from `@react-navigation/*`: expo-router ships its own copy, and the other copy is silently ignored (ADR-012).
 
 ## Decide alone vs ask
 - Follow the root `CLAUDE.md`. Layout, spacing, typography and the exact palette hex values are yours to decide.

@@ -14,6 +14,8 @@ Phase 4 builds the Card Library app (ADR-006: React Native + Expo, UI only). Req
 - **Forms: no form library.** The only form (card editor) has three fields; `useState` is enough. Validation is the server's (CLAUDE.md: the app has no business rules); its 400 codes are shown next to the field.
 - **i18n: i18next + react-i18next**, one `en.json`. Error codes from the error table map to message keys (`errors.<Code>`); unknown codes fall back to "Something went wrong". `expo-localization` reads the phone language; v1 always resolves to English.
 - **Theme:** `useColorScheme()` picks light or dark tokens; `app.json` `userInterfaceStyle: automatic`. The tag palette (UI-07, TAG-13) has a light and a dark hex per key in the app.
+  - Addendum (2026-10-27, UI-17): the user's Appearance choice (System / Light / Dark) is applied with `Appearance.setColorScheme`, so `useColorScheme()`, the keyboard and alerts all follow it. It is stored on the phone with `@react-native-async-storage/async-storage` (works in Expo Go).
+  - Addendum (2026-10-27): expo-router ships its own copy of React Navigation. `ThemeProvider`, `DarkTheme`, `DefaultTheme` and the drawer parts are imported from `expo-router` / `expo-router/drawer`; `@react-navigation/*` is not a dependency. Importing the theme from `@react-navigation/native` left the drawer and headers light in dark mode.
 - **Tests: jest-expo + @testing-library/react-native** (unit tests for the API client and error mapping, component tests for screens with a mocked client). **Lint:** `eslint-config-expo` via `expo lint`. **Types:** TypeScript strict, `tsc --noEmit`.
 
 ## Options considered
