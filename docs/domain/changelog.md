@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-29 — Phase 4b.1 review
+- Confirmed: Undo of "+ Add cards" confirms with "Removed from #Dog", without Undo (CARDTAG-08, UI-16, C-57).
+
 ## 2026-10-29 — Phase 4b review
 - Confirmed: tap on a tag opens its cards (UI-06, C-52); 4b app texts (UI-16, C-53); 101st tick refused with a toast (C-54); adding cards gets an Undo toast (CARDTAG-08, C-55); several tags open at once and rows flip in ⋯ → Tags (UI-14, C-56); Undo of a remove says "Put back in #Dog" (CARDTAG-07).
 

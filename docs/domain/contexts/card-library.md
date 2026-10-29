@@ -216,7 +216,7 @@ It is the only tag change allowed on a trashed card (supports TAG-09). It never 
  [+ Add cards]
 ```
 
-**CARDTAG-08** `confirmed` — "+ Add cards" opens a picker: Active cards not already in the tag, with search (READ-03), newest first, 20 at a time + Load more. Cards that already have 20 tags are greyed out and can't be ticked (CARDTAG-03). Adding is all or nothing (ADR-011): if a card filled up or changed meanwhile, or the tag changed, nothing is added (`TooManyTags` naming the card, `CardChanged`, or `TagChanged`). Max 100 cards per action, checked by the app and by the API. (T-1, T-2, T-4) After adding, the picker closes and a toast says "Added to #Dog · Undo"; Undo removes those cards from the tag again, with the versions just returned. Ticking a 101st card is refused with "You can select up to 100 cards at a time." (C-54, C-55)
+**CARDTAG-08** `confirmed` — "+ Add cards" opens a picker: Active cards not already in the tag, with search (READ-03), newest first, 20 at a time + Load more. Cards that already have 20 tags are greyed out and can't be ticked (CARDTAG-03). Adding is all or nothing (ADR-011): if a card filled up or changed meanwhile, or the tag changed, nothing is added (`TooManyTags` naming the card, `CardChanged`, or `TagChanged`). Max 100 cards per action, checked by the app and by the API. (T-1, T-2, T-4) After adding, the picker closes and a toast says "Added to #Dog · Undo"; Undo removes those cards from the tag again, with the versions just returned, and confirms with "Removed from #Dog" (no Undo). Ticking a 101st card is refused with "You can select up to 100 cards at a time." (C-54, C-55, C-57)
 
 ### Trash
 **TRASH-01** `confirmed` — Deleting a card moves it to the Trash. It is not gone.
@@ -338,7 +338,7 @@ Settings → Appearance: (•) System  ( ) Light  ( ) Dark
 
 **UI-15** `confirmed` — Leaving the card editor (Cancel or Back) with unsaved changes asks "Discard changes?" first. With no changes it leaves at once. (C-49)
 
-**UI-16** `confirmed` — App messages that are not in the error table (C-47, C-53):
+**UI-16** `confirmed` — App messages that are not in the error table (C-47, C-53, C-57):
 | When | Message |
 |---|---|
 | No network / no answer | "Can't reach the server. Check your connection." |
@@ -355,6 +355,7 @@ Settings → Appearance: (•) System  ( ) Light  ( ) Dark
 | Greyed picker row (CARDTAG-08) | "Has 20 tags" |
 | Dialog buttons | "Merge", "Rename", "Delete" |
 | Undo of a remove from a tag | "Put back in #Dog" |
+| Undo of an add to a tag | "Removed from #Dog" (no Undo, C-57) |
 | 101st tick (CARDTAG-07/08) | "You can select up to 100 cards at a time." |
 
 ### Study
