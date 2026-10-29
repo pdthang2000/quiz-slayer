@@ -10,8 +10,7 @@
     "cancel": "Cancel",
     "save": "Save",
     "undo": "Undo",
-    "retry": "Try again",
-    "comingSoon": "Coming in the next slice."
+    "retry": "Try again"
   },
   "cards": {
     "title": "Cards",
@@ -115,5 +114,19 @@
       "title": "Tags",
       "empty": "This card has no tags."
     }
+  },
+  "trash": {
+    "total_one": "{{count}} card",
+    "total_other": "{{count}} cards",
+    "empty": "Empty trash",
+    "emptyConfirm_one": "Delete {{count}} card forever?",
+    "emptyConfirm_other": "Delete {{count}} cards forever?",
+    "emptied": "Trash emptied",
+    "emptyList": "Trash is empty.",
+    "restore": "Restore",
+    "deletePermanently": "Delete permanently",
+    "deleteConfirm": "Delete this card forever?",
+    "delete": "Delete",
+    "deleted": "Card deleted permanently"
   }
 }

@@ -60,3 +60,12 @@ export type MergePreview = {
   fromCount: number;
   resultCount: number;
 };
+
+/** TRASH-12: a card in the Trash tab. `trashedAt`: UTC ISO string. */
+export type TrashedCard = Card & { trashedAt: string };
+
+/** TRASH-12: a page of the Trash tab; `total` and `newestTrashedAt` feed the TRASH-07 dialog. */
+export type TrashPage = Page<TrashedCard> & { total: number; newestTrashedAt: string | null };
+
+/** TRASH-11: what the empty-trash dialog showed. */
+export type EmptyTrashInput = { expectedCount: number; newestTrashedAt: string | null };

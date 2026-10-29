@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { Alert } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../api/client';
@@ -7,17 +6,8 @@ import { errorMessageKey, isStale } from '../../api/errors';
 import { keys } from '../../api/hooks';
 import { tagsApi } from '../../api/tags';
 import type { MergePreview, Tag, TagWithCount } from '../../api/types';
+import { confirm } from '../../components/confirm';
 import { useToast } from '../../components/Toast';
-
-/** Asks a yes/no question with a native dialog; resolves true on the action button. */
-export function confirm(message: string, action: string, cancel: string, danger = false) {
-  return new Promise<boolean>((resolve) =>
-    Alert.alert(message, undefined, [
-      { text: cancel, style: 'cancel', onPress: () => resolve(false) },
-      { text: action, style: danger ? 'destructive' : 'default', onPress: () => resolve(true) },
-    ], { cancelable: true, onDismiss: () => resolve(false) }),
-  );
-}
 
 /** TAG-08 / TAG-15: the question the merge preview asks. */
 export function mergeQuestion(

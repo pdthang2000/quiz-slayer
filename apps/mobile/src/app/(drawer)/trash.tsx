@@ -1,6 +1,16 @@
-import { ComingSoon } from '../../components/ComingSoon';
+import { View } from 'react-native';
+import { useRefetchOnFocus, useTrash } from '../../api/hooks';
+import { TrashList } from '../../features/trash/TrashList';
+import { useTheme } from '../../theme';
 
-/** Slice 4c (TRASH-07, TRASH-11, TRASH-12). */
+/** The Trash tab (TRASH-07, TRASH-11, TRASH-12). */
 export default function TrashScreen() {
-  return <ComingSoon />;
+  const { colors } = useTheme();
+  const trash = useTrash();
+  useRefetchOnFocus(trash.refetch);
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <TrashList />
+    </View>
+  );
 }

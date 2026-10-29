@@ -3,12 +3,15 @@ import { useNavigation } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { cardsApi } from './cards';
 import { tagsApi } from './tags';
+import { trashApi } from './trash';
 import type { CardFilter } from './types';
 
 export const keys = {
   cards: ['cards'] as const,
   cardList: (filter: CardFilter) => ['cards', 'list', filter] as const,
   card: (id: string) => ['cards', 'one', id] as const,
+  // Under 'cards' so any card change (e.g. move to trash) also refreshes the Trash tab.
+  trash: ['cards', 'trash'] as const,
   tags: ['tags'] as const,
   cardTags: (cardId: string) => ['tags', 'ofCard', cardId] as const,
   tagPicker: (tagId: string, search: string) =>
@@ -21,6 +24,16 @@ export function useCardList(filter: CardFilter, enabled = true) {
     enabled,
     queryKey: keys.cardList(filter),
     queryFn: ({ pageParam }) => cardsApi.list(filter, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+  });
+}
+
+/** TRASH-12: "load more" pages of trashed cards, most recently trashed first. */
+export function useTrash() {
+  return useInfiniteQuery({
+    queryKey: keys.trash,
+    queryFn: ({ pageParam }) => trashApi.list(pageParam),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
   });
