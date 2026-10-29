@@ -36,3 +36,5 @@ Mobile app (iOS Simulator or iPhone with Expo Go): see `apps/mobile/README.md`.
 - `docs/domain/decisions/` — ADRs
 - `docs/domain/changelog.md` — what changed in the model, per session
 - `docs/plan.md` — build plan with checkpoints
+
+<!-- Push test from Claude cloud session, 2026-10-29. Safe to remove. -->
