@@ -207,7 +207,7 @@ It is the only tag change allowed on a trashed card (supports TAG-09). It never 
 #Animals #Animals #animals → Animals, animals (2 tags)
 ```
 
-**CARDTAG-07** `confirmed` — A tag's card list can remove cards from the tag: ✕ at the right end of a row removes that card; checkboxes at the left select several, then "Remove (n)". It removes only that tag from those cards. All or nothing (ADR-011); each card sends its version (CARD-08) and the action sends the tag's version (TAG-16). A toast "Removed from #Dog · Undo" puts them back. Max 100 cards per action, checked by the app and by the API (shape guard). (T-4)
+**CARDTAG-07** `confirmed` — A tag's card list can remove cards from the tag: ✕ at the right end of a row removes that card; checkboxes at the left select several, then "Remove (n)". It removes only that tag from those cards. All or nothing (ADR-011); each card sends its version (CARD-08) and the action sends the tag's version (TAG-16). A toast "Removed from #Dog · Undo" puts them back. Max 100 cards per action, checked by the app and by the API (shape guard). (T-4) Its Undo confirms with "Put back in #Dog". Ticking a 101st card is refused with "You can select up to 100 cards at a time." (C-53, C-54)
 ```
 #Dog (4) ▾                      [Remove (2)]
  ☑ Rex                       ✕
@@ -216,7 +216,7 @@ It is the only tag change allowed on a trashed card (supports TAG-09). It never 
  [+ Add cards]
 ```
 
-**CARDTAG-08** `confirmed` — "+ Add cards" opens a picker: Active cards not already in the tag, with search (READ-03), newest first, 20 at a time + Load more. Cards that already have 20 tags are greyed out and can't be ticked (CARDTAG-03). Adding is all or nothing (ADR-011): if a card filled up or changed meanwhile, or the tag changed, nothing is added (`TooManyTags` naming the card, `CardChanged`, or `TagChanged`). Max 100 cards per action, checked by the app and by the API. (T-1, T-2, T-4)
+**CARDTAG-08** `confirmed` — "+ Add cards" opens a picker: Active cards not already in the tag, with search (READ-03), newest first, 20 at a time + Load more. Cards that already have 20 tags are greyed out and can't be ticked (CARDTAG-03). Adding is all or nothing (ADR-011): if a card filled up or changed meanwhile, or the tag changed, nothing is added (`TooManyTags` naming the card, `CardChanged`, or `TagChanged`). Max 100 cards per action, checked by the app and by the API. (T-1, T-2, T-4) After adding, the picker closes and a toast says "Added to #Dog · Undo"; Undo removes those cards from the tag again, with the versions just returned. Ticking a 101st card is refused with "You can select up to 100 cards at a time." (C-54, C-55)
 
 ### Trash
 **TRASH-01** `confirmed` — Deleting a card moves it to the Trash. It is not gone.
@@ -294,7 +294,7 @@ Dog [pitbull, Animals, động vật, apple] → Animals, apple, động vật, 
 
 **UI-05** `confirmed` — The Tag list is where tags are renamed (TAG-11) and deleted (TAG-06). A tag's card list (from the Tag list or ⋯ → Tags) is where cards are added to or removed from that tag (CARDTAG-07, CARDTAG-08).
 
-**UI-06** `confirmed` — Tag list shows tags as colored buttons. Long-press on a tag opens a bottom sheet with: Show cards, Rename, Delete (mobile form of the original tooltip idea). Tag color: TAG-12.
+**UI-06** `confirmed` — Tag list shows tags as colored buttons. Long-press on a tag opens a bottom sheet with: Show cards, Rename, Delete (mobile form of the original tooltip idea). Tag color: TAG-12. A plain tap on a tag opens its cards (same as Show cards). (C-52)
 
 **UI-07** `confirmed` — The random color is picked from a fixed palette of readable colors (good contrast in light and dark mode), not any hex value. The palette keys are in TAG-13; the app owns the light/dark hex for each key.
 
@@ -318,7 +318,7 @@ Dog [pitbull, Animals, động vật, apple] → Animals, apple, động vật, 
 [ 你好      ⋯ ]  tap → [ xin chào  ⋯ ]
                  ⋯   → Edit · Tags · Delete
 ```
-**UI-14** `confirmed` — "⋯ → Tags" shows this card's tags, each with its count of Active cards (TRASH-03), in READ-06 order. It loads only the tags and their counts. Expanding a tag loads that tag's cards (Active, newest first, READ-02) 20 at a time with a "Load more" button — fetched only when expanded. An expanded tag's card list also allows removing and adding cards (CARDTAG-07, CARDTAG-08). (C-41)
+**UI-14** `confirmed` — "⋯ → Tags" shows this card's tags, each with its count of Active cards (TRASH-03), in READ-06 order. It loads only the tags and their counts. Expanding a tag loads that tag's cards (Active, newest first, READ-02) 20 at a time with a "Load more" button — fetched only when expanded. An expanded tag's card list also allows removing and adding cards (CARDTAG-07, CARDTAG-08). (C-41) Several tags can be open at once, each opens and closes on its own; card rows flip on tap like the Cards screen (UI-10). (C-56)
 ```
 [ 你好  ⋯ ] → Tags →  ▸ #greeting (12)   ▸ #HSK1 (50)
 tap ▸ #greeting  →  loads: Hello, 你好, Xin chào … (20)  [Load more]
@@ -338,7 +338,7 @@ Settings → Appearance: (•) System  ( ) Light  ( ) Dark
 
 **UI-15** `confirmed` — Leaving the card editor (Cancel or Back) with unsaved changes asks "Discard changes?" first. With no changes it leaves at once. (C-49)
 
-**UI-16** `confirmed` — App messages that are not in the error table (C-47):
+**UI-16** `confirmed` — App messages that are not in the error table (C-47, C-53):
 | When | Message |
 |---|---|
 | No network / no answer | "Can't reach the server. Check your connection." |
@@ -346,6 +346,16 @@ Settings → Appearance: (•) System  ( ) Light  ( ) Dark
 | Empty card list | "No cards yet. Tap + to add one." |
 | Empty card list with a filter | "No cards match." |
 | After Undo | "Card restored" |
+| Empty Tag list | "No tags yet. Add tags on a card." |
+| Empty card list of a tag | "No cards with this tag." |
+| Empty "+ Add cards" picker | "No cards to add." |
+| ⋯ → Tags on a card with no tags | "This card has no tags." |
+| Rename dialog title | "Rename #Dog" |
+| Picker title / button | "Add to #Dog" / "Add (n)" |
+| Greyed picker row (CARDTAG-08) | "Has 20 tags" |
+| Dialog buttons | "Merge", "Rename", "Delete" |
+| Undo of a remove from a tag | "Put back in #Dog" |
+| 101st tick (CARDTAG-07/08) | "You can select up to 100 cards at a time." |
 
 ### Study
 Flip through cards one by one. v1 has no scoring and stores nothing.

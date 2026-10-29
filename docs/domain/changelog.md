@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-29 — Phase 4b review
+- Confirmed: tap on a tag opens its cards (UI-06, C-52); 4b app texts (UI-16, C-53); 101st tick refused with a toast (C-54); adding cards gets an Undo toast (CARDTAG-08, C-55); several tags open at once and rows flip in ⋯ → Tags (UI-14, C-56); Undo of a remove says "Put back in #Dog" (CARDTAG-07).
+
 ## 2026-10-29 — Phase 4b (mobile: Tags)
 - Tag list: A–Z colored buttons with counts, long-press sheet Show cards · Rename · Delete (UI-03, UI-05, UI-06). Rename shows the merge preview and resends with confirmMerge (TAG-08, TAG-15); delete asks again with the new count after TagChanged (TAG-16).
 - A tag's card list: ✕ per row, checkboxes + Remove (n) with Undo, "+ Add cards" picker with greyed cards at 20 tags, 100 per action (CARDTAG-07, CARDTAG-08). ⋯ → Tags expands a card's tags on demand (UI-14).
