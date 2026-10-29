@@ -29,6 +29,7 @@ import { useToast } from '../../components/Toast';
 import { CardMenu } from '../../features/cards/CardMenu';
 import { CardRow } from '../../features/cards/CardRow';
 import { spacing, useTheme } from '../../theme';
+import { listDeceleration } from '../../theme/scroll';
 
 /**
  * The card list: search (READ-03), tag chips (READ-05: cards with all selected tags),
@@ -144,6 +145,7 @@ export default function CardsScreen() {
         </View>
       ) : (
         <FlatList
+          decelerationRate={listDeceleration}
           data={cards}
           keyExtractor={(c) => c.id}
           renderItem={({ item }) => <CardRow card={item} onMenu={setMenuCard} />}

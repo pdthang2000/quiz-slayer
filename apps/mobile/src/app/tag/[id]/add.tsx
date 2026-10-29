@@ -17,6 +17,7 @@ import { TagCardRow } from '../../../features/tags/TagCardRow';
 import { useSelection } from '../../../features/tags/useSelection';
 import { useTagMembership } from '../../../features/tags/useTagMembership';
 import { spacing, useTheme } from '../../../theme';
+import { listDeceleration } from '../../../theme/scroll';
 
 /**
  * CARDTAG-08: "+ Add cards". Active cards not in the tag, with search (READ-03), newest
@@ -43,6 +44,7 @@ export default function AddCardsToTag() {
 
   return (
     <ScrollView
+      decelerationRate={listDeceleration}
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={styles.content}
       keyboardShouldPersistTaps="handled"

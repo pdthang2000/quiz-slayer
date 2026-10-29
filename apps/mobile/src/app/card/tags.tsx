@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { keys, useRefetchOnFocus } from '../../api/hooks';
 import { CardTagsView } from '../../features/tags/CardTagsView';
 import { spacing, useTheme } from '../../theme';
+import { listDeceleration } from '../../theme/scroll';
 
 /** UI-14: "⋯ → Tags" for one card. */
 export default function CardTagsScreen() {
@@ -18,6 +19,7 @@ export default function CardTagsScreen() {
   useRefetchOnFocus(reload);
   return (
     <ScrollView
+      decelerationRate={listDeceleration}
       // iOS 26+ draws the header over the content; let iOS inset below it.
       contentInsetAdjustmentBehavior="automatic"
       style={{ backgroundColor: colors.background }}

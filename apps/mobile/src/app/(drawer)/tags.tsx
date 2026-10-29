@@ -17,6 +17,7 @@ import { RenameTagDialog } from '../../features/tags/RenameTagDialog';
 import { TagButtons } from '../../features/tags/TagButtons';
 import { useTagActions } from '../../features/tags/useTagActions';
 import { spacing, useTheme } from '../../theme';
+import { listDeceleration } from '../../theme/scroll';
 
 /** UI-05: the Tag list, where tags are renamed and deleted. READ-04: A–Z. */
 export default function TagsScreen() {
@@ -46,6 +47,7 @@ export default function TagsScreen() {
   return (
     <>
       <ScrollView
+        decelerationRate={listDeceleration}
         style={{ backgroundColor: colors.background }}
         contentContainerStyle={styles.content}
         refreshControl={

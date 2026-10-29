@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { keys, useRefetchOnFocus, useTags } from '../../../api/hooks';
 import { TagCards } from '../../../features/tags/TagCards';
 import { spacing, useTheme } from '../../../theme';
+import { listDeceleration } from '../../../theme/scroll';
 
 /** A tag's card list, opened from the Tag list (UI-05, UI-06 "Show cards"). */
 export default function TagScreen() {
@@ -24,6 +25,7 @@ export default function TagScreen() {
 
   return (
     <ScrollView
+      decelerationRate={listDeceleration}
       // iOS 26+ draws the header over the content; let iOS inset below it.
       contentInsetAdjustmentBehavior="automatic"
       style={{ backgroundColor: colors.background }}
