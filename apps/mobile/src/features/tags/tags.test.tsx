@@ -9,11 +9,13 @@ import {
 } from '@testing-library/react-native';
 import type { Card, TagPickerCard, TagWithCount } from '../../api/types';
 import { fakeApi, Providers } from '../../test/harness';
+import { CardMenu } from '../cards/CardMenu';
 import { CardTagsView } from './CardTagsView';
 import { TagButtons } from './TagButtons';
 import { TagCardRow } from './TagCardRow';
 import { TagCards } from './TagCards';
 import { useSelection } from './useSelection';
+import { useTagMembership } from './useTagMembership';
 import { useTagActions } from './useTagActions';
 
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
@@ -445,5 +447,119 @@ describe('⋯ → Tags', () => {
     await screen.findByText('front c1');
     expect(screen.getByText('Load more')).toBeTruthy(); // 20 at a time
     expect(api.calls.map((c) => c.path)).toEqual(['/cards/c1/tags', '/cards?tag=t-greeting']);
+  });
+});
+
+describe('Tags on a card', () => {
+  it('UI-04: a card offers no rename, neither in its menu nor in ⋯ → Tags', async () => {
+    fakeApi([
+      { method: 'GET', path: /^\/cards\/c1\/tags$/, reply: { body: [tag('greeting', 12)] } },
+      {
+        method: 'GET',
+        path: /^\/cards\?tag=t-greeting/,
+        reply: { body: { items: [card('c1')], nextCursor: null } },
+      },
+    ]);
+    await render(
+      <Providers>
+        <CardMenu visible onClose={jest.fn()} onEdit={jest.fn()} onTags={jest.fn()} onDelete={jest.fn()} />
+        <CardTagsView cardId="c1" />
+      </Providers>,
+    );
+    expect(screen.getByText('Edit')).toBeTruthy();
+    expect(screen.getByText('Delete')).toBeTruthy();
+    await fireEvent.press(await screen.findByTestId('expand-greeting'));
+    await screen.findByText('front c1');
+    expect(screen.queryByText(/rename/i)).toBeNull();
+  });
+});
+
+/** Buttons that add or remove c1 and c3 from #Dog, as the picker and the card list do. */
+function MembershipHarness({ onAdded }: { onAdded?: () => void }) {
+  const { add, remove } = useTagMembership({ onAdded });
+  const change = {
+    tag: tag('Dog', 3, 4),
+    cards: [
+      { id: 'c1', version: 1 },
+      { id: 'c3', version: 3 },
+    ],
+  };
+  return (
+    <>
+      <Pressable onPress={() => add.mutate(change)} testID="add">
+        <Text>add</Text>
+      </Pressable>
+      <Pressable onPress={() => remove.mutate(change)} testID="remove">
+        <Text>remove</Text>
+      </Pressable>
+    </>
+  );
+}
+
+const versionsAfter = { tag: { id: 't-Dog', version: 5 }, cards: [{ id: 'c1', version: 2 }, { id: 'c3', version: 4 }] };
+const versionsAfterUndo = { tag: { id: 't-Dog', version: 6 }, cards: [{ id: 'c1', version: 3 }, { id: 'c3', version: 5 }] };
+
+describe('Undo in a tag\'s card list', () => {
+  it('CARDTAG-08: "Added to #Dog · Undo"; Undo removes them with the versions the add returned', async () => {
+    let adds = 0;
+    const api = fakeApi([
+      { method: 'POST', path: /^\/tags\/t-Dog\/cards$/, reply: () => ((adds += 1), { body: versionsAfter }) },
+      { method: 'POST', path: /^\/tags\/t-Dog\/cards\/remove$/, reply: { body: versionsAfterUndo } },
+    ]);
+    const onAdded = jest.fn();
+    await render(
+      <Providers>
+        <MembershipHarness onAdded={onAdded} />
+      </Providers>,
+    );
+    await fireEvent.press(screen.getByTestId('add'));
+    await screen.findByText('Added to #Dog');
+    expect(onAdded).toHaveBeenCalled(); // the picker closes
+    await fireEvent.press(screen.getByText('Undo'));
+    await screen.findByText('Removed from #Dog');
+    expect(screen.queryByText('Undo')).toBeNull(); // an Undo is not undone again
+    const undo = api.calls.find((c) => c.path.endsWith('/cards/remove'))!;
+    expect(undo.ifMatch).toBe('"5"');
+    expect(undo.body).toEqual({
+      cards: [
+        { cardId: 'c1', version: 2 },
+        { cardId: 'c3', version: 4 },
+      ],
+    });
+    expect(adds).toBe(1);
+  });
+
+  it('CARDTAG-07: "Removed from #Dog · Undo"; Undo puts them back and says "Put back in #Dog"', async () => {
+    let removes = 0;
+    const api = fakeApi([
+      {
+        method: 'POST',
+        path: /^\/tags\/t-Dog\/cards\/remove$/,
+        reply: () => ((removes += 1), { body: versionsAfter }),
+      },
+      { method: 'POST', path: /^\/tags\/t-Dog\/cards$/, reply: { body: versionsAfterUndo } },
+    ]);
+    const onAdded = jest.fn();
+    await render(
+      <Providers>
+        <MembershipHarness onAdded={onAdded} />
+      </Providers>,
+    );
+    await fireEvent.press(screen.getByTestId('remove'));
+    await screen.findByText('Removed from #Dog');
+    await fireEvent.press(screen.getByText('Undo'));
+    await screen.findByText('Put back in #Dog');
+    expect(screen.queryByText('Added to #Dog')).toBeNull(); // not the add's toast
+    expect(screen.queryByText('Undo')).toBeNull();
+    expect(onAdded).not.toHaveBeenCalled();
+    const undo = api.calls.find((c) => c.method === 'POST' && c.path === '/tags/t-Dog/cards')!;
+    expect(undo.ifMatch).toBe('"5"');
+    expect(undo.body).toEqual({
+      cards: [
+        { cardId: 'c1', version: 2 },
+        { cardId: 'c3', version: 4 },
+      ],
+    });
+    expect(removes).toBe(1);
   });
 });

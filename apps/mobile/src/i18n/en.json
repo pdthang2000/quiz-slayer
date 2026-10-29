@@ -107,7 +107,9 @@
       "pickerEmpty": "No cards to add.",
       "atTagLimit": "Has 20 tags",
       "maxSelected": "You can select up to 100 cards at a time.",
-      "select": "Select {{front}}"
+      "select": "Select {{front}}",
+      "putBack": "Put back in #{{name}}",
+      "undoneAdd": "Removed from #{{name}}"
     },
     "ofCard": {
       "title": "Tags",
