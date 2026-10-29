@@ -35,11 +35,6 @@ export const cardsApi = {
       version: card.version,
     }),
 
-  /** UI-14 (slice 4b). */
+  /** UI-14: this card's tags with their Active card counts, READ-06 order. */
   tagsOf: (id: string) => request<TagWithCount[]>('GET', `/cards/${id}/tags`),
-};
-
-export const tagsApi = {
-  /** READ-04: A–Z with Active counts. Also the autocomplete source (UI-02). */
-  list: () => request<TagWithCount[]>('GET', '/tags'),
 };

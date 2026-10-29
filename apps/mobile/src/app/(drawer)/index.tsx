@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Pressable,
   RefreshControl,
@@ -188,7 +187,9 @@ export default function CardsScreen() {
         onEdit={() =>
           menuCard && router.push({ pathname: '/card/edit', params: { id: menuCard.id } })
         }
-        onTags={() => Alert.alert(t('cards.menu.tags'), t('common.comingSoon'))}
+        onTags={() =>
+          menuCard && router.push({ pathname: '/card/tags', params: { id: menuCard.id } })
+        }
         onDelete={() =>
           menuCard && moveToTrash.mutate({ id: menuCard.id, version: menuCard.version })
         }

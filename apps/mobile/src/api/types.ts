@@ -44,3 +44,19 @@ export type CardVersion = { id: string; version: number };
 
 /** READ-03 + READ-05: the card list's filter (also Study's, STUDY-01). */
 export type CardFilter = { search?: string; tagIds?: string[] };
+
+/** CARDTAG-08: a card in the "+ Add cards" picker. `atTagLimit`: it already has 20 tags. */
+export type TagPickerCard = Card & { atTagLimit: boolean };
+
+/** What adding or removing cards through a tag's list returns: the new versions. */
+export type TagCards = { tag: CardVersion; cards: CardVersion[] };
+
+/** TAG-15: the merge preview carried by 409 TagMergeNeedsConfirmation. Active cards only. */
+export type MergePreview = {
+  /** null: nobody holds the name any more (C-38); the app asks for a plain rename. */
+  into: string | null;
+  intoId: string | null;
+  intoCount: number;
+  fromCount: number;
+  resultCount: number;
+};

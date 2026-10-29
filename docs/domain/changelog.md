@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-29 — Phase 4b (mobile: Tags)
+- Tag list: A–Z colored buttons with counts, long-press sheet Show cards · Rename · Delete (UI-03, UI-05, UI-06). Rename shows the merge preview and resends with confirmMerge (TAG-08, TAG-15); delete asks again with the new count after TagChanged (TAG-16).
+- A tag's card list: ✕ per row, checkboxes + Remove (n) with Undo, "+ Add cards" picker with greyed cards at 20 tags, 100 per action (CARDTAG-07, CARDTAG-08). ⋯ → Tags expands a card's tags on demand (UI-14).
+- New open questions C-52..C-56 (tap on a tag, app texts, the 101st tick, after adding, UI-14 details).
+
 ## 2026-10-27 — Theme option
 - Confirmed: Settings at the bottom of the drawer with Appearance System / Light / Dark, kept on this phone only (UI-17, C-51). UI-09 and UI-12 updated to point to it.
 

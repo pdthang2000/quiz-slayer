@@ -9,6 +9,10 @@ type Props = {
   onPress?: () => void;
   onLongPress?: () => void;
   accessibilityLabel?: string;
+  /** Active cards with this tag, shown after the name (Tag list). */
+  count?: number;
+  large?: boolean;
+  testID?: string;
 };
 
 /** A tag shown as a colored chip. `#` is display only (UI-01). */
@@ -19,6 +23,9 @@ export function TagChip({
   onPress,
   onLongPress,
   accessibilityLabel,
+  count,
+  large,
+  testID,
 }: Props) {
   const { colors, tagColor } = useTheme();
   const background = color ? tagColor(color) : colors.surfaceMuted;
@@ -30,13 +37,18 @@ export function TagChip({
       accessibilityRole={onPress ? 'button' : 'text'}
       accessibilityState={onPress ? { selected: !!selected } : undefined}
       accessibilityLabel={accessibilityLabel ?? `#${name}`}
+      testID={testID}
       style={[
         styles.chip,
+        large && styles.large,
         { backgroundColor: background, borderColor: selected ? colors.primary : 'transparent' },
       ]}
     >
-      <Text style={[styles.text, { color: colors.text }]} numberOfLines={1}>
+      <Text style={[styles.text, large && styles.largeText, { color: colors.text }]} numberOfLines={1}>
         #{name}
+        {count !== undefined ? (
+          <Text style={{ color: colors.textMuted }}>{`  ${count}`}</Text>
+        ) : null}
       </Text>
     </Pressable>
   );
@@ -51,4 +63,6 @@ const styles = StyleSheet.create({
     maxWidth: 220,
   },
   text: { fontSize: 14 },
+  large: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, maxWidth: '100%' },
+  largeText: { fontSize: 16 },
 });

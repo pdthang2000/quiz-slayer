@@ -1,7 +1,8 @@
 import { useEffect, useEffectEvent, useState } from 'react';
 import { useNavigation } from 'expo-router';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { cardsApi, tagsApi } from './cards';
+import { cardsApi } from './cards';
+import { tagsApi } from './tags';
 import type { CardFilter } from './types';
 
 export const keys = {
@@ -9,11 +10,15 @@ export const keys = {
   cardList: (filter: CardFilter) => ['cards', 'list', filter] as const,
   card: (id: string) => ['cards', 'one', id] as const,
   tags: ['tags'] as const,
+  cardTags: (cardId: string) => ['tags', 'ofCard', cardId] as const,
+  tagPicker: (tagId: string, search: string) =>
+    ['cards', 'toAddToTag', tagId, search] as const,
 };
 
 /** READ-02: "load more" pages of Active cards for the current filter. */
-export function useCardList(filter: CardFilter) {
+export function useCardList(filter: CardFilter, enabled = true) {
   return useInfiniteQuery({
+    enabled,
     queryKey: keys.cardList(filter),
     queryFn: ({ pageParam }) => cardsApi.list(filter, pageParam),
     initialPageParam: undefined as string | undefined,
@@ -24,6 +29,24 @@ export function useCardList(filter: CardFilter) {
 /** UI-02: all of the user's tags, loaded once, filtered on the phone. */
 export function useTags() {
   return useQuery({ queryKey: keys.tags, queryFn: tagsApi.list });
+}
+
+/** UI-14: one card's tags with their Active counts. */
+export function useCardTags(cardId: string) {
+  return useQuery({
+    queryKey: keys.cardTags(cardId),
+    queryFn: () => cardsApi.tagsOf(cardId),
+  });
+}
+
+/** CARDTAG-08: cards that can be added to the tag, newest first, 20 at a time. */
+export function useTagPicker(tagId: string, search: string) {
+  return useInfiniteQuery({
+    queryKey: keys.tagPicker(tagId, search),
+    queryFn: ({ pageParam }) => tagsApi.cardsToAdd(tagId, search, pageParam),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+  });
 }
 
 /** A screen reloads when you return to it after leaving (not on its first show). */

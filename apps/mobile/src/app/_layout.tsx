@@ -58,12 +58,16 @@ export default function RootLayout() {
           <ThemeProvider value={navTheme}>
             <ToastProvider>
               <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-              <Stack>
+              {/* Back buttons show only the arrow, never a route name such as "(drawer)". */}
+              <Stack screenOptions={{ headerBackButtonDisplayMode: 'minimal' }}>
                 <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
                 <Stack.Screen
                   name="card/edit"
                   options={{ presentation: 'modal', title: t('cards.edit') }}
                 />
+                <Stack.Screen name="card/tags" options={{ title: t('tags.ofCard.title') }} />
+                <Stack.Screen name="tag/[id]/index" options={{ title: '' }} />
+                <Stack.Screen name="tag/[id]/add" options={{ presentation: 'modal' }} />
               </Stack>
             </ToastProvider>
           </ThemeProvider>

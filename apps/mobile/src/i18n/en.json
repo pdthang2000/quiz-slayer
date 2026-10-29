@@ -69,5 +69,49 @@
     "system": "System",
     "light": "Light",
     "dark": "Dark"
+  },
+  "tags": {
+    "title": "Tags",
+    "empty": "No tags yet. Add tags on a card.",
+    "cardCount_one": "{{count}} card",
+    "cardCount_other": "{{count}} cards",
+    "menu": {
+      "showCards": "Show cards",
+      "rename": "Rename",
+      "delete": "Delete"
+    },
+    "rename": {
+      "title": "Rename #{{name}}",
+      "placeholder": "New name"
+    },
+    "delete": {
+      "confirm_one": "{{name}} is on {{count}} card. Delete?",
+      "confirm_other": "{{name}} is on {{count}} cards. Delete?",
+      "action": "Delete"
+    },
+    "merge": {
+      "confirm": "{{into}} already exists ({{intoCount}} cards). Merge {{from}} ({{fromCount}} cards) into {{into}}? Result: {{resultCount}} cards.",
+      "action": "Merge",
+      "renameConfirm": "Rename {{from}} to {{to}}?",
+      "renameAction": "Rename"
+    },
+    "cards": {
+      "empty": "No cards with this tag.",
+      "remove": "Remove ({{count}})",
+      "removeOne": "Remove from #{{name}}",
+      "removed": "Removed from #{{name}}",
+      "addCards": "+ Add cards",
+      "add": "Add ({{count}})",
+      "added": "Added to #{{name}}",
+      "pickerTitle": "Add to #{{name}}",
+      "pickerEmpty": "No cards to add.",
+      "atTagLimit": "Has 20 tags",
+      "maxSelected": "You can select up to 100 cards at a time.",
+      "select": "Select {{front}}"
+    },
+    "ofCard": {
+      "title": "Tags",
+      "empty": "This card has no tags."
+    }
   }
 }
