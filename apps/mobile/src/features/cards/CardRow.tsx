@@ -7,10 +7,12 @@ import { spacing, useTheme } from '../../theme';
 type Props = {
   card: Card;
   onMenu: (card: Card) => void;
+  /** A small line under the text, e.g. "Trashed 2 days ago" (TRASH-13). */
+  note?: string;
 };
 
 /** UI-10: shows the front; tap flips it in place to the back; "⋯" opens the card menu. */
-export function CardRow({ card, onMenu }: Props) {
+export function CardRow({ card, onMenu, note }: Props) {
   const [flipped, setFlipped] = useState(false);
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -28,6 +30,11 @@ export function CardRow({ card, onMenu }: Props) {
         <Text style={[styles.text, { color: colors.text }]}>
           {flipped ? card.back : card.front}
         </Text>
+        {note ? (
+          <Text style={[styles.note, { color: colors.textMuted }]} testID={`card-note-${card.id}`}>
+            {note}
+          </Text>
+        ) : null}
       </Pressable>
       <Pressable
         hitSlop={12}
@@ -54,6 +61,7 @@ const styles = StyleSheet.create({
   },
   body: { flex: 1, padding: spacing.lg, minHeight: 56, justifyContent: 'center' },
   text: { fontSize: 17 },
+  note: { fontSize: 13, marginTop: spacing.xs },
   menu: { paddingHorizontal: spacing.lg, alignSelf: 'stretch', justifyContent: 'center' },
   dots: { fontSize: 22 },
 });

@@ -2,7 +2,9 @@ import { Alert, type AlertButton } from 'react-native';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import type { TrashedCard, TrashPage } from '../../api/types';
 import { fakeApi, Providers } from '../../test/harness';
+import i18n from '../../i18n';
 import { TrashList } from './TrashList';
+import { trashedAgo } from './trashedAgo';
 
 const NEWEST = '2026-10-29T09:34:55.197Z';
 
@@ -82,7 +84,7 @@ describe('Trash tab', () => {
     });
   });
 
-  it('TRASH-05: Delete permanently asks first, then deletes with the version shown', async () => {
+  it('TRASH-05, TRASH-14: Delete permanently asks first, then deletes with the version shown', async () => {
     const alert = jest.spyOn(Alert, 'alert');
     const { calls } = fakeApi([
       { method: 'GET', path: /^\/trash$/, reply: { body: page([card('a', 4)], 1) } },
@@ -170,5 +172,38 @@ describe('Trash tab', () => {
     expect(await screen.findByText('Trash changed, check again.')).toBeTruthy();
     expect(await screen.findByText('3 cards')).toBeTruthy();
     expect(calls.filter((c) => c.path === '/trash')).toHaveLength(2);
+  });
+});
+
+describe('TRASH-13: trashed … ago', () => {
+  const now = Date.parse('2026-10-31T12:00:00.000Z');
+  const ago = (iso: string) => trashedAgo(i18n.t.bind(i18n), iso, now);
+
+  it.each([
+    ['2026-10-31T11:59:30.000Z', 'Trashed just now'],
+    ['2026-10-31T12:00:05.000Z', 'Trashed just now'], // phone clock a little behind
+    ['2026-10-31T11:59:00.000Z', 'Trashed 1 min ago'],
+    ['2026-10-31T11:55:00.000Z', 'Trashed 5 min ago'],
+    ['2026-10-31T11:00:00.000Z', 'Trashed 1 hour ago'],
+    ['2026-10-31T00:30:00.000Z', 'Trashed 11 hours ago'],
+    ['2026-10-30T12:00:00.000Z', 'Trashed 1 day ago'],
+    ['2026-10-29T09:00:00.000Z', 'Trashed 2 days ago'],
+  ])('TRASH-13: trashed at %s → "%s"', (iso, text) => {
+    expect(ago(iso)).toBe(text);
+  });
+
+  it('TRASH-13: a Trash row shows the front and when it was trashed', async () => {
+    jest.useFakeTimers({ now, doNotFake: ['setTimeout', 'setInterval', 'nextTick', 'setImmediate', 'queueMicrotask'] });
+    fakeApi([
+      {
+        method: 'GET',
+        path: /^\/trash$/,
+        reply: { body: page([{ ...card('a'), trashedAt: '2026-10-29T09:00:00.000Z' }], 1) },
+      },
+    ]);
+    await showTrash();
+    expect(await screen.findByText('front a')).toBeTruthy();
+    expect(screen.getByTestId('card-note-a').props.children).toBe('Trashed 2 days ago');
+    jest.useRealTimers();
   });
 });

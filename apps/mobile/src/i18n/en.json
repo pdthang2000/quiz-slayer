@@ -127,6 +127,15 @@
     "deletePermanently": "Delete permanently",
     "deleteConfirm": "Delete this card forever?",
     "delete": "Delete",
-    "deleted": "Card deleted permanently"
+    "deleted": "Card deleted permanently",
+    "ago": {
+      "justNow": "Trashed just now",
+      "minutes_one": "Trashed {{count}} min ago",
+      "minutes_other": "Trashed {{count}} min ago",
+      "hours_one": "Trashed {{count}} hour ago",
+      "hours_other": "Trashed {{count}} hours ago",
+      "days_one": "Trashed {{count}} day ago",
+      "days_other": "Trashed {{count}} days ago"
+    }
   }
 }

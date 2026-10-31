@@ -20,12 +20,14 @@ import { ActionSheet } from '../../components/ActionSheet';
 import { confirm } from '../../components/confirm';
 import { useToast } from '../../components/Toast';
 import { CardRow } from '../cards/CardRow';
+import { trashedAgo } from './trashedAgo';
 import { spacing, useTheme } from '../../theme';
 import { listDeceleration } from '../../theme/scroll';
 
 /**
  * The Trash tab: trashed cards, most recently trashed first, 20 at a time, with the total
- * (TRASH-12). Each card can be restored (TRASH-04) or deleted permanently (TRASH-05).
+ * (TRASH-12). A row shows when it was trashed (TRASH-13). Each card can be restored
+ * (TRASH-04) or deleted permanently (TRASH-05, asks first: TRASH-14).
  * "Empty trash" asks with the count (TRASH-07) and sends what the screen showed (TRASH-11).
  */
 export function TrashList() {
@@ -113,7 +115,9 @@ export function TrashList() {
         decelerationRate={listDeceleration}
         data={cards}
         keyExtractor={(c) => c.id}
-        renderItem={({ item }) => <CardRow card={item} onMenu={setMenuCard} />}
+        renderItem={({ item }) => (
+          <CardRow card={item} onMenu={setMenuCard} note={trashedAgo(t, item.trashedAt)} />
+        )}
         onEndReached={() => {
           if (trash.hasNextPage && !trash.isFetchingNextPage) void trash.fetchNextPage();
         }}
