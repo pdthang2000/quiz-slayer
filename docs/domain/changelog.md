@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-31 — Phase 4c review
+- Confirmed: Trash rows show the front + "2 days ago", tap flips, ⋯ Restore · Delete permanently (TRASH-13, C-58); delete permanently asks first (TRASH-14, C-59); Trash texts (UI-16, C-60).
+
 ## 2026-10-29 — Phase 4b.1 review
 - Confirmed: Undo of "+ Add cards" confirms with "Removed from #Dog", without Undo (CARDTAG-08, UI-16, C-57).
 

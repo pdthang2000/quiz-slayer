@@ -255,6 +255,13 @@ The count check and every `card.deletePermanently()` run in one transaction: any
 
 **TRASH-12** `confirmed` — The Trash tab shows the most recently trashed card first. A card stores `trashedAt`: set by move to trash, cleared by restore. (C-30; also what B-04 auto-delete needs.) It loads 20 at a time ("load more", like READ-02), and the response carries the total count for the TRASH-07 dialog. (C-33)
 
+**TRASH-13** `confirmed` — A Trash row shows the front and a small "trashed … ago" (e.g. "2 days ago", from `trashedAt`, shown in local time). Tapping the row flips it to the back. Its "⋯" opens Restore · Delete permanently (like UI-10). (C-58)
+```
+[ 你好            2 days ago  ⋯ ]  ⋯ → Restore · Delete permanently
+```
+
+**TRASH-14** `confirmed` — Delete permanently of one card asks first: "Delete this card forever?" with Cancel / Delete. It cannot be undone (TRASH-05). (C-59)
+
 ### Reads
 **READ-01** `confirmed` — Every read that returns or counts cards states which state it wants. Repository methods are named by state (`findActive`, `findTrashed`); there is no `findAll`. No DB view. Each read path gets a test: "trashed card not returned".
 
@@ -338,7 +345,7 @@ Settings → Appearance: (•) System  ( ) Light  ( ) Dark
 
 **UI-15** `confirmed` — Leaving the card editor (Cancel or Back) with unsaved changes asks "Discard changes?" first. With no changes it leaves at once. (C-49)
 
-**UI-16** `confirmed` — App messages that are not in the error table (C-47, C-53, C-57):
+**UI-16** `confirmed` — App messages that are not in the error table (C-47, C-53, C-57, C-60):
 | When | Message |
 |---|---|
 | No network / no answer | "Can't reach the server. Check your connection." |
@@ -356,6 +363,13 @@ Settings → Appearance: (•) System  ( ) Light  ( ) Dark
 | Dialog buttons | "Merge", "Rename", "Delete" |
 | Undo of a remove from a tag | "Put back in #Dog" |
 | Undo of an add to a tag | "Removed from #Dog" (no Undo, C-57) |
+| Trash total (TRASH-12) | "47 cards" / "1 card" |
+| Trash button | "Empty trash" (hidden when the Trash is empty) |
+| Empty Trash | "Trash is empty." |
+| Empty trash dialog (TRASH-07) | "Delete 47 cards forever?" with Cancel / Delete |
+| After restore | "Card restored" |
+| After delete permanently | "Card deleted permanently" |
+| After empty trash | "Trash emptied" |
 | 101st tick (CARDTAG-07/08) | "You can select up to 100 cards at a time." |
 
 ### Study
