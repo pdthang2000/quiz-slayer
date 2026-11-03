@@ -255,7 +255,7 @@ The count check and every `card.deletePermanently()` run in one transaction: any
 
 **TRASH-12** `confirmed` — The Trash tab shows the most recently trashed card first. A card stores `trashedAt`: set by move to trash, cleared by restore. (C-30; also what B-04 auto-delete needs.) It loads 20 at a time ("load more", like READ-02), and the response carries the total count for the TRASH-07 dialog. (C-33)
 
-**TRASH-13** `confirmed` — A Trash row shows the front and a small "trashed … ago" (e.g. "2 days ago", from `trashedAt`, shown in local time). Tapping the row flips it to the back. Its "⋯" opens Restore · Delete permanently (like UI-10). (C-58)
+**TRASH-13** `confirmed` — A Trash row shows the front and a small "trashed … ago" (e.g. "2 days ago", from `trashedAt`, shown in local time). Tapping the row flips it to the back. Its "⋯" opens Restore · Delete permanently (like UI-10). (C-58) Wording keeps the word "Trashed": "Trashed just now" (under 1 min), "Trashed 5 min ago", "Trashed 3 hours ago", "Trashed 2 days ago" (under 14 days), then "Trashed 3 weeks ago". (C-61)
 ```
 [ 你好            2 days ago  ⋯ ]  ⋯ → Restore · Delete permanently
 ```
@@ -392,6 +392,28 @@ Start Study #HSK1 (50 cards) → add a new #HSK1 card on the laptop → not in t
 **STUDY-05** `confirmed` — v1: flip and Next only. No "know / don't know", no score, nothing stored. A Quizlet-like study experience comes later (backlog B-12). (S-4)
 
 **STUDY-06** `confirmed` — No limit on cards per session; the user can stop anytime. (S-5)
+
+**STUDY-07** `confirmed` — A Study button is on the Cards screen and on a tag's card list ("Study #HSK1"); both study what that list shows (STUDY-01). With 0 cards the button is disabled. (S-6, S-7)
+
+**STUDY-08** `confirmed` — The study screen shows progress ("12 / 50"), Prev and Next buttons, and also moves by swipe: left = next, right = previous. Tap flips the card. (S-8, S-9, S-10)
+```
+┌──────────────────────────────┐
+│ 12 / 50          ⇄ Shuffle ✕ │
+│            你好               │  tap = flip · swipe ← next · swipe → prev
+│   [ ◀ Prev ]      [ Next ▶ ] │
+└──────────────────────────────┘
+```
+
+**STUDY-09** `confirmed` — Shuffle in the middle reshuffles only the cards not seen yet; the position stays. (S-11)
+```
+At 12 / 50 → Shuffle → cards 1–12 unchanged, 13–50 in a new random order, still at 12
+```
+
+**STUDY-10** `confirmed` — The front/back switch can be changed anytime during a session; the choice is remembered on this phone for the next session. (S-12)
+
+**STUDY-11** `confirmed` — After the last card: "Done! 50 cards" with Study again · Shuffle & again · Close. Leaving in the middle (✕ or Back) leaves at once; there is no resume, because nothing is stored (STUDY-05). (S-13, S-14)
+
+**STUDY-12** `confirmed` — A card edited on another device during a session shows the content as fetched (20 at a time); a trashed or deleted card is skipped (STUDY-02). (S-15)
 
 How a session loads (technical, C): the app first loads only the matching card ids (small even for thousands of cards), orders or shuffles them on the phone, then fetches card content 20 at a time, fetching the next batch before it is needed.
 

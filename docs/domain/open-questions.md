@@ -65,20 +65,37 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | C-58 | Trash tab: how are Restore and Delete permanently reached on a card? Provisional: each row has "⋯" → Restore · Delete permanently (like UI-10); a tap flips the row to the back. Is the trashed date shown on a row? Provisional: no. | answered: ⋯ Restore · Delete permanently, tap flips, plus a small "2 days ago" → TRASH-13 |
 | C-59 | Delete permanently of one card (TRASH-05, no undo): ask first? Provisional: yes, "Delete this card forever?" with Cancel / Delete. | answered: yes, "Delete this card forever?" → TRASH-14 |
 | C-60 | Slice 4c app texts not written in the docs. Provisional: total above the list "47 cards" / "1 card"; button "Empty trash" (hidden when the Trash is empty); empty Trash "Trash is empty."; TRASH-07 dialog "Delete 47 cards forever?" with Cancel / Delete; toasts "Card restored" (same as UI-13 Undo), "Card deleted permanently", "Trash emptied". | answered: confirmed as listed → UI-16 |
-| C-61 | TRASH-13 wording of the relative time. Provisional: "Trashed just now" (under 1 min, or a time slightly in the future), "Trashed 5 min ago" (under 1 hour), "Trashed 1 hour ago" / "Trashed 3 hours ago" (under 1 day), "Trashed 1 day ago" / "Trashed 2 days ago" (no weeks or months). Should the "Trashed" word be shown, or only "2 days ago"? | open |
+| C-61 | TRASH-13 wording of the relative time. Provisional: "Trashed just now" (under 1 min, or a time slightly in the future), "Trashed 5 min ago" (under 1 hour), "Trashed 1 hour ago" / "Trashed 3 hours ago" (under 1 day), "Trashed 1 day ago" / "Trashed 2 days ago" (no weeks or months). Should the "Trashed" word be shown, or only "2 days ago"? | answered: keep "Trashed"; just now / min / hours / days, weeks after 14 days → TRASH-13 |
 | C-40 | A tag merge fails because one of its cards was saved on another device at the same moment (CARD-08). Which message? | answered: the merge's own error `TagMergeFailed`, "Merge failed, try again." (409, Race) → Error handling |
 | C-16 | The Model and Events sections of card-library.md are `draft` (incl. `TagsMerged`). Confirm them as the Phase 1 design? | answered: confirmed as listed, plus `TagsMerged` |
 
 ## Daily Practice
 | ID | Question | Status |
 |---|---|---|
-| Q-01 | What is a "day"? User's timezone or fixed? What if a session starts at 23:55? | open |
-| Q-02 | Is 10 strict? What if a group of 3 items comes when only 2 slots are left? | open |
-| Q-03 | Missed day: can it be made up? Does it break the streak? | open |
-| Q-04 | Which answer types are in v1? (Writing/Speaking need human or AI grading) | open |
-| Q-05 | How are items selected: random, difficulty, weak areas, spaced repetition of mistakes? | open |
-| Q-06 | Do quiz mistakes become cards: automatically, suggested, or never? | open |
-| Q-07 | Can a user study several tracks at once, each with its own daily set? | open |
+| Q-01 | What is a "day"? User's timezone or fixed? What if a session starts at 23:55? | answered: phone's timezone; a session belongs to the day it started → DP-05 |
+| Q-02 | Is 10 strict? What if a group of 3 items comes when only 2 slots are left? | answered: see Q-02a–d → DP-12..DP-17 |
+| Q-03 | Missed day: can it be made up? Does it break the streak? | answered: missed day is gone, streak resets → DP-06, B-14 |
+| Q-04 | Which answer types are in v1? (Writing/Speaking need human or AI grading) | answered: multiple choice only (text, image or audio question) → DP-07, B-15 |
+| Q-05 | How are items selected: random, difficulty, weak areas, spaced repetition of mistakes? | answered: not seen yet + mistakes come back after 1, 3, 7 days → DP-08 |
+| Q-06 | Do quiz mistakes become cards: automatically, suggested, or never? | answered: a \"Save as card\" button on wrong answers → DP-10 |
+| Q-07 | Can a user study several tracks at once, each with its own daily set? | answered: yes, each track has its own daily set and streak → DP-09 |
+| Q-14 | Where do questions come from in v1? | answered: a JSON/CSV file Jackkie writes, imported by a script; in-app editor later → content-ingestion.md |
+| D-1..D-8 | A day of practice: feedback, order, resume, finish, changing answers, timer, audio replay, history | answered: → DP-20..DP-26, DP-03 |
+| Q-06a | "Save as card" on an audio question (cards are text only, CARD-03): hide the button, or save the question text only? | answered: hidden for audio kinds → DP-16 |
+| Q-07a | Daily size per track: fixed 10, or set per track (default 10)? | answered: per track, default 10, allowed 1–50 → DP-12 |
+| Q-07b | Add/remove tracks anytime from Settings? | answered: yes; removing keeps history, re-adding continues it → DP-15 |
+| Q-02d | Settings leave too few questions? | answered: give what's there + message → DP-14 |
+| Q-02c | Settings changed while today's set is started? | answered: applies from the next set → DP-13 |
+| Q-02b | With groups on: exactly 10, or 10–12 (a group is never split)? Or count a group as one? | answered: count quizzes (a group = 1); progress in quizzes, result in questions → DP-17, DP-18 |
+| Q-02a | Kinds on/off per track or one setting for all? | answered: per track → DP-12 |
+| M-1 | Drop Test/Level fields: a track is defined by question tags instead? | answered: confirmed → QB-11 |
+| M-2 | Question kinds in v1 | answered: single, single audio, reading group, audio group; a field, not a tag → QB-06 |
+| M-3 | Which questions go into a pool? | answered: system + the user's own → QB-10 |
+| M-4 | Sections ("Part 3") | answered: no Section concept; a part can be a tag if wanted |
+| M-5 | Topic tags on questions | answered: confirmed, topics are plain tags → QB-11 |
+| T-a | Question tags vs Card tags | answered: same rules, separate list → QB-07 |
+| T-b | A track = one tag, or a combination of tags? | answered: one tag per track; must-have / must-not-have filters later → DP-11, B-16 |
+| T-c | Tags on a group or on each question? | answered: on the group → QB-08 |
 
 ## Infrastructure
 | ID | Question | Status |
@@ -90,7 +107,7 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 |---|---|---|
 | Q-08 | Content source? | answered: mostly user-provided; the system also provides a decent set of ready tests/questions. Follow-ups Q-11, Q-12 |
 | Q-09 | Real login in v1, or a single demo user? | answered: demo user only in v1 |
-| Q-10 | Target users: only Jackkie at first, or public? | open |
+| Q-10 | Target users: only Jackkie at first, or public? | answered: v1 only Jackkie → 00-vision.md |
 | Q-11 | User-provided content: private or shareable? | answered: Public/Private per set, Private by default → QB-01..05 |
 | Q-13 | Name for a user's collection of questions? | answered: Quiz Set |
 | Q-12 | Where does system-provided content come from: written originally in the test's format, licensed, or public domain? Official IELTS/TOEIC/HSK material belongs to its publishers; serving it to other users is likely infringement (not legal advice). | deferred: Jackkie provides it later; check origin then |

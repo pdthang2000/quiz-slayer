@@ -55,26 +55,31 @@ Names confirmed 2026-10-22. How each error is handled: card-library.md → Error
 | `TagNotOnCard` | CARDTAG-04 (replaceTagForMerge when the card lacks A) | confirmed |
 | `TagMergeNotAllowed` | Merging a tag into itself or into another user's tag (TAG-08, CARD-04) | confirmed |
 
-## Daily Practice (all draft)
+## Daily Practice
 
 | Term | Meaning | Status |
 |---|---|---|
-| Track | The test a user practises for (TOEIC, IELTS, HSK...). | draft |
-| Daily Session | One user's set of quizzes for one track on one day. | draft |
-| Slot | One place in a daily session (10 per day by default). | draft |
-| Attempt | A user's answer to one item in a daily session. | draft |
-| Mistake | An item answered wrong; may come back later. | draft |
-| Streak | Consecutive days with a completed daily session. | draft |
+| Track | A question tag the user follows (e.g. `#HSK4`), with its own settings, daily set and streak (DP-09, DP-11, DP-12). | confirmed |
+| Daily Session | One track's set of quizzes for one day; belongs to the day it was started (DP-01, DP-05, DP-17). | confirmed |
+| Quiz | One unit of a daily set: a single question, or a group (one passage or audio + its questions) (DP-17). | confirmed |
+| Attempt | The user's answer to one question in a daily session; can't be changed (DP-03). | confirmed |
+| Mistake | A question answered wrong; it comes back after 1, 3 and 7 days (DP-08). | confirmed |
+| Streak | Consecutive days with a finished daily set: one per track, plus one overall (any track) (DP-19, DP-23). | confirmed |
 
-## Question Bank (all draft)
+## Question Bank
 
 | Term | Meaning | Status |
 |---|---|---|
-| Test | A source exam format (TOEIC, IELTS, HSK). | draft |
-| Quiz Set | A collection of questions owned by a user (or the system), Public or Private. Belongs to a Test (e.g. a TOEIC Quiz Set). | confirmed |
+| Kind | Fixed field on a question or group telling the app how to show it: single, single audio, reading group, audio group (QB-06). | confirmed |
+| Question tag | A label on a question or group (`#HSK3`, `#mock`); same name rules as Card tags, separate list (QB-07). Never repeats the kind (QB-09). | confirmed |
+| Pool | All questions with a given question tag that the user can use: system + own (QB-10). | confirmed |
+
+
+| Term | Meaning | Status |
+|---|---|---|
+| Quiz Set | A collection of questions owned by a user (or the system), Public or Private. One uploaded test; its questions carry question tags (QB-07, QB-11). | confirmed |
 | Visibility | Public or Private, per Quiz Set. | confirmed |
-| Section | A part of a test (TOEIC Part 3, IELTS Listening). | draft |
-| Item Group | Items that share one stimulus; served together. | draft |
-| Stimulus | Shared material: audio, passage, image. | draft |
-| Item | One question with its answer key. | draft |
-| Answer Key | The correct answer(s) for an item. | draft |
+| Group | Questions that share one passage or audio and are always served together; one quiz (QB-06, DP-17). | confirmed |
+| Passage / Audio | The shared material of a group (QB-06). | confirmed |
+| Question | One multiple-choice question: 2–6 choices, one correct (DP-07). | confirmed |
+| Answer Key | The correct choice of a question. | confirmed |

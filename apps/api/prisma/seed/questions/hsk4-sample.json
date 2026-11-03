@@ -1,0 +1,658 @@
+{
+  "_note": "Original sample questions written for development and testing (not taken from any official exam). Format is a proposal (see backlog B-17); the Phase 6 seed script may adapt it.",
+  "quizSet": "HSK4 Sample",
+  "owner": "system",
+  "tags": [
+    "HSK4",
+    "sample"
+  ],
+  "quizzes": [
+    {
+      "id": "hsk4-s01",
+      "kind": "single",
+      "question": "你明天早上八点___到，别迟到。",
+      "choices": [
+        "按照",
+        "准时",
+        "正好",
+        "及时"
+      ],
+      "answer": 1,
+      "explanation": "准时 = on time, at the exact time (đúng giờ)."
+    },
+    {
+      "id": "hsk4-s02",
+      "kind": "single",
+      "question": "___下雨，比赛也要按时进行。",
+      "choices": [
+        "虽然",
+        "即使",
+        "因为",
+        "只要"
+      ],
+      "answer": 1,
+      "explanation": "即使……也…… = even if … still … (cho dù … cũng …)."
+    },
+    {
+      "id": "hsk4-s03",
+      "kind": "single",
+      "question": "他___学习很努力，___成绩一直很好。",
+      "choices": [
+        "虽然……但是",
+        "如果……就",
+        "既然……就",
+        "因为……所以"
+      ],
+      "answer": 3,
+      "explanation": "因为……所以…… = because … so … (vì … nên …)."
+    },
+    {
+      "id": "hsk4-s04",
+      "kind": "single",
+      "question": "我___把作业写完了，现在可以休息了。",
+      "choices": [
+        "终于",
+        "竟然",
+        "突然",
+        "偶尔"
+      ],
+      "answer": 0,
+      "explanation": "终于 = finally, after effort (cuối cùng)."
+    },
+    {
+      "id": "hsk4-s05",
+      "kind": "single",
+      "question": "没想到这么难的题，他___做对了。",
+      "choices": [
+        "果然",
+        "终于",
+        "当然",
+        "竟然"
+      ],
+      "answer": 3,
+      "explanation": "竟然 = unexpectedly; matches 没想到 (vậy mà, không ngờ)."
+    },
+    {
+      "id": "hsk4-s06",
+      "kind": "single",
+      "question": "___你已经决定了，就别再犹豫了。",
+      "choices": [
+        "虽然",
+        "即使",
+        "既然",
+        "尽管"
+      ],
+      "answer": 2,
+      "explanation": "既然……就…… = since (already) … then … (đã … thì …)."
+    },
+    {
+      "id": "hsk4-s07",
+      "kind": "single",
+      "question": "___他工作很忙，他___每天坚持锻炼。",
+      "choices": [
+        "因为……所以",
+        "既然……就",
+        "尽管……还是",
+        "只要……就"
+      ],
+      "answer": 2,
+      "explanation": "尽管……还是…… = although … still … (mặc dù … vẫn …)."
+    },
+    {
+      "id": "hsk4-s08",
+      "kind": "single",
+      "question": "你___多练习，口语___会越来越好。",
+      "choices": [
+        "即使……所以",
+        "只要……就",
+        "虽然……但是",
+        "因为……但是"
+      ],
+      "answer": 1,
+      "explanation": "只要……就…… = as long as … then … (chỉ cần … thì …)."
+    },
+    {
+      "id": "hsk4-s09",
+      "kind": "single",
+      "question": "___天气怎么样，我们明天都要出发。",
+      "choices": [
+        "无论",
+        "因为",
+        "如果",
+        "虽然"
+      ],
+      "answer": 0,
+      "explanation": "无论……都…… = no matter … (bất kể … đều …)."
+    },
+    {
+      "id": "hsk4-s10",
+      "kind": "single",
+      "question": "这本书我看了好几遍，___没看懂。",
+      "choices": [
+        "或者",
+        "还有",
+        "还是",
+        "而且"
+      ],
+      "answer": 2,
+      "explanation": "还是 = still (vẫn)."
+    },
+    {
+      "id": "hsk4-s11",
+      "kind": "single",
+      "question": "他___会说汉语，___会说日语。",
+      "choices": [
+        "虽然……但是",
+        "不仅……而且",
+        "因为……所以",
+        "如果……就"
+      ],
+      "answer": 1,
+      "explanation": "不仅……而且…… = not only … but also … (không những … mà còn …)."
+    },
+    {
+      "id": "hsk4-s12",
+      "kind": "single",
+      "question": "请你把这杯水___给王老师。",
+      "choices": [
+        "收",
+        "接",
+        "递",
+        "拿起"
+      ],
+      "answer": 2,
+      "explanation": "递给 = hand to someone (đưa cho)."
+    },
+    {
+      "id": "hsk4-s13",
+      "kind": "single",
+      "question": "我的手机___弟弟弄坏了。",
+      "choices": [
+        "向",
+        "把",
+        "被",
+        "对"
+      ],
+      "answer": 2,
+      "explanation": "被 marks the passive: the phone was broken by my brother (bị)."
+    },
+    {
+      "id": "hsk4-s14",
+      "kind": "single",
+      "question": "你先___窗户关上，外面太冷了。",
+      "choices": [
+        "从",
+        "对",
+        "被",
+        "把"
+      ],
+      "answer": 3,
+      "explanation": "把 + object + verb + result: 把窗户关上 (đóng cửa sổ lại)."
+    },
+    {
+      "id": "hsk4-s15",
+      "kind": "single",
+      "question": "这个问题太难了，___老师都不会。",
+      "choices": [
+        "连",
+        "才",
+        "也",
+        "就"
+      ],
+      "answer": 0,
+      "explanation": "连……都…… = even … (ngay cả … cũng …)."
+    },
+    {
+      "id": "hsk4-s16",
+      "kind": "single",
+      "question": "他每天都___上班，从来没迟到过。",
+      "choices": [
+        "按时",
+        "正确",
+        "及时",
+        "准确"
+      ],
+      "answer": 0,
+      "explanation": "按时 = on schedule, at the set time (đúng giờ, theo giờ quy định)."
+    },
+    {
+      "id": "hsk4-s17",
+      "kind": "single",
+      "question": "生病了要___去医院看病，别拖。",
+      "choices": [
+        "按时",
+        "同时",
+        "及时",
+        "准时"
+      ],
+      "answer": 2,
+      "explanation": "及时 = promptly, before it is too late (kịp thời)."
+    },
+    {
+      "id": "hsk4-s18",
+      "kind": "single",
+      "question": "这件衣服颜色很好看，___有点儿贵。",
+      "choices": [
+        "只有",
+        "只好",
+        "只是",
+        "只要"
+      ],
+      "answer": 2,
+      "explanation": "只是 = it's just that, but (chỉ là)."
+    },
+    {
+      "id": "hsk4-s19",
+      "kind": "single",
+      "question": "末班车已经走了，我们___打车回家了。",
+      "choices": [
+        "只有",
+        "只要",
+        "只是",
+        "只好"
+      ],
+      "answer": 3,
+      "explanation": "只好 = have no choice but to (đành phải)."
+    },
+    {
+      "id": "hsk4-s20",
+      "kind": "single",
+      "question": "我昨天晚上看书看得太晚，今天早上差点儿___了。",
+      "choices": [
+        "迟到",
+        "到达",
+        "来得及",
+        "准时"
+      ],
+      "answer": 0,
+      "explanation": "差点儿迟到了 = was almost late (suýt nữa thì muộn)."
+    },
+    {
+      "id": "hsk4-s21",
+      "kind": "single",
+      "question": "快点儿，电影七点开始，再不走就___了。",
+      "choices": [
+        "用不着",
+        "来不及",
+        "不得了",
+        "来得及"
+      ],
+      "answer": 1,
+      "explanation": "来不及 = not enough time, too late (không kịp)."
+    },
+    {
+      "id": "hsk4-s22",
+      "kind": "single",
+      "question": "别着急，离考试还有一个小时，___。",
+      "choices": [
+        "舍不得",
+        "不得不",
+        "来不及",
+        "来得及"
+      ],
+      "answer": 3,
+      "explanation": "来得及 = there is still time (vẫn kịp)."
+    },
+    {
+      "id": "hsk4-s23",
+      "kind": "single",
+      "question": "做决定以前，你最好___跟他商量一下。",
+      "choices": [
+        "刚刚",
+        "先",
+        "才",
+        "已经"
+      ],
+      "answer": 1,
+      "explanation": "先 = first, beforehand (trước)."
+    },
+    {
+      "id": "hsk4-s24",
+      "kind": "single",
+      "question": "他说话的声音太小了，我___听不清楚。",
+      "choices": [
+        "根本",
+        "原来",
+        "到底",
+        "本来"
+      ],
+      "answer": 0,
+      "explanation": "根本 + negative = not at all (hoàn toàn không)."
+    },
+    {
+      "id": "hsk4-s25",
+      "kind": "single",
+      "question": "你___想去哪儿？快点儿决定吧。",
+      "choices": [
+        "终于",
+        "到底",
+        "竟然",
+        "根本"
+      ],
+      "answer": 1,
+      "explanation": "到底 in questions = after all, on earth (rốt cuộc)."
+    },
+    {
+      "id": "hsk4-s26",
+      "kind": "single",
+      "question": "我___以为他是老师，后来才知道他是学生。",
+      "choices": [
+        "终于",
+        "到底",
+        "根本",
+        "本来"
+      ],
+      "answer": 3,
+      "explanation": "本来 = originally, at first (vốn dĩ, lúc đầu)."
+    },
+    {
+      "id": "hsk4-s27",
+      "kind": "single",
+      "question": "推开门一看，___是我的老朋友来了。",
+      "choices": [
+        "本来",
+        "原来",
+        "到底",
+        "根本"
+      ],
+      "answer": 1,
+      "explanation": "原来 = so it turns out (hóa ra)."
+    },
+    {
+      "id": "hsk4-s28",
+      "kind": "single",
+      "question": "这道菜___酸___辣，非常好吃。",
+      "choices": [
+        "一……就",
+        "连……都",
+        "越……越",
+        "又……又"
+      ],
+      "answer": 3,
+      "explanation": "又……又…… = both … and … (vừa … vừa …)."
+    },
+    {
+      "id": "hsk4-s29",
+      "kind": "single",
+      "question": "天气___来___冷了，多穿点儿衣服。",
+      "choices": [
+        "连……都",
+        "越……越",
+        "又……又",
+        "一……就"
+      ],
+      "answer": 1,
+      "explanation": "越来越 = more and more (càng ngày càng)."
+    },
+    {
+      "id": "hsk4-s30",
+      "kind": "single",
+      "question": "我一到家___给你打电话。",
+      "choices": [
+        "再",
+        "还",
+        "才",
+        "就"
+      ],
+      "answer": 3,
+      "explanation": "一……就…… = as soon as … (vừa … là …)."
+    },
+    {
+      "id": "hsk4-s31",
+      "kind": "single",
+      "question": "这个周末我打算在家好好___一下。",
+      "choices": [
+        "休息",
+        "睡觉",
+        "休假",
+        "放松了"
+      ],
+      "answer": 0,
+      "explanation": "休息一下 = take a rest (nghỉ ngơi một chút). 睡觉 is a separable verb and can't take 一下 here."
+    },
+    {
+      "id": "hsk4-s32",
+      "kind": "single",
+      "question": "他___了很多年的经验，工作做得很好。",
+      "choices": [
+        "发展",
+        "提高",
+        "增加",
+        "积累"
+      ],
+      "answer": 3,
+      "explanation": "积累经验 = accumulate experience (tích lũy kinh nghiệm)."
+    },
+    {
+      "id": "hsk4-s33",
+      "kind": "single",
+      "question": "只要你___下去，一定能学好汉语。",
+      "choices": [
+        "坚决",
+        "保持",
+        "坚持",
+        "支持"
+      ],
+      "answer": 2,
+      "explanation": "坚持下去 = keep going, persevere (kiên trì)."
+    },
+    {
+      "id": "hsk4-s34",
+      "kind": "single",
+      "question": "我们要___环境，不要乱扔垃圾。",
+      "choices": [
+        "保存",
+        "保留",
+        "保证",
+        "保护"
+      ],
+      "answer": 3,
+      "explanation": "保护环境 = protect the environment (bảo vệ môi trường)."
+    },
+    {
+      "id": "hsk4-s35",
+      "kind": "single",
+      "question": "这件事我向你___，明天一定完成。",
+      "choices": [
+        "证明",
+        "保证",
+        "保护",
+        "估计"
+      ],
+      "answer": 1,
+      "explanation": "保证 = promise, guarantee (cam đoan, đảm bảo)."
+    },
+    {
+      "id": "hsk4-s36",
+      "kind": "single",
+      "question": "对不起，___一下，请问去火车站怎么走？",
+      "choices": [
+        "打招呼",
+        "打扰",
+        "打算",
+        "打扮"
+      ],
+      "answer": 1,
+      "explanation": "打扰一下 = excuse me (xin lỗi, làm phiền một chút)."
+    },
+    {
+      "id": "hsk4-s37",
+      "kind": "single",
+      "question": "他这次考试考得很好，老师___了他。",
+      "choices": [
+        "表示",
+        "表扬",
+        "表达",
+        "表演"
+      ],
+      "answer": 1,
+      "explanation": "表扬 = praise (khen ngợi)."
+    },
+    {
+      "id": "hsk4-s38",
+      "kind": "single",
+      "question": "这家博物馆对学生___开放，不用买票。",
+      "choices": [
+        "浪费",
+        "免得",
+        "免费",
+        "收费"
+      ],
+      "answer": 2,
+      "explanation": "免费 = free of charge (miễn phí)."
+    },
+    {
+      "id": "hsk4-g1",
+      "kind": "reading group",
+      "passage": "小王是一家公司的职员。他每天早上七点起床，坐地铁上班。虽然公司离家很远，但他从来没有迟到过。上个月，公司让他去上海出差一个星期。在上海，他不仅完成了工作，还利用周末参观了几个有名的博物馆。回来以后，经理表扬了他，还决定下个月给他涨工资。",
+      "questions": [
+        {
+          "id": "hsk4-g1-1",
+          "question": "小王每天怎么上班？",
+          "choices": [
+            "坐地铁",
+            "骑自行车",
+            "走路",
+            "开车"
+          ],
+          "answer": 0
+        },
+        {
+          "id": "hsk4-g1-2",
+          "question": "关于小王，下面哪个是对的？",
+          "choices": [
+            "家离公司很近",
+            "从来没迟到过",
+            "不喜欢工作",
+            "经常迟到"
+          ],
+          "answer": 1
+        },
+        {
+          "id": "hsk4-g1-3",
+          "question": "小王在上海做了什么？",
+          "choices": [
+            "没有完成工作",
+            "只参观了博物馆",
+            "完成了工作，还参观了博物馆",
+            "在那儿住了一个月"
+          ],
+          "answer": 2
+        },
+        {
+          "id": "hsk4-g1-4",
+          "question": "经理决定做什么？",
+          "choices": [
+            "批评他",
+            "让他休假",
+            "给他涨工资",
+            "让他再去上海"
+          ],
+          "answer": 2
+        }
+      ]
+    },
+    {
+      "id": "hsk4-g2",
+      "kind": "reading group",
+      "passage": "现在越来越多的年轻人喜欢在网上买东西。网上购物又方便又便宜，不用出门就能买到各种各样的东西。但是，网上的东西有时候和照片上看起来不一样，质量也不一定好。所以，专家建议大家在网上买东西以前，先看看别人的评价，再决定买不买。",
+      "questions": [
+        {
+          "id": "hsk4-g2-1",
+          "question": "网上购物有什么好处？",
+          "choices": [
+            "质量一定很好",
+            "东西和照片一样",
+            "必须出门去买",
+            "又方便又便宜"
+          ],
+          "answer": 3
+        },
+        {
+          "id": "hsk4-g2-2",
+          "question": "网上的东西可能有什么问题？",
+          "choices": [
+            "种类太少",
+            "和照片上不一样",
+            "送得太快",
+            "价格太贵"
+          ],
+          "answer": 1
+        },
+        {
+          "id": "hsk4-g2-3",
+          "question": "专家建议大家怎么做？",
+          "choices": [
+            "不要在网上买东西",
+            "先看看别人的评价",
+            "只买最便宜的东西",
+            "每天都去网上看看"
+          ],
+          "answer": 1
+        },
+        {
+          "id": "hsk4-g2-4",
+          "question": "这段话主要谈的是什么？",
+          "choices": [
+            "年轻人的工作",
+            "商店的服务",
+            "网上购物",
+            "怎么拍照片"
+          ],
+          "answer": 2
+        }
+      ]
+    },
+    {
+      "id": "hsk4-g3",
+      "kind": "reading group",
+      "passage": "我爷爷今年七十岁了，身体非常健康。他每天早上六点起床，先去公园跑步，然后和朋友们一起打太极拳。爷爷说，健康的秘密很简单：按时吃饭，早睡早起，经常运动，还要保持好心情。虽然他年纪大了，但是他对什么都很感兴趣，最近还开始学用智能手机了。",
+      "questions": [
+        {
+          "id": "hsk4-g3-1",
+          "question": "爷爷每天早上先做什么？",
+          "choices": [
+            "在家吃早饭",
+            "去公园跑步",
+            "打太极拳",
+            "学用手机"
+          ],
+          "answer": 1
+        },
+        {
+          "id": "hsk4-g3-2",
+          "question": "下面哪个不是爷爷说的健康的秘密？",
+          "choices": [
+            "按时吃饭",
+            "经常运动",
+            "每天喝咖啡",
+            "保持好心情"
+          ],
+          "answer": 2
+        },
+        {
+          "id": "hsk4-g3-3",
+          "question": "爷爷最近开始学什么？",
+          "choices": [
+            "用智能手机",
+            "跑步",
+            "打太极拳",
+            "做饭"
+          ],
+          "answer": 0
+        },
+        {
+          "id": "hsk4-g3-4",
+          "question": "从这段话可以知道，爷爷：",
+          "choices": [
+            "每天睡得很晚",
+            "身体不太好",
+            "不喜欢运动",
+            "对很多事情都感兴趣"
+          ],
+          "answer": 3
+        }
+      ]
+    }
+  ]
+}

@@ -92,7 +92,7 @@ Built in four slices. After each: tests, lint, tsc, commit, tag, then stop so Ja
 - **4a Cards** — list (front only, tap flips, ⋯ Edit · Tags · Delete, UI-10; Undo toast, UI-13), search + tag chip filter (READ-02/03/05), load more, editor with chip input + autocomplete (UI-01, UI-02, CARD-07, CARD-08). → tag `phase-4a`
 - **4b Tags** — Tag list A–Z as colored buttons, long-press bottom sheet Show cards · Rename · Delete (UI-03, UI-05, UI-06, TAG-15 merge dialog), ⋯ → Tags view (UI-14), a tag's card list with ✕ / checkboxes / Remove (n) and the "+ Add cards" picker (CARDTAG-07/08, 100 cap in the app). → tag `phase-4b`
 - **4c Trash** — newest trashed first, load more, total, restore, delete permanently, empty trash dialog with count (TRASH-07, TRASH-11, TRASH-12). → tag `phase-4c`
-- **4d Study** (STUDY-01..06) — from the current list filter, ids first then content 20 at a time, newest first + Shuffle, choose the starting side, flip + Next. → tag `phase-4d`
+- **4d Study** (STUDY-01..12) — Study button on the Cards screen and a tag's card list; ids first then content 20 at a time; progress, Prev/Next + swipe; newest first + Shuffle (unseen only); front/back switch remembered on the phone; "Done!" screen; no resume. → tag `phase-4d`
 
 🔍 **Checkpoint 4**
 - [ ] You use it yourself for real study for a week.
@@ -102,23 +102,22 @@ Built in four slices. After each: tests, lint, tsc, commit, tag, then stop so Ja
 ---
 
 ## Phase 5 — Model Daily Practice, docs only (M)
-Run `/domain-interview`. Order:
-1. Q-12 origin of system content when Jackkie provides it.
-2. Q-01 what is a day, Q-02 is 10 strict, Q-03 missed days / streak.
-3. Q-04 answer types in v1, Q-05 selection, Q-06 mistakes → cards, Q-07 several tracks.
-4. Event storming for one full day of practice.
+Done 2026-11-03 (started early, in parallel with Phase 4). All business rules are `confirmed`: DP-01..DP-26 (day, streaks, tracks, settings, quizzes, a day of practice, history), QB-06..QB-11 (kinds, question tags, pools, no Test/Level/Section fields), glossary terms for both contexts. First questions: `apps/api/prisma/seed/questions/hsk4-sample.json` (50 original HSK4 questions).
+Left for Phase 6 to propose (design, not business rules): events, commands and the `DailySession` aggregate boundaries; Jackkie reviews them at the start of Phase 6.
+Still deferred: Q-12 origin of system content, when Jackkie provides it. Import feature: backlog B-17.
 
 🔍 **Checkpoint 5**
-- [ ] `daily-practice.md` rules for `DailySession` all `confirmed`; no open question blocks the aggregate.
-- [ ] Glossary terms for Daily Practice and Question Bank confirmed.
+- [x] `daily-practice.md` rules for `DailySession` all `confirmed`; no open question blocks the aggregate.
+- [x] Glossary terms for Daily Practice and Question Bank confirmed.
 - [ ] Commit tagged `phase-5`.
 
 ---
 
 ## Phase 6 — Daily Practice + minimal Question Bank (L)
 - `DailySession` aggregate, tests first (DP-*).
-- Question Bank with a small hand-entered set (e.g. 50 items) — no ingestion yet.
-- `MistakeRecorded` → Card Library via event (per Q-06).
+- Question Bank: kinds (QB-06), question tags (QB-07..09), pools (QB-10). First questions: a sample file in the repo (`apps/api/prisma/seed/questions/hsk4-sample.json`, 50 original HSK4 questions) loaded by the dev seed script. The real import feature is backlog B-17.
+- Tracks = one question tag each (DP-11), with their own daily set and streak (DP-09).
+- "Save as card" on a wrong answer → Card Library (DP-10); needs the outbox first (B-10).
 - API + UI for today's session.
 
 🔍 **Checkpoint 6**

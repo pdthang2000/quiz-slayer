@@ -1,5 +1,33 @@
 # Changelog
 
+## 2026-11-03 — Daily Practice rules complete
+- Confirmed: a day of practice DP-20..DP-26 (feedback after each quiz, in order, resume the same day, finished = all answered, no timer, unlimited audio replay, history); DP-01 and DP-03 confirmed; DP-04 replaced by DP-08.
+- Confirmed: no Test/Level/Section fields, everything is a question tag (QB-11, M-1, M-5). Glossary: Daily Practice and Question Bank terms confirmed (Test, Section dropped; Item → Question, Item Group → Group).
+- Confirmed: Trash wording "Trashed … ago" with weeks after 14 days (TRASH-13, C-61).
+
+## 2026-11-02 — Streaks and first questions
+- Confirmed: per-track streaks plus one overall streak (any track finished) (DP-19).
+- First questions for Phase 6: a sample file in the repo loaded by the dev seed (50 original HSK4 questions); the import feature stays in the backlog (B-17).
+
+## 2026-11-02 — Import file later
+- The import file feature moves to the backlog (B-17), with the I-1..I-6 proposals undecided.
+
+## 2026-11-02 — Track settings
+- Confirmed: per-track kinds and daily size 1–50, default 10 (DP-12); changes apply from the next set (DP-13); too few questions → what's there + message (DP-14); add/remove tracks anytime, history kept (DP-15); no "Save as card" on audio kinds (DP-16).
+- Confirmed: a daily set counts quizzes, a group = 1 quiz (DP-17); progress in quizzes, result in questions (DP-18); glossary "Quiz" replaces "Slot".
+
+## 2026-11-02 — Question Bank: kinds and tags
+- Confirmed: kind is a fixed field (4 kinds, QB-06); question tags with Card-tag rules but a separate list (QB-07); a group's tags are on the group (QB-08); tags never repeat the kind (QB-09); pool = system + own (QB-10).
+- Confirmed: a track is one question tag; filters later (DP-11, T-b, backlog B-16). Pending: M-1, M-5.
+
+## 2026-10-31 — Daily Practice, first answers
+- Confirmed: DP-05 day = phone timezone, session belongs to the day it started (Q-01); DP-06 missed day gone, streak resets (Q-03); DP-07 multiple choice only in v1 (Q-04); DP-08 unseen questions + mistakes back after 1/3/7 days (Q-05); v1 users = Jackkie only (Q-10); v1 content from an imported file (Q-14).
+- Backlog B-14 streak freeze, B-15 more answer types.
+- Confirmed: several tracks at once, each with its own daily set and streak (DP-09, Q-07); "Save as card" button on wrong answers (DP-10, Q-06). Open: Q-06a, Q-07a, Q-07b.
+
+## 2026-10-31 — Study details (4d)
+- Confirmed: STUDY-07..12 — Study button on the Cards screen and a tag's card list (disabled at 0); progress, Prev/Next and swipe; Shuffle reshuffles only unseen cards; front/back switch anytime, remembered on the phone; "Done!" screen; no resume; edited cards show as fetched (S-6..S-15).
+
 ## 2026-10-31 — Phase 4c review
 - Confirmed: Trash rows show the front + "2 days ago", tap flips, ⋯ Restore · Delete permanently (TRASH-13, C-58); delete permanently asks first (TRASH-14, C-59); Trash texts (UI-16, C-60).
 

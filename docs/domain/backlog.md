@@ -16,3 +16,7 @@ Ideas agreed for later. Not v1 unless moved.
 | B-10 | Transactional outbox for domain events, before any listener depends on them (Daily Practice, Phase 6). Today events are published after commit and only logged; a crash between commit and publish would lose them. | Cross-cutting | 2026-10-25 (Phase 3 review) |
 | B-12 | Quizlet-like study modes (e.g. know / still learning, learn, test, match) | Card Library | 2026-10-25 (STUDY-05) |
 | B-13 | Live updates: screens change the moment another device saves (server push) | Mobile | 2026-10-25 (C-44 discussion) |
+| B-14 | Streak freeze (keep the streak through a missed day) | Daily Practice | 2026-10-31 (DP-06) |
+| B-15 | More answer types: fill in the blank, writing, speaking (need grading) | Daily Practice | 2026-10-31 (DP-07) |
+| B-16 | Track filters: must also have / must not have tags (e.g. #HSK3 + #grammar − #mock) | Daily Practice | 2026-11-02 (DP-11) |
+| B-17 | Import file feature: JSON format, media files next to it, re-import updates by id, removed = out of the pool, 2–6 choices with one correct, optional explanation (proposals I-1..I-6, not decided) | Content Ingestion | 2026-11-02 |

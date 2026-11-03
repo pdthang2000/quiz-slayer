@@ -8,7 +8,7 @@
 - `confirmed` **10 Quizzes per day** — each day the user does a set of questions (Q&A, listening, ...) taken from a test (IELTS, TOEIC, HSK, more later). Questions are extracted from tests, stored, and served X per day.
 
 ## Users
-- _empty — who is the target user? Only Jackkie at first, or public?_
+- `confirmed` v1: only Jackkie (the demo user). Every record already has a user id, so more users can come later. (Q-10)
 
 ## v1 scope
 - `confirmed` Demo user only, no real login (Q-09).
