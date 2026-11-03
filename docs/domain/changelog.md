@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 — Phase 6d Daily Practice API (continuous run)
+- Endpoints for Today, Start/resume, answer, session, history, tracks, track options, Save as card (daily-practice.md → API).
+- Error table for Daily Practice added as draft (messages provisional, G-14).
+- Provisional (not confirmed): G-13 (no versions on track settings, track order, history includes today).
+- Card Library exports `CreateCard` for "Save as card"; Question Bank's public services take plain string ids.
+
 ## 2026-11-03 — Phase 6c Outbox + QuizProgress reaction (continuous run)
 - ADR-014: transactional outbox (B-10 done). `QuizAnswered` is stored with the answer and delivered after commit; QuizProgress applies DP-33 idempotently.
 - AnswerQuiz use case (answers a whole quiz, G-7).

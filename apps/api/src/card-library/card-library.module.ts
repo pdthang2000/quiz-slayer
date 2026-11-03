@@ -61,5 +61,7 @@ import { PrismaTagRepository } from './infrastructure/prisma-tag.repository';
     ListTrash,
     ListTags,
   ],
+  /** Public application service for other contexts: Daily Practice "Save as card" (DP-10). */
+  exports: [CreateCard],
 })
 export class CardLibraryModule {}

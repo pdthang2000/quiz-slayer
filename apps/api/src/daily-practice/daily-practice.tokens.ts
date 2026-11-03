@@ -2,3 +2,4 @@
 export const TRACK_REPOSITORY = Symbol('TrackRepository');
 export const DAILY_SESSION_REPOSITORY = Symbol('DailySessionRepository');
 export const QUIZ_PROGRESS_REPOSITORY = Symbol('QuizProgressRepository');
+export const DAILY_PRACTICE_QUERIES = Symbol('DailyPracticeQueries');

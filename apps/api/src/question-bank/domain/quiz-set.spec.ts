@@ -36,6 +36,18 @@ const group = (
 });
 
 describe('Quiz Set', () => {
+  it('QB-01: visibility is set on the Quiz Set, not on its questions', () => {
+    const set = QuizSet.create({
+      id: QuizSetId('s'),
+      ownerUserId: null,
+      name: 'n',
+      quizzes: [single('a')],
+    });
+    expect(set.toSnapshot()).toHaveProperty('visibility');
+    expect(set.quizzes[0]).not.toHaveProperty('visibility');
+    expect(set.quizzes[0].questions[0]).not.toHaveProperty('visibility');
+  });
+
   it('QB-02: a new Quiz Set is Private', () => {
     const set = QuizSet.create({
       id: QuizSetId('s'),

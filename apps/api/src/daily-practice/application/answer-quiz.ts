@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { CLOCK, type Clock } from '../../shared/application/clock';
 import { OUTBOX, type Outbox } from '../../shared/application/outbox';
 import {
   TRANSACTION_RUNNER,
@@ -22,6 +23,7 @@ export class AnswerQuiz {
     @Inject(DAILY_SESSION_REPOSITORY)
     private readonly sessions: DailySessionRepository,
     @Inject(OUTBOX) private readonly outbox: Outbox,
+    @Inject(CLOCK) private readonly clock: Clock = { now: () => new Date() },
   ) {}
 
   async execute(input: {
@@ -29,7 +31,6 @@ export class AnswerQuiz {
     sessionId: DailySessionId;
     quizId: QuizId;
     choices: number[];
-    now?: Date;
   }): Promise<QuizFeedback> {
     const feedback = await this.transactions.run(async () => {
       const session = await this.sessions.findById(
@@ -40,7 +41,7 @@ export class AnswerQuiz {
       const result = session.answerQuiz(
         input.quizId,
         input.choices,
-        input.now ?? new Date(),
+        this.clock.now(),
       );
       await this.sessions.save(session);
       await this.outbox.add(session.pullEvents());

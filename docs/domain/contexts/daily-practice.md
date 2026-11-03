@@ -125,6 +125,34 @@ How a day's set is built (DP-30, DP-35, DP-28, DP-14):
 - **QuizProgress** (per user and quiz): last answered, mistake stage and due day. DP-27, DP-29, DP-33, DP-37, DP-38.
 - `buildDailySet` (domain service) and `streakLength` (computed, nothing stored) are pure functions.
 
+## API (draft, built in 6d)
+Every call that depends on the day sends the phone's timezone in `X-Time-Zone` (DP-05, ADR-013).
+```
+GET    /practice/today                              tracks, today's progress, streaks (G-5)
+POST   /practice/tracks/:id/start                   Start (DP-31) or resume (DP-22)
+GET    /practice/sessions/:id                       quizzes; the key only for answered ones (DP-20)
+POST   /practice/sessions/:id/quizzes/:quizId/answer  { choices: [i, …] } one per question (G-7)
+POST   /practice/sessions/:id/questions/:qid/save-as-card  DP-10, DP-32, DP-40
+GET    /practice/tracks/:id/history                 DP-26, newest day first
+GET    /practice/tracks · POST /practice/tracks { tagName } · PATCH /practice/tracks/:id { kinds, dailySize } · DELETE /practice/tracks/:id
+GET    /practice/track-options                      question tags with quiz counts (G-2)
+```
+
+## Error handling (draft — messages provisional, G-14)
+| Error | Rule | When | Kind | HTTP | Message to the user |
+|---|---|---|---|---|---|
+| `InvalidTimeZone` | DP-05 | No or unknown `X-Time-Zone` | Bug | 400 | generic "Something went wrong" |
+| `InvalidDailySize` | DP-12 | Not 1–50 | User input | 400 | "Daily size is 1 to 50" |
+| `InvalidTrackKinds` | DP-12 | No kind on, or an unknown kind | User input | 400 | "Pick at least one kind" |
+| `NoQuizzesMatch` | DP-14 | Nothing matches the track at all (G-9) | Info | 422 | "No quizzes match your settings." |
+| `TrackIsRemoved` | DP-15 | Start on a removed track | Stale screen | 409 | "This track was removed. Refresh." |
+| `QuizAlreadyAnswered` | DP-03 | Answered on another device meanwhile | Stale screen | 409 | "Already answered. Refresh." |
+| `QuizOutOfOrder` | DP-21 | Not the next quiz | Stale screen | 409 | "Already answered. Refresh." |
+| `CannotSaveAsCard` | DP-10, DP-32, DP-40 | Button not allowed (e.g. already saved) | Stale screen | 409 | "Already saved." |
+| `PracticeChanged` | — | Two devices at the same moment | Race | 409 | "Changed on another device. Refresh." |
+| `InvalidAnswer` | — | Wrong number of choices or an unknown choice | Bug | 400 | generic |
+| `DailySessionNotFound` / `TrackNotFound` / `QuestionTagNotFound` | — | No such item for this user | Stale screen | 404 | "Not found. Refresh." |
+
 ## Integrations
 - Reads pools and quiz content from Question Bank's public application service and keeps a snapshot of what it served (QB-04).
 - "Save as card" calls Card Library's `createCard` (context map). No event.

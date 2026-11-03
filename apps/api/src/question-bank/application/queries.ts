@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import type { QuizId, UserId } from '../domain/ids';
+import { type QuizId, UserId } from '../domain/ids';
 import type { QuizKind } from '../domain/quiz-kind';
 import { QUESTION_BANK_QUERIES } from '../question-bank.tokens';
 import type {
@@ -9,7 +9,8 @@ import type {
 } from './question-bank-queries';
 
 // The Question Bank's public application services (context map: pools read by Daily
-// Practice). Other contexts use these classes, never the tables.
+// Practice). Other contexts use these classes, never the tables. They take plain strings
+// for ids, so callers don't need this context's id types.
 
 /** DP-11, DP-12, QB-10 */
 @Injectable()
@@ -20,11 +21,15 @@ export class ListPoolQuizIds {
   ) {}
 
   execute(input: {
-    userId: UserId;
+    userId: string;
     tagName: string;
     kinds: readonly QuizKind[];
   }): Promise<QuizId[]> {
-    return this.queries.poolQuizIds(input.userId, input.tagName, input.kinds);
+    return this.queries.poolQuizIds(
+      UserId(input.userId),
+      input.tagName,
+      input.kinds,
+    );
   }
 }
 
@@ -37,10 +42,13 @@ export class GetQuizzesForPractice {
   ) {}
 
   execute(input: {
-    userId: UserId;
-    quizIds: readonly QuizId[];
+    userId: string;
+    quizIds: readonly string[];
   }): Promise<QuizContent[]> {
-    return this.queries.quizzesByIds(input.userId, input.quizIds);
+    return this.queries.quizzesByIds(
+      UserId(input.userId),
+      input.quizIds as QuizId[],
+    );
   }
 }
 
@@ -52,7 +60,7 @@ export class ListQuestionTags {
     private readonly queries: QuestionBankQueries,
   ) {}
 
-  execute(input: { userId: UserId }): Promise<QuestionTagWithCount[]> {
-    return this.queries.tagsWithCounts(input.userId);
+  execute(input: { userId: string }): Promise<QuestionTagWithCount[]> {
+    return this.queries.tagsWithCounts(UserId(input.userId));
   }
 }
