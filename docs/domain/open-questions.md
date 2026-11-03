@@ -81,6 +81,14 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | Q-07 | Can a user study several tracks at once, each with its own daily set? | answered: yes, each track has its own daily set and streak → DP-09 |
 | Q-14 | Where do questions come from in v1? | answered: a JSON/CSV file Jackkie writes, imported by a script; in-app editor later → content-ingestion.md |
 | D-1..D-8 | A day of practice: feedback, order, resume, finish, changing answers, timer, audio replay, history | answered: → DP-20..DP-26, DP-03 |
+| P-1 | When does a question count as seen? | answered: only when answered → DP-27 |
+| P-2 | Pool used up, no mistakes due? | answered: start over, oldest-answered first → DP-28 |
+| P-3 | Mistake schedule: right on comeback → day 3, day 7, retired; wrong again → back to day 1? | open (discussing the logic and storage) |
+| P-4 | A group with one wrong question? | answered: the whole group comes back → DP-29 |
+| P-5 | Mix of mistakes and new? | answered: due mistakes first, max half → DP-30 |
+| P-6 | When is today's set chosen? | answered: when Start is tapped → DP-31 |
+| P-7 | More practice after finishing? | answered: not in v1 → B-18 |
+| P-8 | "Save as card" twice? | answered: "Saved ✓", no duplicate → DP-32 |
 | Q-06a | "Save as card" on an audio question (cards are text only, CARD-03): hide the button, or save the question text only? | answered: hidden for audio kinds → DP-16 |
 | Q-07a | Daily size per track: fixed 10, or set per track (default 10)? | answered: per track, default 10, allowed 1–50 → DP-12 |
 | Q-07b | Add/remove tracks anytime from Settings? | answered: yes; removing keeps history, re-adding continues it → DP-15 |

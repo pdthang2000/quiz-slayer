@@ -74,6 +74,18 @@ Home: HSK4 0/10 🔥5 → Start → quiz 1 → answer → ✓/✗ + correct answ
 - **DP-25** `confirmed` — Audio can be replayed any number of times. (D-7)
 - **DP-26** `confirmed` — History: past days per track with their result; tapping a day shows the questions and the user's answers. (D-8)
 
+### Picking and mistakes (2026-11-03)
+- **DP-27** `confirmed` — A question counts as seen only when it was answered; shown but not answered doesn't count. (P-1)
+- **DP-28** `confirmed` — When every quiz in the pool has been answered and no mistake is due, the pool starts over, oldest-answered first. (P-2)
+- **DP-29** `confirmed` — A group counts as one quiz for mistakes too: if any of its questions is wrong, the whole group comes back. (P-4)
+- **DP-30** `confirmed` — Today's set: mistakes that are due come first, at most half of the daily size; the rest are quizzes not seen yet (then DP-28). (P-5)
+```
+Daily size 10, 7 mistakes due → 5 mistakes (oldest due first) + 5 new
+```
+- **DP-31** `confirmed` — Today's set is chosen when the user taps Start, not at midnight. (P-6)
+- **DP-32** `confirmed` — After a "Save as card" tap the button shows "Saved ✓"; it can't create a second card for that question in that session. (P-8)
+- Mistake schedule after a wrong answer (1 → 3 → 7 days, then retired): P-3, discussing.
+
 ## Aggregates (draft)
 - **DailySession**: protects DP-01..DP-03. `answerItem` touches only the session; streaks and cards react to events.
 

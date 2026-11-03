@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-03 — Picking details
+- Confirmed: seen = answered (DP-27); pool starts over oldest-first (DP-28); a group with one wrong comes back whole (DP-29); due mistakes first, max half (DP-30); set chosen on Start (DP-31); "Saved ✓" (DP-32). Backlog B-18 "Practice more". P-3 under discussion.
+- Workflow: Claude's code changes go to a branch + pull request; docs-only changes go straight to main; commits under Jackkie's name with a Claude co-author line.
+
 ## 2026-11-03 — Daily Practice rules complete
 - Confirmed: a day of practice DP-20..DP-26 (feedback after each quiz, in order, resume the same day, finished = all answered, no timer, unlimited audio replay, history); DP-01 and DP-03 confirmed; DP-04 replaced by DP-08.
 - Confirmed: no Test/Level/Section fields, everything is a question tag (QB-11, M-1, M-5). Glossary: Daily Practice and Question Bank terms confirmed (Test, Section dropped; Item → Question, Item Group → Group).
