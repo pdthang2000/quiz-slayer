@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-03 — Fix
+- question-bank.md: QB-11 text was missing (an edit didn't apply); now written.
+
 ## 2026-11-03 — Mistake schedule
 - Confirmed: DP-33 schedule (next day → 3 days → 7 days → retired; wrong → next day again); DP-34 not-yet-due mistakes wait; DP-35 extra due mistakes before old quizzes; DP-36 half rounds down; DP-37 progress per user and quiz; DP-38 progress kept when a quiz leaves the pool. Set-building steps written out. Backlog B-19, B-20.
 - Confirmed: a quiz appears at most once per day across tracks; a short set stays short (DP-39, X-2, X-3).

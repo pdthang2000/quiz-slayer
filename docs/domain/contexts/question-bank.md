@@ -35,7 +35,7 @@ Pool #HSK3 = every question/group tagged #HSK3, from every upload
 - **QB-09** `confirmed` — A tag never repeats what a field already says. No `#listening` or `#audio` tags: that is the kind. Tags are for what the kind doesn't express (which exam, source, topic). (2026-11-02, Jackkie)
 - **QB-10** `confirmed` — A pool (for a Daily Practice track) uses system-provided questions and the user's own; other users' public Quiz Sets come later. (M-3)
 - A track = one tag (DP-11).
-- Pending: dropping Test/Level/Section fields in favour of tags (M-1, M-5 — Jackkie confirms at the end).
+- **QB-11** `confirmed` — No Test, Level or Section fields: an exam, a level, a part or a topic is a question tag (`#HSK4`, `#part3`, `#grammar`). A track is one tag (DP-11). (M-1, M-4, M-5)
 
 - ~~Content is organised as Test → Section → Item Group → Item~~ — dropped (QB-11). A group shares one passage or audio (QB-06).
   ```
