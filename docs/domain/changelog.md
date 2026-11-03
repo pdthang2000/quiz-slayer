@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-03 — Plan for a continuous run
+- plan.md: status updated; Phase 5 done (DP-01..DP-40); continuous run 4d → 6e; Phase 6 split into 6a–6e (domain + ADR-013, persistence + seed, outbox, API, mobile); Save as card no longer depends on the outbox; Phase 7 points to B-17/B-21.
+- CLAUDE.md: "Continuous run" rules (build provisional, log, don't stop).
+- G-1, G-2, G-5 provisional (built in 6e); G-6 → backlog B-22.
+
 ## 2026-11-03 — Save as card details
 - Confirmed: "Save as card" only on single text questions; front = question + choices, back = answer + explanation, tag = track's tag; hidden if the front would exceed 500 characters (DP-40, G-3, G-4). Open: G-1, G-2, G-5, G-6.
 

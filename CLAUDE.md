@@ -84,7 +84,14 @@ Always ask (write it in `docs/domain/open-questions.md`, keep working on what is
 - Implement a confirmed answer exactly as confirmed. If you think it is wrong or incomplete, ask; never record your own variant as Jackkie's answer.
 
 ## Work plan
-- Follow `docs/plan.md`. Stop at each checkpoint and let Jackkie review before moving on.
+- Follow `docs/plan.md`. Stop at each checkpoint and let Jackkie review before moving on — except during a **continuous run** (below).
+
+## Continuous run
+When `docs/plan.md` says a stretch is a continuous run (currently 4d → 6e):
+- Don't stop to ask. For a behaviour question, build the recommended choice, log it in `docs/domain/open-questions.md` as `provisional, built: <what>`, and keep going. Jackkie reviews these later.
+- Never record a provisional choice as `confirmed`.
+- Each slice: tests, lint, tsc, rules coverage → commit → tag → next slice. `git pull` first; don't push.
+- Stop only after the run's last slice, if something irreversible or destructive is needed (data loss, a migration that drops data, pushing to a remote), or if tests can't be made green.
 
 ## Modelling sessions
 - Use `/domain-interview` to run a session: one question at a time, docs updated after each answer.

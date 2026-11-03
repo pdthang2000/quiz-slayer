@@ -1,6 +1,6 @@
 # QuizSlayer — build plan
 
-Status: Phases 0–3 done (tags phase-0..phase-3); updated 2026-10-25. Jackkie reviews at every checkpoint (🔍) before the next phase starts.
+Status (2026-11-03): Phases 0–3 done; Phase 4 slices 4a–4c done (4d next); Phase 5 done. **Continuous run** from 4d through Phase 6 (see below and CLAUDE.md → Continuous run).
 Sizes are rough effort, not dates: S = a sitting, M = a few sittings, L = a week or more of evenings.
 
 Order: finish Card Library end-to-end first (small, fully modelled), then model and build Daily Practice (the core).
@@ -88,7 +88,7 @@ UI-06 is already in mobile form (long-press + bottom sheet).
 Hosting for testing outside home Wi-Fi: a VPS running Nest + Postgres in Docker (H-01). At home, the phone uses the Mac's LAN IP.
 Stack: ADR-012 (Expo SDK 58, Expo Router drawer, TanStack Query, i18next). API client sends versions in `If-Match` (CONFLICT-01), maps every error code to an i18n message (UI-11), reloads the screen on `CardChanged` / `TagChanged` / `TrashChanged`; screens reload on return; pull to refresh on every list.
 
-Built in four slices. After each: tests, lint, tsc, commit, tag, then stop so Jackkie tries it on his iPhone (Expo Go).
+Built in four slices. After each: tests, lint, tsc, commit, tag. 4a–4c are done (tags phase-4a..phase-4c.1); 4d runs as part of the continuous run.
 - **4a Cards** — list (front only, tap flips, ⋯ Edit · Tags · Delete, UI-10; Undo toast, UI-13), search + tag chip filter (READ-02/03/05), load more, editor with chip input + autocomplete (UI-01, UI-02, CARD-07, CARD-08). → tag `phase-4a`
 - **4b Tags** — Tag list A–Z as colored buttons, long-press bottom sheet Show cards · Rename · Delete (UI-03, UI-05, UI-06, TAG-15 merge dialog), ⋯ → Tags view (UI-14), a tag's card list with ✕ / checkboxes / Remove (n) and the "+ Add cards" picker (CARDTAG-07/08, 100 cap in the app). → tag `phase-4b`
 - **4c Trash** — newest trashed first, load more, total, restore, delete permanently, empty trash dialog with count (TRASH-07, TRASH-11, TRASH-12). → tag `phase-4c`
@@ -102,25 +102,34 @@ Built in four slices. After each: tests, lint, tsc, commit, tag, then stop so Ja
 ---
 
 ## Phase 5 — Model Daily Practice, docs only (M)
-Done 2026-11-03 (started early, in parallel with Phase 4). All business rules are `confirmed`: DP-01..DP-26 (day, streaks, tracks, settings, quizzes, a day of practice, history), QB-06..QB-11 (kinds, question tags, pools, no Test/Level/Section fields), glossary terms for both contexts. First questions: `apps/api/prisma/seed/questions/hsk4-sample.json` (50 original HSK4 questions).
-Left for Phase 6 to propose (design, not business rules): events, commands and the `DailySession` aggregate boundaries; Jackkie reviews them at the start of Phase 6.
-Backlog: B-21 origin of system content, B-17 import feature.
+Done 2026-11-03. All business rules are `confirmed`: DP-01..DP-40, QB-06..QB-11, glossary terms for both contexts, subdomains and context map. First questions: `apps/api/prisma/seed/questions/hsk4-sample.json` (50 original HSK4 questions: 38 single, 3 reading groups).
+Design (events, commands, aggregate boundaries) is proposed in Phase 6a as an ADR; Jackkie reviews it whenever he likes — work does not wait.
 
 🔍 **Checkpoint 5**
-- [x] `daily-practice.md` rules for `DailySession` all `confirmed`; no open question blocks the aggregate.
+- [x] `daily-practice.md` rules all `confirmed`; no open question blocks the aggregates.
 - [x] Glossary terms for Daily Practice and Question Bank confirmed.
-- [ ] Commit tagged `phase-5`.
+- [ ] Commit tagged `phase-5` (tag the current docs commit at the start of the run).
 
 ---
 
+## Continuous run (4d → 6e)
+Claude Code works through 4d and 6a–6e without stopping for questions:
+- Each slice ends with: tests, lint, tsc, rules coverage → commit → tag → next slice. No stop between slices.
+- A behaviour question that comes up: build the recommended/provisional choice, log it in `open-questions.md` as "provisional, built", keep going.
+- Stop only (a) after 6e, (b) if something can't be built provisionally because it's irreversible or destructive (data loss, schema change that drops data, pushing to a remote), or (c) if tests can't be made green.
+- Jackkie's Checkpoint 4 (a week of real use) runs in parallel; his findings come back as new questions later.
+- Provisional choices already known (G-1, G-2, G-5, G-6): see `open-questions.md`.
+
 ## Phase 6 — Daily Practice + minimal Question Bank (L)
-- `DailySession` aggregate, tests first (DP-*).
-- Question Bank: kinds (QB-06), question tags (QB-07..09), pools (QB-10). First questions: a sample file in the repo (`apps/api/prisma/seed/questions/hsk4-sample.json`, 50 original HSK4 questions) loaded by the dev seed script. The real import feature is backlog B-17.
-- Tracks = one question tag each (DP-11), with their own daily set and streak (DP-09).
-- "Save as card" on a wrong answer → Card Library (DP-10); needs the outbox first (B-10).
-- API + UI for today's session.
+Source: `daily-practice.md` (DP-01..DP-40), `question-bank.md` (QB-06..QB-11), context map.
+- **6a Domain + design ADR (ADR-013)** — pure TypeScript, tests first by rule ID. Aggregates (proposal): `Track` (tag, kinds, daily size — DP-11, DP-12), `DailySession` (one per track per day; quizzes snapshot; answers can't change; finished = all answered — DP-01, DP-03, DP-17, DP-18, DP-21..DP-23), `QuizProgress` (one per user and quiz; the 1-3-7 schedule — DP-33, DP-37, DP-38). Set-building as a domain service (DP-27..DP-31, DP-34..DP-36, DP-39, steps written in daily-practice.md). Streaks per track + overall (DP-19, DP-23): computed or an aggregate — the ADR decides. Day = the user's timezone (DP-05): where the timezone lives — the ADR decides. → tag `phase-6a`
+- **6b Question Bank + persistence** — Prisma models for quiz sets, quizzes (kind, single / group with passage or audio, questions, 2–6 choices, one correct, optional explanation), question tags (separate from Card tags, same rules — QB-07), owner System/User, tracks, sessions, progress. Seed script loads `hsk4-sample.json` as System content. Integration tests. → tag `phase-6b`
+- **6c Outbox + QuizProgress reaction (B-10)** — `QuizAnswered` saved in the same transaction as the answer; delivered after commit; `QuizProgress` applies DP-33 idempotently. Integration test: crash between commit and delivery loses nothing. → tag `phase-6c`
+- **6d API** — start today (DP-31, resume DP-22), answer (feedback DP-20), finish, today overview (tracks + streaks), history (DP-26), track list/add/remove/settings (DP-12..DP-15), "Save as card" → Card Library `createCard` (DP-10, DP-40; no event). Errors through the error table pattern. e2e tests. → tag `phase-6d`
+- **6e Mobile** — "Today" screen as the first drawer item and the start screen (G-1), overall + per-track streaks (G-5), quiz screen for single and reading-group kinds (audio kinds: show a simple player only if content exists; the seed has none), feedback + explanation, result "23 / 28", history, Settings → Tracks (add from question tags with quiz counts, G-2; kinds; daily size). i18n texts provisional (log them). → tag `phase-6e`, then STOP.
 
 🔍 **Checkpoint 6**
+- [ ] Jackkie reviews ADR-013 and the provisional choices logged during the run.
 - [ ] You do one full daily session per day for a week.
 - [ ] Rule coverage for DP-* complete.
 - [ ] Commit tagged `phase-6`.
@@ -128,10 +137,9 @@ Backlog: B-21 origin of system content, B-17 import feature.
 ---
 
 ## Phase 7 — Content Ingestion (L, later)
-Depends on Q-08. Pipeline draft → reviewed → published; Anti-Corruption Layer per source format.
+The import feature (B-17: JSON file + media, re-import by id, draft → reviewed → published) and the origin of system content (B-21). Anti-Corruption Layer per source format.
 
 ---
 
 ## Decisions still needed for this plan
-| Needed by | Decision |
-|---|---|
+None blocking. Provisional choices during the continuous run are logged in `open-questions.md`.
