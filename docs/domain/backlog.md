@@ -23,3 +23,4 @@ Ideas agreed for later. Not v1 unless moved.
 | B-18 | "Practice more" after today's set is finished | Daily Practice | 2026-11-03 (P-7) |
 | B-19 | "Reset progress" for a track | Daily Practice | 2026-11-03 |
 | B-20 | Detect the same question uploaded twice | Question Bank | 2026-11-03 |
+| B-21 | Decide where system-provided content comes from (original, licensed or public domain) before adding any; official IELTS/TOEIC/HSK material belongs to its publishers | Question Bank | 2026-11-03 (Q-12) |

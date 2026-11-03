@@ -121,4 +121,4 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | Q-10 | Target users: only Jackkie at first, or public? | answered: v1 only Jackkie → 00-vision.md |
 | Q-11 | User-provided content: private or shareable? | answered: Public/Private per set, Private by default → QB-01..05 |
 | Q-13 | Name for a user's collection of questions? | answered: Quiz Set |
-| Q-12 | Where does system-provided content come from: written originally in the test's format, licensed, or public domain? Official IELTS/TOEIC/HSK material belongs to its publishers; serving it to other users is likely infringement (not legal advice). | deferred: Jackkie provides it later; check origin then |
+| Q-12 | Where does system-provided content come from: written originally in the test's format, licensed, or public domain? Official IELTS/TOEIC/HSK material belongs to its publishers; serving it to other users is likely infringement (not legal advice). | moved to backlog B-21 |

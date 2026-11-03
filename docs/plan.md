@@ -104,7 +104,7 @@ Built in four slices. After each: tests, lint, tsc, commit, tag, then stop so Ja
 ## Phase 5 — Model Daily Practice, docs only (M)
 Done 2026-11-03 (started early, in parallel with Phase 4). All business rules are `confirmed`: DP-01..DP-26 (day, streaks, tracks, settings, quizzes, a day of practice, history), QB-06..QB-11 (kinds, question tags, pools, no Test/Level/Section fields), glossary terms for both contexts. First questions: `apps/api/prisma/seed/questions/hsk4-sample.json` (50 original HSK4 questions).
 Left for Phase 6 to propose (design, not business rules): events, commands and the `DailySession` aggregate boundaries; Jackkie reviews them at the start of Phase 6.
-Still deferred: Q-12 origin of system content, when Jackkie provides it. Import feature: backlog B-17.
+Backlog: B-21 origin of system content, B-17 import feature.
 
 🔍 **Checkpoint 5**
 - [x] `daily-practice.md` rules for `DailySession` all `confirmed`; no open question blocks the aggregate.
@@ -135,4 +135,3 @@ Depends on Q-08. Pipeline draft → reviewed → published; Anti-Corruption Laye
 ## Decisions still needed for this plan
 | Needed by | Decision |
 |---|---|
-| Phase 5 | Q-12: origin of system content (when provided) |

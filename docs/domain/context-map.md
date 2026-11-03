@@ -1,16 +1,19 @@
 # Context map
 
-`draft`
+`confirmed` 2026-11-03.
 
 ```
-Content Ingestion ──publishes──> Question Bank ──read by──> Daily Practice
-                                                                │
-                                                                │ MistakeRecorded (event)
-                                                                v
-                                                          Card Library
+Content Ingestion ──imports──> Question Bank ──pools read by──> Daily Practice
+   (v1: seed file)                                                    │
+                                                                      │ "Save as card" (user taps, DP-10)
+                                                                      │ → calls Card Library's createCard
+                                                                      v
+                                                                Card Library
 
 Identity ──(user id)──> all contexts
 ```
 
-- Daily Practice keeps its own snapshot of the items it served, so fixing an answer key later doesn't change past scores. `draft`
-- Daily Practice never reads Card Library tables directly. It goes through a Card Library API that only returns Active cards. `confirmed` (see READ-01)
+- Daily Practice keeps its own snapshot of the quizzes it served, so fixing an answer key later doesn't change past results (QB-04). `confirmed`
+- "Save as card" is a user action: Daily Practice calls Card Library's public use case `createCard`; it never writes Card Library tables. It is not a reaction to an event. `confirmed`
+- Inside Daily Practice, `QuizProgress` reacts to answers through an event (`QuizAnswered`, DP-37, DP-33); that is where the outbox (B-10) is needed. `confirmed`
+- Daily Practice never reads Card Library tables directly; it goes through a Card Library API that only returns Active cards (READ-01). `confirmed`

@@ -4,7 +4,7 @@ Supporting subdomain.
 
 - `confirmed` Questions and answers are stored in the DB, grouped by Quiz Set (one uploaded test).
 - `confirmed` Two sources of content: mostly provided by users themselves, plus a decent set of ready tests/questions provided by the system (Q-08).
-- `draft` Every Quiz Set has an owner: System or a User. Origin of system content: Q-12 (deferred).
+- `confirmed` Every Quiz Set has an owner: System or a User (QB-10 uses it). Where system content comes from: backlog B-21.
 
 ## Visibility (Q-11)
 - **QB-01** `confirmed` — Visibility is per Quiz Set, not per question: Public or Private.
@@ -45,5 +45,3 @@ Pool #HSK3 = every question/group tagged #HSK3, from every upload
     Q2 What does the man want?      key D
     Q3 What will the woman do next? key A
   ```
-- `draft` Only published items are visible to Daily Practice.
-- `draft` Fixing an answer key doesn't change past scores (Daily Practice keeps snapshots).

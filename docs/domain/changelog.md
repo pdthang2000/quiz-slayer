@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-03 — Strategic docs confirmed
+- Confirmed: subdomains; context map updated ("Save as card" is a user action calling createCard, not an event; QuizProgress reacts to QuizAnswered); Quiz Set owner System/User.
+- Backlog: "published" flow goes with the import feature (B-17); Q-12 → B-21.
+
 ## 2026-11-03 — Fix
 - question-bank.md: QB-11 text was missing (an edit didn't apply); now written.
 
