@@ -90,8 +90,8 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | P-7 | More practice after finishing? | answered: not in v1 → B-18 |
 | P-8 | "Save as card" twice? | answered: "Saved ✓", no duplicate → DP-32 |
 | X-1 | A quiz in two tracks: one progress or one per track? | answered: one per user and quiz → DP-37 |
-| X-2 | Can the same quiz be in two tracks' sets on the same day? Proposed: no, the second set skips it. | open |
-| X-3 | If skipping leaves the second set short: reuse the quiz, or show fewer? | open |
+| X-2 | Can the same quiz be in two tracks' sets on the same day? Proposed: no, the second set skips it. | answered: no, skipped → DP-39 |
+| X-3 | If skipping leaves the second set short: reuse the quiz, or show fewer? | answered: strict, show fewer → DP-39 |
 | Q-06a | "Save as card" on an audio question (cards are text only, CARD-03): hide the button, or save the question text only? | answered: hidden for audio kinds → DP-16 |
 | Q-07a | Daily size per track: fixed 10, or set per track (default 10)? | answered: per track, default 10, allowed 1–50 → DP-12 |
 | Q-07b | Add/remove tracks anytime from Settings? | answered: yes; removing keeps history, re-adding continues it → DP-15 |

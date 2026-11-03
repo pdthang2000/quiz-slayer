@@ -93,12 +93,15 @@ Mon 3 wrong → Tue 4 · right → Fri 7 · wrong → Sat 8 · right → Tue 11 
 - **DP-36** `confirmed` — "Half" rounds down: daily size 5 → at most 2 mistakes. (2026-11-03)
 - **DP-37** `confirmed` — Progress is kept per user and quiz, not per track: a quiz in two tracks (e.g. tagged #HSK4 and #grammar) has one schedule. (2026-11-03)
 - **DP-38** `confirmed` — A quiz that leaves every pool (tag removed, deleted, or its kind switched off in the track) keeps its progress, unused; it counts again if it comes back. (2026-11-03)
-- Open: can the same quiz appear in two tracks' sets on the same day? (X-2, X-3)
+- **DP-39** `confirmed` — A quiz appears at most once per day across all tracks: a set skips quizzes already in today's other sets. If that leaves it short, it stays short (DP-14 message); quizzes are never reused the same day. (X-2, X-3)
+```
+Q7 tagged #HSK4 #grammar · 07:00 Track #HSK4 has Q7 · 07:10 Track #grammar skips Q7
+```
 
 How a day's set is built (DP-30, DP-35, DP-28, DP-14):
 ```
 0. Today's set exists → resume (DP-22)
-1. Pool: the track's tag, allowed kinds, system + own
+1. Pool: the track's tag, allowed kinds, system + own, minus quizzes in today's other sets (DP-39)
 2. Due mistakes, oldest due first, up to half (rounded down)
 3. Never answered, random, up to the daily size
 4. More due mistakes, if still short
