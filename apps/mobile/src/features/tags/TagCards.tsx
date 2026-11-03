@@ -7,6 +7,7 @@ import { useCardList } from '../../api/hooks';
 import type { Card, Tag } from '../../api/types';
 import { useToast } from '../../components/Toast';
 import { spacing, useTheme } from '../../theme';
+import { StudyButton } from '../study/StudyButton';
 import { TagCardRow } from './TagCardRow';
 import { useSelection } from './useSelection';
 import { useTagMembership } from './useTagMembership';
@@ -43,6 +44,11 @@ export function TagCards({ tag }: { tag: Tag }) {
             {t('tags.cards.addCards')}
           </Text>
         </Pressable>
+        <StudyButton
+          filter={filter}
+          tagName={tag.name}
+          disabled={list.isPending || cards.length === 0}
+        />
         {selection.count > 0 ? (
           <Pressable
             onPress={() => remove.mutate({ tag, cards: selection.cards() })}

@@ -35,6 +35,15 @@ export const cardsApi = {
       version: card.version,
     }),
 
+  /** STUDY-01, STUDY-02: ids of every Active card the list's filter shows, newest first. */
+  studyIds: (filter: CardFilter) =>
+    request<{ ids: string[] }>('GET', '/cards/study-ids', {
+      query: { q: filter.search, tag: filter.tagIds },
+    }),
+
+  /** STUDY-02: up to 20 cards by id, in that order; trashed or deleted ones are left out. */
+  byIds: (ids: string[]) => request<Card[]>('GET', '/cards/by-ids', { query: { id: ids } }),
+
   /** UI-14: this card's tags with their Active card counts, READ-06 order. */
   tagsOf: (id: string) => request<TagWithCount[]>('GET', `/cards/${id}/tags`),
 };

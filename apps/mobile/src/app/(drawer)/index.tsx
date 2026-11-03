@@ -28,6 +28,7 @@ import { TagChip } from '../../components/TagChip';
 import { useToast } from '../../components/Toast';
 import { CardMenu } from '../../features/cards/CardMenu';
 import { CardRow } from '../../features/cards/CardRow';
+import { StudyButton } from '../../features/study/StudyButton';
 import { spacing, useTheme } from '../../theme';
 import { listDeceleration } from '../../theme/scroll';
 
@@ -134,6 +135,11 @@ export default function CardsScreen() {
         </ScrollView>
       )}
 
+      <View style={styles.toolbar}>
+        {/* STUDY-07: studies what this list shows; disabled with 0 cards. */}
+        <StudyButton filter={filter} disabled={list.isPending || cards.length === 0} />
+      </View>
+
       {list.isPending ? (
         <ActivityIndicator style={styles.center} color={colors.textMuted} />
       ) : list.isError && cards.length === 0 ? (
@@ -212,6 +218,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   chipRow: { flexGrow: 0 },
+  toolbar: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: spacing.lg },
   chips: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm, gap: spacing.sm },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
   link: { fontSize: 16, fontWeight: '600' },

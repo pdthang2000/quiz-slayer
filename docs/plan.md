@@ -1,6 +1,6 @@
 # QuizSlayer — build plan
 
-Status (2026-11-03): Phases 0–3 done; Phase 4 slices 4a–4c done (4d next); Phase 5 done. **Continuous run** from 4d through Phase 6 (see below and CLAUDE.md → Continuous run).
+Status (2026-11-03): Phases 0–3 done; Phase 4 slices 4a–4d done; Phase 5 done. **Continuous run** from 4d through Phase 6 (see below and CLAUDE.md → Continuous run).
 Sizes are rough effort, not dates: S = a sitting, M = a few sittings, L = a week or more of evenings.
 
 Order: finish Card Library end-to-end first (small, fully modelled), then model and build Daily Practice (the core).
@@ -88,7 +88,7 @@ UI-06 is already in mobile form (long-press + bottom sheet).
 Hosting for testing outside home Wi-Fi: a VPS running Nest + Postgres in Docker (H-01). At home, the phone uses the Mac's LAN IP.
 Stack: ADR-012 (Expo SDK 58, Expo Router drawer, TanStack Query, i18next). API client sends versions in `If-Match` (CONFLICT-01), maps every error code to an i18n message (UI-11), reloads the screen on `CardChanged` / `TagChanged` / `TrashChanged`; screens reload on return; pull to refresh on every list.
 
-Built in four slices. After each: tests, lint, tsc, commit, tag. 4a–4c are done (tags phase-4a..phase-4c.1); 4d runs as part of the continuous run.
+Built in four slices. After each: tests, lint, tsc, commit, tag. 4a–4d are done (tags phase-4a..phase-4d).
 - **4a Cards** — list (front only, tap flips, ⋯ Edit · Tags · Delete, UI-10; Undo toast, UI-13), search + tag chip filter (READ-02/03/05), load more, editor with chip input + autocomplete (UI-01, UI-02, CARD-07, CARD-08). → tag `phase-4a`
 - **4b Tags** — Tag list A–Z as colored buttons, long-press bottom sheet Show cards · Rename · Delete (UI-03, UI-05, UI-06, TAG-15 merge dialog), ⋯ → Tags view (UI-14), a tag's card list with ✕ / checkboxes / Remove (n) and the "+ Add cards" picker (CARDTAG-07/08, 100 cap in the app). → tag `phase-4b`
 - **4c Trash** — newest trashed first, load more, total, restore, delete permanently, empty trash dialog with count (TRASH-07, TRASH-11, TRASH-12). → tag `phase-4c`

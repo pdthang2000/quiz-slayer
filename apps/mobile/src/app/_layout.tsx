@@ -68,6 +68,10 @@ export default function RootLayout() {
                 <Stack.Screen name="card/tags" options={{ title: t('tags.ofCard.title') }} />
                 <Stack.Screen name="tag/[id]/index" options={{ title: '' }} />
                 <Stack.Screen name="tag/[id]/add" options={{ presentation: 'modal' }} />
+                <Stack.Screen
+                  name="study"
+                  options={{ presentation: 'fullScreenModal', headerShown: false }}
+                />
               </Stack>
             </ToastProvider>
           </ThemeProvider>

@@ -23,15 +23,18 @@ function* specFiles(dir) {
 }
 
 // it('TAG-03: ...') / test("TAG-03: ...") / it.each(...)('TAG-03: ...'), possibly wrapped by prettier.
-const testName = /\b(?:it|test)(?:\.\w+)?\(\s*['"`]([A-Z]+-\d+):/g;
+// A test may name several rules: it('TRASH-05, TRASH-14: ...').
+const testName = /\b(?:it|test)(?:\.\w+)?\(\s*['"`]([A-Z]+-\d+(?:, [A-Z]+-\d+)*):/g;
 const tests = new Map();
 // The API's specs, plus the mobile app's tests (UI rules, apps/mobile/src/**/*.test.ts(x)).
 for (const dir of ['src', 'test', '../mobile/src']) {
   for (const file of specFiles(join(apiRoot, dir))) {
-    for (const [, id] of readFileSync(file, 'utf8').matchAll(testName)) {
-      const files = tests.get(id) ?? new Set();
-      files.add(relative(apiRoot, file));
-      tests.set(id, files);
+    for (const [, list] of readFileSync(file, 'utf8').matchAll(testName)) {
+      for (const id of list.split(', ')) {
+        const files = tests.get(id) ?? new Set();
+        files.add(relative(apiRoot, file));
+        tests.set(id, files);
+      }
     }
   }
 }

@@ -137,5 +137,21 @@
       "days_one": "Trashed {{count}} day ago",
       "days_other": "Trashed {{count}} days ago"
     }
+  },
+  "study": {
+    "button": "Study",
+    "buttonTag": "Study #{{name}}",
+    "progress": "{{position}} / {{total}}",
+    "shuffle": "⇄ Shuffle",
+    "frontFirst": "Front first",
+    "backFirst": "Back first",
+    "prev": "◀ Prev",
+    "next": "Next ▶",
+    "close": "Close",
+    "done_one": "Done! {{count}} card",
+    "done_other": "Done! {{count}} cards",
+    "nothing": "No cards to study.",
+    "again": "Study again",
+    "shuffleAgain": "Shuffle & again"
   }
 }
