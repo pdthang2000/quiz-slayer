@@ -223,3 +223,21 @@ model QuizProgress {
   @@id([userId, quizId])
   @@map("quiz_progress")
 }
+
+// ---------- Outbox (B-10) ----------
+
+/// Domain events saved in the same transaction as the change that raised them, delivered
+/// to their handlers after commit by the OutboxRelay. A crash between commit and delivery
+/// loses nothing: undelivered rows are picked up again.
+model OutboxEvent {
+  id          String    @id @db.Uuid
+  type        String
+  payload     Json
+  occurredAt  DateTime  @default(now()) @map("occurred_at")
+  deliveredAt DateTime? @map("delivered_at")
+  attempts    Int       @default(0)
+  lastError   String?   @map("last_error")
+
+  @@index([deliveredAt, occurredAt])
+  @@map("outbox_event")
+}

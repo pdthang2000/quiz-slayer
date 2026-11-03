@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-03 — Phase 6c Outbox + QuizProgress reaction (continuous run)
+- ADR-014: transactional outbox (B-10 done). `QuizAnswered` is stored with the answer and delivered after commit; QuizProgress applies DP-33 idempotently.
+- AnswerQuiz use case (answers a whole quiz, G-7).
+
 ## 2026-11-03 — Phase 6b Question Bank + persistence (continuous run)
 - Question Bank domain: Quiz Set (Private by default, QB-02), quizzes checked against their kind (QB-06, DP-07), question tags with the TAG-01 rules (QB-07), on the group (QB-08), no tag repeating the kind (QB-09).
 - Prisma: quiz_set, quiz, question, quiz_tag, track, daily_session, quiz_progress (additive migration; CHECK backstops for choices, daily size, mistake stage, NFC tag names).

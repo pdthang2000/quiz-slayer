@@ -1,0 +1,52 @@
+import { Inject, Injectable } from '@nestjs/common';
+import { OUTBOX, type Outbox } from '../../shared/application/outbox';
+import {
+  TRANSACTION_RUNNER,
+  type TransactionRunner,
+} from '../../shared/application/transaction-runner';
+import { DAILY_SESSION_REPOSITORY } from '../daily-practice.tokens';
+import type { QuizFeedback } from '../domain/daily-session';
+import type { DailySessionId, QuizId, UserId } from '../domain/ids';
+import type { DailySessionRepository } from '../domain/repositories';
+import { DailySessionNotFound } from './errors';
+
+/**
+ * DP-03, DP-20, DP-21, DP-23, DP-29: answers one quiz of a session (a whole group at once,
+ * G-7). The session and its events (QuizAnswered → QuizProgress) commit together (B-10).
+ */
+@Injectable()
+export class AnswerQuiz {
+  constructor(
+    @Inject(TRANSACTION_RUNNER)
+    private readonly transactions: TransactionRunner,
+    @Inject(DAILY_SESSION_REPOSITORY)
+    private readonly sessions: DailySessionRepository,
+    @Inject(OUTBOX) private readonly outbox: Outbox,
+  ) {}
+
+  async execute(input: {
+    userId: UserId;
+    sessionId: DailySessionId;
+    quizId: QuizId;
+    choices: number[];
+    now?: Date;
+  }): Promise<QuizFeedback> {
+    const feedback = await this.transactions.run(async () => {
+      const session = await this.sessions.findById(
+        input.userId,
+        input.sessionId,
+      );
+      if (!session) throw new DailySessionNotFound(input.sessionId);
+      const result = session.answerQuiz(
+        input.quizId,
+        input.choices,
+        input.now ?? new Date(),
+      );
+      await this.sessions.save(session);
+      await this.outbox.add(session.pullEvents());
+      return result;
+    });
+    this.outbox.deliverSoon();
+    return feedback;
+  }
+}
