@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 — Phase 6b Question Bank + persistence (continuous run)
+- Question Bank domain: Quiz Set (Private by default, QB-02), quizzes checked against their kind (QB-06, DP-07), question tags with the TAG-01 rules (QB-07), on the group (QB-08), no tag repeating the kind (QB-09).
+- Prisma: quiz_set, quiz, question, quiz_tag, track, daily_session, quiz_progress (additive migration; CHECK backstops for choices, daily size, mistake stage, NFC tag names).
+- Seed: `pnpm --filter @quizslayer/api seed` loads `hsk4-sample.json` as System content; re-running keeps quiz ids.
+- Provisional (not confirmed): G-12 which tag names QB-09 refuses.
+
 ## 2026-11-03 — Phase 6a Daily Practice domain + ADR-013 (continuous run)
 - ADR-013 (proposed): aggregates Track, DailySession, QuizProgress; buildDailySet domain service; streaks computed from finished sessions; the phone sends its timezone (`X-Time-Zone`) with each request; events and commands renamed (QuizAnswered, DailySessionStarted, DailySessionFinished).
 - daily-practice.md: Events, Commands, Aggregates sections rewritten (still draft). Glossary: design terms, events and errors added as draft.

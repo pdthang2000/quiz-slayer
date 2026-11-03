@@ -85,3 +85,19 @@ export class CannotSaveAsCard extends DomainError {
     super(`Question ${questionId} can't be saved as a card: ${reason}`);
   }
 }
+
+/** DP-01: the track already has a session that day (two Start taps at once). */
+export class DailySessionExists extends DomainError {
+  readonly code = 'DailySessionExists';
+  constructor() {
+    super('This track already has a daily session today');
+  }
+}
+
+/** Two devices changed the same session or track at once; the later one must reload. */
+export class PracticeChanged extends DomainError {
+  readonly code = 'PracticeChanged';
+  constructor(readonly what: 'track' | 'session' | 'progress') {
+    super(`The ${what} was changed meanwhile`);
+  }
+}

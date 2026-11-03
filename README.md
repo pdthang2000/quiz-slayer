@@ -11,6 +11,7 @@ pnpm install
 cp apps/api/.env.example apps/api/.env
 docker compose up -d               # Postgres 16 on localhost:5432
 pnpm --filter @quizslayer/api exec prisma migrate dev
+pnpm --filter @quizslayer/api seed   # System questions from apps/api/prisma/seed/questions (safe to re-run)
 pnpm test && pnpm lint
 pnpm test:int                      # integration tests, uses database quizslayer_test
 pnpm test:e2e                      # HTTP tests, same database

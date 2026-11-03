@@ -74,3 +74,152 @@ model CardTag {
   @@index([tagId])
   @@map("card_tag")
 }
+
+// ---------- Question Bank ----------
+
+enum QuizSetVisibility {
+  Private
+  Public
+
+  @@map("quiz_set_visibility")
+}
+
+/// QB-06: how the app shows a quiz.
+enum QuizKind {
+  single
+  singleAudio  @map("single_audio")
+  readingGroup @map("reading_group")
+  audioGroup   @map("audio_group")
+
+  @@map("quiz_kind")
+}
+
+/// One uploaded test (Quiz Set). owner_user_id NULL = System content (QB-10, B-21).
+model QuizSet {
+  id          String            @id @db.Uuid
+  ownerUserId String?           @map("owner_user_id") @db.Uuid
+  name        String
+  /// QB-01, QB-02: per Quiz Set, Private by default.
+  visibility  QuizSetVisibility @default(Private)
+  createdAt   DateTime          @default(now()) @map("created_at")
+  quizzes     Quiz[]
+
+  @@index([ownerUserId])
+  @@map("quiz_set")
+}
+
+/// A quiz: a single question, or a group (passage or audio + 2–4 questions) (QB-06, DP-17).
+model Quiz {
+  id         String     @id @db.Uuid
+  quizSetId  String     @map("quiz_set_id") @db.Uuid
+  /// The id in the imported file (e.g. "hsk4-s01"); re-importing keeps the quiz's id.
+  externalId String     @map("external_id")
+  kind       QuizKind
+  passage    String?
+  audioUrl   String?    @map("audio_url")
+  position   Int
+  quizSet    QuizSet    @relation(fields: [quizSetId], references: [id], onDelete: Cascade)
+  questions  Question[]
+  tags       QuizTag[]
+
+  @@unique([quizSetId, externalId])
+  @@map("quiz")
+}
+
+/// DP-07: multiple choice, 2–6 choices, one correct (the Answer Key).
+model Question {
+  id            String   @id @db.Uuid
+  quizId        String   @map("quiz_id") @db.Uuid
+  externalId    String   @map("external_id")
+  position      Int
+  text          String
+  imageUrl      String?  @map("image_url")
+  audioUrl      String?  @map("audio_url")
+  choices       String[]
+  correctChoice Int      @map("correct_choice")
+  explanation   String?
+  quiz          Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@unique([quizId, externalId])
+  @@map("question")
+}
+
+/// QB-07, QB-08: a question tag on a quiz (on the group, not its questions). A pool is every
+/// quiz with a tag name (DP-11, QB-10). Names follow TAG-01; separate from Card tags.
+model QuizTag {
+  quizId String @map("quiz_id") @db.Uuid
+  name   String
+  quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@id([quizId, name])
+  @@index([name])
+  @@map("quiz_tag")
+}
+
+// ---------- Daily Practice (ADR-013) ----------
+
+enum TrackState {
+  Active
+  Removed
+
+  @@map("track_state")
+}
+
+/// DP-09, DP-11, DP-12, DP-15. Unique per user and tag: re-adding reactivates the same row.
+model Track {
+  id        String         @id @db.Uuid
+  userId    String         @map("user_id") @db.Uuid
+  tagName   String         @map("tag_name")
+  kinds     QuizKind[]
+  dailySize Int            @map("daily_size")
+  state     TrackState
+  version   Int            @default(0)
+  createdAt DateTime       @default(now()) @map("created_at")
+  sessions  DailySession[]
+
+  @@unique([userId, tagName])
+  @@map("track")
+}
+
+/// DP-01: one per user, track and day. `quizzes` is the snapshot served (QB-04); quiz ids
+/// point into the Question Bank without a foreign key (contexts don't share tables).
+model DailySession {
+  id          String    @id @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  trackId     String    @map("track_id") @db.Uuid
+  /// DP-05: the day it was started, in the phone's timezone.
+  day         DateTime  @db.Date
+  timeZone    String    @map("time_zone")
+  startedAt   DateTime  @map("started_at")
+  tagName     String    @map("tag_name")
+  dailySize   Int       @map("daily_size")
+  /// DP-39: the served quiz ids, for "already in today's other sets".
+  quizIds     String[]  @map("quiz_ids") @db.Uuid
+  quizzes     Json
+  answers     Json
+  /// DP-32
+  savedAsCard String[]  @map("saved_as_card")
+  finishedAt  DateTime? @map("finished_at")
+  version     Int       @default(0)
+  track       Track     @relation(fields: [trackId], references: [id])
+
+  @@unique([userId, trackId, day])
+  @@index([userId, day])
+  @@map("daily_session")
+}
+
+/// DP-27, DP-33, DP-37: one row per user and quiz once answered.
+model QuizProgress {
+  userId         String    @map("user_id") @db.Uuid
+  quizId         String    @map("quiz_id") @db.Uuid
+  lastAnsweredOn DateTime  @map("last_answered_on") @db.Date
+  lastAnsweredAt DateTime  @map("last_answered_at")
+  lastSessionId  String    @map("last_session_id") @db.Uuid
+  /// DP-33: 1, 3 or 7; NULL = no mistake waiting.
+  mistakeStage   Int?      @map("mistake_stage")
+  mistakeDueOn   DateTime? @map("mistake_due_on") @db.Date
+  version        Int       @default(0)
+
+  @@id([userId, quizId])
+  @@map("quiz_progress")
+}

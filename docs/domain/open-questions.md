@@ -106,6 +106,7 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | G-9 | Start when nothing matches the track at all (0 quizzes): an empty set (and a free streak day?) or no set? | provisional, built in 6a: no set; error `NoQuizzesMatch`, the app shows "No quizzes match your settings." |
 | G-10 | Adding a tag that is already an Active track? | provisional, built in 6a: no-op, the existing track is returned |
 | G-11 | Order of quizzes inside a day's set? | provisional, built in 6a: the build order — due mistakes first, then new, then more mistakes, then seen (daily-practice.md steps); not shuffled |
+| G-12 | QB-09 says no tag repeats the kind (no #listening, #audio). Which names exactly are refused? | provisional, built in 6b: `listening`, `audio`, and the kind names (`single`, `single audio`, `reading group`, `audio group`), ignoring case; the import fails with `InvalidQuestionTagName` |
 | Q-06a | "Save as card" on an audio question (cards are text only, CARD-03): hide the button, or save the question text only? | answered: hidden for audio kinds → DP-16 |
 | Q-07a | Daily size per track: fixed 10, or set per track (default 10)? | answered: per track, default 10, allowed 1–50 → DP-12 |
 | Q-07b | Add/remove tracks anytime from Settings? | answered: yes; removing keeps history, re-adding continues it → DP-15 |
