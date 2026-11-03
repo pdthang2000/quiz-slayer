@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-03 — Mistake schedule
+- Confirmed: DP-33 schedule (next day → 3 days → 7 days → retired; wrong → next day again); DP-34 not-yet-due mistakes wait; DP-35 extra due mistakes before old quizzes; DP-36 half rounds down; DP-37 progress per user and quiz; DP-38 progress kept when a quiz leaves the pool. Set-building steps written out. Backlog B-19, B-20. Open: X-2, X-3.
+
 ## 2026-11-03 — Picking details
 - Confirmed: seen = answered (DP-27); pool starts over oldest-first (DP-28); a group with one wrong comes back whole (DP-29); due mistakes first, max half (DP-30); set chosen on Start (DP-31); "Saved ✓" (DP-32). Backlog B-18 "Practice more". P-3 under discussion.
 - Workflow: Claude's code changes go to a branch + pull request; docs-only changes go straight to main; commits under Jackkie's name with a Claude co-author line.

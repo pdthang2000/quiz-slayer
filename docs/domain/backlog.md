@@ -21,3 +21,5 @@ Ideas agreed for later. Not v1 unless moved.
 | B-16 | Track filters: must also have / must not have tags (e.g. #HSK3 + #grammar − #mock) | Daily Practice | 2026-11-02 (DP-11) |
 | B-17 | Import file feature: JSON format, media files next to it, re-import updates by id, removed = out of the pool, 2–6 choices with one correct, optional explanation (proposals I-1..I-6, not decided) | Content Ingestion | 2026-11-02 |
 | B-18 | "Practice more" after today's set is finished | Daily Practice | 2026-11-03 (P-7) |
+| B-19 | "Reset progress" for a track | Daily Practice | 2026-11-03 |
+| B-20 | Detect the same question uploaded twice | Question Bank | 2026-11-03 |

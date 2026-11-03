@@ -84,7 +84,28 @@ Daily size 10, 7 mistakes due → 5 mistakes (oldest due first) + 5 new
 ```
 - **DP-31** `confirmed` — Today's set is chosen when the user taps Start, not at midnight. (P-6)
 - **DP-32** `confirmed` — After a "Save as card" tap the button shows "Saved ✓"; it can't create a second card for that question in that session. (P-8)
-- Mistake schedule after a wrong answer (1 → 3 → 7 days, then retired): P-3, discussing.
+- **DP-33** `confirmed` — Mistake schedule, counted from the day of each answer: wrong → comes back the next day; right on its comeback → in 3 days; right again → in 7 days; right again → retired. Wrong at any comeback → back to the next day. (P-3)
+```
+Mon 3 wrong → Tue 4 · right → Fri 7 · wrong → Sat 8 · right → Tue 11 · right → Tue 18 · right → retired
+```
+- **DP-34** `confirmed` — A mistake that is not due yet never fills a short day; it waits for its day. (2026-11-03)
+- **DP-35** `confirmed` — When never-answered quizzes run out, extra due mistakes are used before already-seen quizzes (the half limit of DP-30 only keeps room for new ones while there are new ones). (2026-11-03)
+- **DP-36** `confirmed` — "Half" rounds down: daily size 5 → at most 2 mistakes. (2026-11-03)
+- **DP-37** `confirmed` — Progress is kept per user and quiz, not per track: a quiz in two tracks (e.g. tagged #HSK4 and #grammar) has one schedule. (2026-11-03)
+- **DP-38** `confirmed` — A quiz that leaves every pool (tag removed, deleted, or its kind switched off in the track) keeps its progress, unused; it counts again if it comes back. (2026-11-03)
+- Open: can the same quiz appear in two tracks' sets on the same day? (X-2, X-3)
+
+How a day's set is built (DP-30, DP-35, DP-28, DP-14):
+```
+0. Today's set exists → resume (DP-22)
+1. Pool: the track's tag, allowed kinds, system + own
+2. Due mistakes, oldest due first, up to half (rounded down)
+3. Never answered, random, up to the daily size
+4. More due mistakes, if still short
+5. Already seen and not waiting as a mistake, oldest answered first
+6. Still short → what's there + "Only N quizzes match your settings"
+7. Save the chosen quiz ids as today's set
+```
 
 ## Aggregates (draft)
 - **DailySession**: protects DP-01..DP-03. `answerItem` touches only the session; streaks and cards react to events.
