@@ -11,6 +11,14 @@ const STALE = new Set([
   'CardIsTrashed',
   'CardIsNotTrashed',
   'TagNoLongerExists',
+  // Daily Practice (daily-practice.md → Error handling)
+  'TrackIsRemoved',
+  'QuizAlreadyAnswered',
+  'QuizOutOfOrder',
+  'CannotSaveAsCard',
+  'PracticeChanged',
+  'DailySessionNotFound',
+  'TrackNotFound',
 ]);
 
 /** Codes that have their own message in en.json (`errors.<key>`). */
@@ -34,6 +42,17 @@ const KNOWN = new Set([
   'CardNotFound',
   'TagNotFound',
   'Network',
+  'InvalidDailySize',
+  'InvalidTrackKinds',
+  'NoQuizzesMatch',
+  'TrackIsRemoved',
+  'QuizAlreadyAnswered',
+  'QuizOutOfOrder',
+  'CannotSaveAsCard',
+  'PracticeChanged',
+  'DailySessionNotFound',
+  'TrackNotFound',
+  'QuestionTagNotFound',
 ]);
 
 /**

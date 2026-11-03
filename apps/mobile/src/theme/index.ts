@@ -13,6 +13,7 @@ const light = {
   primary: '#3B5BDB',
   onPrimary: '#FFFFFF',
   danger: '#C92A2A',
+  success: '#2B8A3E',
   toast: '#1F2229',
   onToast: '#FFFFFF',
 };
@@ -27,6 +28,7 @@ const dark: typeof light = {
   primary: '#7C95F5',
   onPrimary: '#0F1115',
   danger: '#FF8787',
+  success: '#69DB7C',
   toast: '#ECEEF2',
   onToast: '#16181D',
 };

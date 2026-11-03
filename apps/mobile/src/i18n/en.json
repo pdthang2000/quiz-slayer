@@ -1,9 +1,11 @@
 {
   "nav": {
+    "today": "Today",
     "cards": "Cards",
     "tags": "Tags",
     "trash": "Trash",
-    "settings": "Settings"
+    "settings": "Settings",
+    "tracks": "Tracks"
   },
   "common": {
     "loadMore": "Load more",
@@ -61,7 +63,18 @@
     "CardNotFound": "This card no longer exists.",
     "TagNotFound": "Tag not found",
     "Network": "Can't reach the server. Check your connection.",
-    "generic": "Something went wrong"
+    "generic": "Something went wrong",
+    "InvalidDailySize": "Daily size is 1 to 50",
+    "InvalidTrackKinds": "Pick at least one kind",
+    "NoQuizzesMatch": "No quizzes match your settings.",
+    "TrackIsRemoved": "This track was removed. Refresh.",
+    "QuizAlreadyAnswered": "Already answered. Refresh.",
+    "QuizOutOfOrder": "Already answered. Refresh.",
+    "CannotSaveAsCard": "Already saved.",
+    "PracticeChanged": "Changed on another device. Refresh.",
+    "DailySessionNotFound": "Not found. Refresh.",
+    "TrackNotFound": "Not found. Refresh.",
+    "QuestionTagNotFound": "Not found. Refresh."
   },
   "settings": {
     "appearance": "Appearance",
@@ -153,5 +166,62 @@
     "nothing": "No cards to study.",
     "again": "Study again",
     "shuffleAgain": "Shuffle & again"
+  },
+  "practice": {
+    "overallStreak_one": "🔥 {{count}} day streak",
+    "overallStreak_other": "🔥 {{count}} day streak",
+    "streak": "🔥{{count}}",
+    "progress": "{{answered}} / {{total}}",
+    "notStarted": "Not started",
+    "start": "Start",
+    "continue": "Continue",
+    "done": "Done ✓",
+    "history": "History",
+    "noTracks": "No tracks yet. Add one to get a daily set.",
+    "addTrack": "Add a track",
+    "short_one": "Only {{count}} quiz matches your settings.",
+    "short_other": "Only {{count}} quizzes match your settings.",
+    "check": "Check",
+    "next": "Next",
+    "seeResult": "See result",
+    "correct": "✓ Correct",
+    "wrong": "✗ Wrong",
+    "answerIs": "Answer: {{answer}}",
+    "saveAsCard": "Save as card",
+    "saved": "Saved ✓",
+    "result": "{{correct}} / {{total}} correct",
+    "finished": "Done!",
+    "close": "Close",
+    "review": "Your answers",
+    "play": "▶ Play",
+    "replay": "↻ Play again",
+    "noHistory": "No days yet.",
+    "dayResult": "{{correct}} / {{total}}",
+    "unfinished": "{{answered}} / {{total}} quizzes"
+  },
+  "tracks": {
+    "title": "Tracks",
+    "add": "+ Add track",
+    "addTitle": "Add a track",
+    "empty": "No tracks yet.",
+    "noOptions": "No question tags yet.",
+    "quizCount_one": "{{count}} quiz",
+    "quizCount_other": "{{count}} quizzes",
+    "added": "Added",
+    "perDay": "{{count}} a day",
+    "dailySize": "Daily size",
+    "kinds": "Kinds",
+    "kind": {
+      "single": "Single",
+      "singleAudio": "Single audio",
+      "readingGroup": "Reading group",
+      "audioGroup": "Audio group"
+    },
+    "save": "Save",
+    "saved": "Settings saved. They apply from the next daily set.",
+    "remove": "Remove track",
+    "removeConfirm": "Remove #{{name}}? Its history is kept.",
+    "removeAction": "Remove",
+    "removed": "Track removed"
   }
 }

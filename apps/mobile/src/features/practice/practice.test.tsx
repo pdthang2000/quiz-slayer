@@ -1,0 +1,382 @@
+import { Alert, type AlertButton } from 'react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { router } from 'expo-router';
+import type { DailySession, Quiz, Today, Track } from '../../api/types';
+import { fakeApi, type FetchCall, Providers } from '../../test/harness';
+import { HistoryList } from './HistoryList';
+import { SessionView } from './SessionView';
+import { TodayView } from './TodayView';
+import { AddTrackList, TrackSettings } from './TrackScreens';
+
+jest.mock('expo-router', () => ({
+  router: { push: jest.fn(), back: jest.fn() },
+  useNavigation: () => ({ addListener: () => () => {} }),
+}));
+jest.mock('expo-localization', () => ({
+  ...jest.requireActual('expo-localization'),
+  getCalendars: () => [{ timeZone: 'Asia/Ho_Chi_Minh' }],
+}));
+const mockPlay = jest.fn();
+const mockSeekTo = jest.fn();
+jest.mock('expo-audio', () => ({
+  useAudioPlayer: () => ({ play: mockPlay, seekTo: mockSeekTo }),
+}));
+
+const wrap = (ui: React.ReactElement) => render(<Providers>{ui}</Providers>);
+const press = (id: string) => fireEvent.press(screen.getByTestId(id));
+
+const today = (over: Partial<Today> = {}): Today => ({
+  day: '2026-11-07',
+  overallStreak: 4,
+  tracks: [
+    { id: 't1', tagName: 'HSK4', kinds: ['single'], dailySize: 10, streak: 5, session: null },
+    {
+      id: 't2',
+      tagName: 'TOEIC',
+      kinds: ['single'],
+      dailySize: 10,
+      streak: 2,
+      session: {
+        id: 's2',
+        trackId: 't2',
+        day: '2026-11-07',
+        short: false,
+        finished: false,
+        progress: { answered: 3, total: 10 },
+        result: { correct: 3, total: 3 },
+      },
+    },
+  ],
+  ...over,
+});
+
+const single = (id: string, over: Partial<Quiz> = {}): Quiz => ({
+  id,
+  kind: 'single',
+  questions: [{ id: `${id}-q`, text: `question ${id}`, choices: ['是', '在', '有', '去'] }],
+  ...over,
+});
+
+const answered = (quiz: Quiz, chosen: number, correctChoice = 0, extra = {}): Quiz => ({
+  ...quiz,
+  answer: {
+    questions: quiz.questions.map((q) => ({
+      questionId: q.id,
+      chosen,
+      correctChoice,
+      correct: chosen === correctChoice,
+      explanation: '是 = to be',
+      canSaveAsCard: chosen !== correctChoice,
+      savedAsCard: false,
+      ...extra,
+    })),
+  },
+});
+
+const session = (quizzes: Quiz[], over: Partial<DailySession> = {}): DailySession => ({
+  id: 's1',
+  trackId: 't1',
+  tagName: 'HSK4',
+  day: '2026-11-07',
+  dailySize: 10,
+  short: false,
+  finished: quizzes.every((q) => q.answer),
+  progress: { answered: quizzes.filter((q) => q.answer).length, total: quizzes.length },
+  result: { correct: 0, total: quizzes.length },
+  quizzes,
+  ...over,
+});
+
+beforeEach(() => jest.clearAllMocks());
+
+describe('Today', () => {
+  it('G-5, DP-19: the overall streak on top, each track with its own streak and progress', async () => {
+    fakeApi([{ method: 'GET', path: /^\/practice\/today$/, reply: { body: today() } }]);
+    await wrap(<TodayView />);
+    expect(await screen.findByText('🔥 4 day streak')).toBeTruthy();
+    expect(screen.getByTestId('streak-HSK4').props.children).toBe('🔥5');
+    expect(screen.getByTestId('progress-HSK4').props.children).toBe('Not started');
+    expect(screen.getByTestId('progress-TOEIC').props.children).toBe('3 / 10'); // DP-18 quizzes
+  });
+
+  it("DP-05: day-dependent requests send the phone's timezone", async () => {
+    const { calls } = fakeApi([{ method: 'GET', path: /^\/practice\/today$/, reply: { body: today() } }]);
+    await wrap(<TodayView />);
+    await screen.findByText('🔥 4 day streak');
+    expect(calls[0].headers['X-Time-Zone']).toBe('Asia/Ho_Chi_Minh');
+  });
+
+  it('DP-31: Start chooses the set and opens it; DP-22: Continue resumes without a new set', async () => {
+    const { calls } = fakeApi([
+      { method: 'GET', path: /^\/practice\/today$/, reply: { body: today() } },
+      { method: 'POST', path: /^\/practice\/tracks\/t1\/start$/, reply: { body: session([single('a')], { id: 'new' }) } },
+    ]);
+    await wrap(<TodayView />);
+    await screen.findByText('🔥 4 day streak');
+    await press('start-HSK4');
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith({ pathname: '/practice/[id]', params: { id: 'new' } }));
+    expect(calls.find((c) => c.method === 'POST')!.headers['X-Time-Zone']).toBe('Asia/Ho_Chi_Minh');
+
+    await press('start-TOEIC');
+    await waitFor(() => expect(router.push).toHaveBeenLastCalledWith({ pathname: '/practice/[id]', params: { id: 's2' } }));
+    expect(calls.filter((c) => c.method === 'POST')).toHaveLength(1);
+  });
+
+  it('DP-14: nothing matching shows the message (G-9)', async () => {
+    fakeApi([
+      { method: 'GET', path: /^\/practice\/today$/, reply: { body: today() } },
+      { method: 'POST', path: /start$/, reply: { status: 422, body: { error: 'NoQuizzesMatch' } } },
+    ]);
+    await wrap(<TodayView />);
+    await screen.findByText('🔥 4 day streak');
+    await press('start-HSK4');
+    expect(await screen.findByText('No quizzes match your settings.')).toBeTruthy();
+  });
+
+  it('G-1: with no track yet, Today offers to add one', async () => {
+    fakeApi([{ method: 'GET', path: /^\/practice\/today$/, reply: { body: today({ tracks: [], overallStreak: 0 }) } }]);
+    await wrap(<TodayView />);
+    await press(await screen.findByTestId('add-first-track').then(() => 'add-first-track'));
+    expect(router.push).toHaveBeenCalledWith('/tracks/add');
+  });
+});
+
+describe('Daily session', () => {
+  const showSession = () => wrap(<SessionView id="s1" onClose={jest.fn()} />);
+
+  it('DP-21, DP-20: Check needs a choice; then right/wrong, the correct answer and the explanation; Next goes on', async () => {
+    const a = single('a');
+    const b = single('b');
+    const { calls } = fakeApi([
+      { method: 'GET', path: /^\/practice\/sessions\/s1$/, reply: { body: session([a, b]) } },
+      {
+        method: 'POST',
+        path: /^\/practice\/sessions\/s1\/quizzes\/a\/answer$/,
+        reply: { body: session([answered(a, 1), b]) },
+      },
+    ]);
+    await showSession();
+    expect(await screen.findByText('question a')).toBeTruthy();
+    expect(screen.getByTestId('session-progress').props.children).toBe('1 / 2'); // DP-18
+    expect(screen.getByTestId('session-check').props.accessibilityState.disabled).toBe(true);
+    await press('choice-a-q-1');
+    await press('session-check');
+    expect(calls.at(-1)!.body).toEqual({ choices: [1] });
+    expect(await screen.findByText('✗ Wrong')).toBeTruthy();
+    expect(screen.getByText('Answer: 是')).toBeTruthy();
+    expect(screen.getByText('是 = to be')).toBeTruthy();
+    await press('session-next');
+    expect(screen.getByText('question b')).toBeTruthy();
+    expect(screen.getByTestId('session-progress').props.children).toBe('2 / 2');
+  });
+
+  it('DP-17, DP-03: a reading group shows its passage and is answered as a whole', async () => {
+    const g: Quiz = {
+      id: 'g',
+      kind: 'readingGroup',
+      passage: '小王是一家公司的职员。',
+      questions: [
+        { id: 'g1', text: 'q1', choices: ['x', 'y'] },
+        { id: 'g2', text: 'q2', choices: ['x', 'y'] },
+      ],
+    };
+    const { calls } = fakeApi([
+      { method: 'GET', path: /sessions\/s1$/, reply: { body: session([g]) } },
+      { method: 'POST', path: /quizzes\/g\/answer$/, reply: { body: session([answered(g, 0)]) } },
+    ]);
+    await showSession();
+    expect(await screen.findByText('小王是一家公司的职员。')).toBeTruthy();
+    await press('choice-g1-0');
+    expect(screen.getByTestId('session-check').props.accessibilityState.disabled).toBe(true);
+    await press('choice-g2-1');
+    await press('session-check');
+    expect(calls.at(-1)!.body).toEqual({ choices: [0, 1] });
+  });
+
+  it('DP-22: reopening continues at the first quiz not answered', async () => {
+    fakeApi([{ method: 'GET', path: /sessions\/s1$/, reply: { body: session([answered(single('a'), 0), single('b')]) } }]);
+    await showSession();
+    expect(await screen.findByText('question b')).toBeTruthy();
+  });
+
+  it('DP-14: a short set says how many quizzes matched', async () => {
+    fakeApi([{ method: 'GET', path: /sessions\/s1$/, reply: { body: session([single('a')], { short: true }) } }]);
+    await showSession();
+    expect(await screen.findByText('Only 1 quiz matches your settings.')).toBeTruthy();
+  });
+
+  it('DP-24: no timer is shown', async () => {
+    fakeApi([{ method: 'GET', path: /sessions\/s1$/, reply: { body: session([single('a')]) } }]);
+    await showSession();
+    await screen.findByText('question a');
+    expect(screen.queryByText(/\d+:\d\d/)).toBeNull();
+  });
+
+  it('DP-25: audio can be replayed any number of times', async () => {
+    fakeApi([
+      {
+        method: 'GET',
+        path: /sessions\/s1$/,
+        reply: { body: session([single('au', { kind: 'singleAudio', audioUrl: 'https://x/a.mp3' })]) },
+      },
+    ]);
+    await showSession();
+    await press(await screen.findByTestId('quiz-audio').then(() => 'quiz-audio'));
+    expect(screen.getByText('↻ Play again')).toBeTruthy();
+    await press('quiz-audio');
+    await press('quiz-audio');
+    expect(mockPlay).toHaveBeenCalledTimes(3);
+    expect(mockSeekTo).toHaveBeenLastCalledWith(0);
+  });
+
+  it('DP-10: a wrong answer shows "Save as card" right in its feedback', async () => {
+    const a = single('a');
+    fakeApi([
+      { method: 'GET', path: /sessions\/s1$/, reply: { body: session([a, single('b')]) } },
+      { method: 'POST', path: /quizzes\/a\/answer$/, reply: { body: session([answered(a, 1), single('b')]) } },
+    ]);
+    await showSession();
+    await press(await screen.findByTestId('choice-a-q-1').then(() => 'choice-a-q-1'));
+    await press('session-check');
+    expect(await screen.findByTestId('save-as-card-a-q')).toBeTruthy();
+  });
+
+  it('DP-40: no "Save as card" button when the server says it is not allowed', async () => {
+    const a = single('a');
+    fakeApi([
+      { method: 'GET', path: /sessions\/s1$/, reply: { body: session([answered(a, 1, 0, { canSaveAsCard: false })]) } },
+      { method: 'GET', path: /^\/practice\/today$/, reply: { body: today() } },
+    ]);
+    await showSession();
+    await screen.findByTestId('session-result');
+    expect(screen.queryByTestId('save-as-card-a-q')).toBeNull();
+  });
+
+  it('DP-23, DP-18: a finished set shows the result in questions and every answer', async () => {
+    const a = answered(single('a'), 0);
+    const b = answered(single('b'), 2);
+    fakeApi([
+      {
+        method: 'GET',
+        path: /sessions\/s1$/,
+        reply: { body: session([a, b], { result: { correct: 23, total: 28 } }) },
+      },
+      { method: 'GET', path: /^\/practice\/today$/, reply: { body: today() } },
+    ]);
+    await showSession();
+    expect(await screen.findByText('23 / 28 correct')).toBeTruthy();
+    expect(screen.getByText('question a')).toBeTruthy();
+    expect(screen.getByText('question b')).toBeTruthy();
+    expect(screen.getByText('✓ Correct')).toBeTruthy();
+  });
+
+  it('DP-32: "Save as card" on the result list creates the card once and then shows "Saved ✓"', async () => {
+    let saved = false;
+    const a = single('a');
+    const { calls } = fakeApi([
+      {
+        method: 'GET',
+        path: /sessions\/s1$/,
+        reply: () => ({
+          body: session([answered(a, 1, 0, saved ? { savedAsCard: true, canSaveAsCard: false } : {})]),
+        }),
+      },
+      { method: 'GET', path: /^\/practice\/today$/, reply: { body: today() } },
+      {
+        method: 'POST',
+        path: /questions\/a-q\/save-as-card$/,
+        reply: () => {
+          saved = true;
+          return { status: 201, body: { cardId: 'c1' } };
+        },
+      },
+    ]);
+    await showSession();
+    await press(await screen.findByTestId('save-as-card-a-q').then(() => 'save-as-card-a-q'));
+    expect(await screen.findByText('Saved ✓')).toBeTruthy();
+    expect(screen.queryByTestId('save-as-card-a-q')).toBeNull();
+    expect(calls.filter((c: FetchCall) => c.method === 'POST')).toHaveLength(1);
+  });
+});
+
+describe('History', () => {
+  it('DP-26: past days with their result, newest first; a tap opens that day', async () => {
+    fakeApi([
+      {
+        method: 'GET',
+        path: /^\/practice\/tracks\/t1\/history$/,
+        reply: {
+          body: [
+            { id: 's8', trackId: 't1', day: '2026-11-08', short: false, finished: true, progress: { answered: 2, total: 2 }, result: { correct: 2, total: 2 } },
+            { id: 's7', trackId: 't1', day: '2026-11-07', short: false, finished: true, progress: { answered: 2, total: 2 }, result: { correct: 1, total: 2 } },
+          ],
+        },
+      },
+    ]);
+    await wrap(<HistoryList trackId="t1" />);
+    expect(await screen.findByText('2 / 2')).toBeTruthy();
+    expect(screen.getByText('1 / 2')).toBeTruthy();
+    await press('day-2026-11-07');
+    expect(router.push).toHaveBeenCalledWith({ pathname: '/practice/[id]', params: { id: 's7' } });
+  });
+});
+
+describe('Tracks', () => {
+  const track: Track = { id: 't1', tagName: 'HSK4', kinds: ['single', 'readingGroup'], dailySize: 10 };
+
+  it('G-2: a track is added from question tags with quiz counts; ones already added are greyed', async () => {
+    const onAdded = jest.fn();
+    const { calls } = fakeApi([
+      {
+        method: 'GET',
+        path: /^\/practice\/track-options$/,
+        reply: { body: [{ name: 'HSK4', quizCount: 41, tracked: true }, { name: 'sample', quizCount: 41, tracked: false }] },
+      },
+      { method: 'POST', path: /^\/practice\/tracks$/, reply: { status: 201, body: track } },
+    ]);
+    await wrap(<AddTrackList onAdded={onAdded} />);
+    expect(await screen.findByText('41 quizzes')).toBeTruthy();
+    expect(screen.getByText('Added')).toBeTruthy();
+    expect(screen.getByTestId('option-HSK4').props.accessibilityState.disabled).toBe(true);
+    await press('option-sample');
+    await waitFor(() => expect(onAdded).toHaveBeenCalled());
+    expect(calls.find((c) => c.method === 'POST')!.body).toEqual({ tagName: 'sample' });
+  });
+
+  it('DP-12, DP-13: daily size and kinds are saved together; applies from the next set', async () => {
+    const { calls } = fakeApi([{ method: 'PATCH', path: /^\/practice\/tracks\/t1$/, reply: { body: track } }]);
+    await wrap(<TrackSettings track={track} onRemoved={jest.fn()} />);
+    expect(screen.getByTestId('track-save').props.accessibilityState.disabled).toBe(true);
+    await press('size-plus');
+    await press('kind-audioGroup');
+    await press('track-save');
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0].body).toEqual({ kinds: ['single', 'readingGroup', 'audioGroup'], dailySize: 11 });
+    expect(await screen.findByText('Settings saved. They apply from the next daily set.')).toBeTruthy();
+  });
+
+  it('DP-12: the server refuses no kind at all; its message is shown', async () => {
+    fakeApi([{ method: 'PATCH', path: /tracks\/t1$/, reply: { status: 400, body: { error: 'InvalidTrackKinds' } } }]);
+    await wrap(<TrackSettings track={{ ...track, kinds: ['single'] }} onRemoved={jest.fn()} />);
+    await press('kind-single');
+    await press('track-save');
+    expect(await screen.findByText('Pick at least one kind')).toBeTruthy();
+  });
+
+  it('DP-15: Remove asks first and keeps the history', async () => {
+    // The user taps "Remove" in the dialog.
+    const alert = jest
+      .spyOn(Alert, 'alert')
+      .mockImplementation((_title, _message, buttons?: AlertButton[]) =>
+        buttons?.find((b) => b.text === 'Remove')?.onPress?.(),
+      );
+    const onRemoved = jest.fn();
+    const { calls } = fakeApi([{ method: 'DELETE', path: /^\/practice\/tracks\/t1$/, reply: { status: 204 } }]);
+    await wrap(<TrackSettings track={track} onRemoved={onRemoved} />);
+    await press('track-remove');
+    expect(alert.mock.calls.at(-1)![0]).toBe('Remove #HSK4? Its history is kept.');
+    await waitFor(() => expect(onRemoved).toHaveBeenCalled());
+    expect(calls[0].method).toBe('DELETE');
+    alert.mockRestore();
+  });
+});

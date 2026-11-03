@@ -19,7 +19,7 @@ jest.mock('expo-router/drawer', () => {
 });
 
 function drawerProps(current: string) {
-  const routes = ['index', 'tags', 'trash', 'settings'].map((name) => ({ key: name, name }));
+  const routes = ['index', 'cards', 'tags', 'trash', 'settings'].map((name) => ({ key: name, name }));
   const navigate = jest.fn();
   return {
     navigate,
@@ -37,9 +37,9 @@ const texts = (node: ReturnType<typeof screen.getByTestId>) =>
     .map((n) => n.props.children);
 
 describe('Navigation', () => {
-  it('UI-09: the drawer lists Cards, Tags, Trash; Settings sits apart at the bottom', async () => {
+  it('UI-09: the drawer lists Today (G-1, provisional), Cards, Tags, Trash; Settings sits apart at the bottom', async () => {
     await render(<DrawerContent {...drawerProps('index').props} />);
-    expect(texts(screen.getByTestId('drawer-items'))).toEqual(['Cards', 'Tags', 'Trash']);
+    expect(texts(screen.getByTestId('drawer-items'))).toEqual(['Today', 'Cards', 'Tags', 'Trash']);
     expect(texts(screen.getByTestId('drawer-footer'))).toEqual(['Settings']);
   });
 

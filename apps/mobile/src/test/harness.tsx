@@ -37,6 +37,7 @@ export type FetchCall = {
   method: string;
   path: string;
   ifMatch?: string;
+  headers: Record<string, string>;
   body?: Record<string, unknown>;
 };
 
@@ -50,6 +51,7 @@ export function fakeApi(routes: Route[]) {
       method: init.method ?? 'GET',
       path,
       ifMatch: headers['If-Match'],
+      headers,
       body: init.body ? JSON.parse(init.body as string) : undefined,
     };
     calls.push(call);

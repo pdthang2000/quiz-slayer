@@ -1,6 +1,6 @@
 # QuizSlayer — build plan
 
-Status (2026-11-03): Phases 0–3 done; Phase 4 slices 4a–4d done; Phase 5 done; Phases 6a–6d done (ADR-013 proposed, ADR-014 outbox). **Continuous run** from 4d through Phase 6 (see below and CLAUDE.md → Continuous run).
+Status (2026-11-03): Phases 0–3 done; Phase 4 slices 4a–4d done; Phase 5 done; Phase 6 slices 6a–6e done (ADR-013 proposed, ADR-014 outbox); continuous run finished, waiting for Checkpoint 6 review. **Continuous run** from 4d through Phase 6 (see below and CLAUDE.md → Continuous run).
 Sizes are rough effort, not dates: S = a sitting, M = a few sittings, L = a week or more of evenings.
 
 Order: finish Card Library end-to-end first (small, fully modelled), then model and build Daily Practice (the core).

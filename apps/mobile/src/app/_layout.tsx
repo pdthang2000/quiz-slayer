@@ -68,6 +68,14 @@ export default function RootLayout() {
                 <Stack.Screen name="card/tags" options={{ title: t('tags.ofCard.title') }} />
                 <Stack.Screen name="tag/[id]/index" options={{ title: '' }} />
                 <Stack.Screen name="tag/[id]/add" options={{ presentation: 'modal' }} />
+                <Stack.Screen name="practice/[id]" options={{ title: '' }} />
+                <Stack.Screen
+                  name="practice/history/[trackId]"
+                  options={{ title: t('practice.history') }}
+                />
+                <Stack.Screen name="tracks/index" options={{ title: t('tracks.title') }} />
+                <Stack.Screen name="tracks/add" options={{ title: t('tracks.addTitle') }} />
+                <Stack.Screen name="tracks/[id]" options={{ title: '' }} />
                 <Stack.Screen
                   name="study"
                   options={{ presentation: 'fullScreenModal', headerShown: false }}

@@ -24,6 +24,8 @@ export type RequestOptions = {
   body?: unknown;
   /** CONFLICT-01: the version the screen showed, sent as If-Match. */
   version?: number;
+  /** Extra headers, e.g. X-Time-Zone for Daily Practice (DP-05). */
+  headers?: Record<string, string>;
 };
 
 /** A request with no answer after this long counts as "no network". */
@@ -52,6 +54,7 @@ export async function request<T>(
   const headers: Record<string, string> = { Accept: 'application/json' };
   if (options.body !== undefined) headers['Content-Type'] = 'application/json';
   if (options.version !== undefined) headers['If-Match'] = `"${options.version}"`;
+  Object.assign(headers, options.headers);
 
   // AbortController + setTimeout rather than AbortSignal.timeout, which React Native lacks.
   const controller = new AbortController();

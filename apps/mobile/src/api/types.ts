@@ -69,3 +69,54 @@ export type TrashPage = Page<TrashedCard> & { total: number; newestTrashedAt: st
 
 /** TRASH-11: what the empty-trash dialog showed. */
 export type EmptyTrashInput = { expectedCount: number; newestTrashedAt: string | null };
+
+// ---------- Daily Practice (apps/api/src/daily-practice/application/views.ts) ----------
+
+/** QB-06 */
+export type QuizKind = 'single' | 'singleAudio' | 'readingGroup' | 'audioGroup';
+
+export type Track = { id: string; tagName: string; kinds: QuizKind[]; dailySize: number };
+
+/** G-2: a question tag to add a track from. */
+export type TrackOption = { name: string; quizCount: number; tracked: boolean };
+
+export type AnsweredQuestion = {
+  questionId: string;
+  chosen: number;
+  correctChoice: number;
+  correct: boolean;
+  explanation?: string;
+  canSaveAsCard: boolean;
+  savedAsCard: boolean;
+};
+
+export type Quiz = {
+  id: string;
+  kind: QuizKind;
+  passage?: string;
+  audioUrl?: string;
+  questions: { id: string; text: string; imageUrl?: string; audioUrl?: string; choices: string[] }[];
+  /** Present once answered (DP-20). */
+  answer?: { questions: AnsweredQuestion[] };
+};
+
+export type DailySessionSummary = {
+  id: string;
+  trackId: string;
+  /** YYYY-MM-DD, the phone's day it was started (DP-05). */
+  day: string;
+  short: boolean;
+  finished: boolean;
+  progress: { answered: number; total: number };
+  result: { correct: number; total: number };
+};
+
+export type DailySession = DailySessionSummary & {
+  tagName: string;
+  dailySize: number;
+  quizzes: Quiz[];
+};
+
+export type TodayTrack = Track & { streak: number; session: DailySessionSummary | null };
+
+export type Today = { day: string; overallStreak: number; tracks: TodayTrack[] };

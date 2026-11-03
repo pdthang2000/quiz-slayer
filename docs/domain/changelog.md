@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-03 — Phase 6e Daily Practice mobile (continuous run, end)
+- App: Today screen (first drawer item, start screen), quiz screen for single and reading-group quizzes (audio player when a quiz has audio), feedback + explanation, Save as card, result + answers, History, Settings → Tracks (add from question tags with counts, kinds, daily size, remove).
+- Every Daily Practice rule DP-01..DP-40 has a test.
+- Provisional (not confirmed): G-1 (changes UI-09), G-2, G-5 built; G-15 quiz flow; G-16 texts.
+- `expo-audio` added (works in Expo Go).
+
 ## 2026-11-03 — Phase 6d Daily Practice API (continuous run)
 - Endpoints for Today, Start/resume, answer, session, history, tracks, track options, Save as card (daily-practice.md → API).
 - Error table for Daily Practice added as draft (messages provisional, G-14).

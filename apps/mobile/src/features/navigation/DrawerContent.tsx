@@ -9,13 +9,14 @@ import { spacing, useTheme } from '../../theme';
 
 /** UI-09: the drawer's items, in this order. Route name → i18n label. */
 export const DRAWER_ITEMS = [
-  { route: 'index', label: 'nav.cards' },
+  { route: 'index', label: 'nav.today' }, // G-1 (provisional): first item, the start screen
+  { route: 'cards', label: 'nav.cards' },
   { route: 'tags', label: 'nav.tags' },
   { route: 'trash', label: 'nav.trash' },
 ] as const;
 
 /**
- * UI-09: Cards, Tags, Trash; Settings sits apart at the bottom of the drawer (UI-17).
+ * UI-09: Today (G-1), Cards, Tags, Trash; Settings sits apart at the bottom of the drawer (UI-17).
  * The items are listed here, not taken from the routes, so a new screen never shows up in
  * the drawer by accident.
  */
