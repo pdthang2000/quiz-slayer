@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-03 — Save as card details
+- Confirmed: "Save as card" only on single text questions; front = question + choices, back = answer + explanation, tag = track's tag; hidden if the front would exceed 500 characters (DP-40, G-3, G-4). Open: G-1, G-2, G-5, G-6.
+
 ## 2026-11-03 — Strategic docs confirmed
 - Confirmed: subdomains; context map updated ("Save as card" is a user action calling createCard, not an event; QuizProgress reacts to QuizAnswered); Quiz Set owner System/User.
 - Backlog: "published" flow goes with the import feature (B-17); Q-12 → B-21.

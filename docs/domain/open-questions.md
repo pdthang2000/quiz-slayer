@@ -92,6 +92,12 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | X-1 | A quiz in two tracks: one progress or one per track? | answered: one per user and quiz → DP-37 |
 | X-2 | Can the same quiz be in two tracks' sets on the same day? Proposed: no, the second set skips it. | answered: no, skipped → DP-39 |
 | X-3 | If skipping leaves the second set short: reuse the quiz, or show fewer? | answered: strict, show fewer → DP-39 |
+| G-3 | "Save as card" on a reading-group question? | answered: no; only single text questions → DP-40 |
+| G-4 | What does a saved card contain? | answered: front = question + choices, back = answer + explanation, tag = track's tag → DP-40 |
+| G-1 | Where is Daily Practice in the app? Proposed: a first drawer item "Today", and the app opens on it. | open |
+| G-2 | How is a track added? Proposed: pick from question tags that have quizzes, with counts. | open |
+| G-5 | Where do streaks show? Proposed: "Today" screen, overall at the top, each track with its own. | open |
+| G-6 | Daily reminder notification? Proposed: backlog. | open |
 | Q-06a | "Save as card" on an audio question (cards are text only, CARD-03): hide the button, or save the question text only? | answered: hidden for audio kinds → DP-16 |
 | Q-07a | Daily size per track: fixed 10, or set per track (default 10)? | answered: per track, default 10, allowed 1–50 → DP-12 |
 | Q-07b | Add/remove tracks anytime from Settings? | answered: yes; removing keeps history, re-adding continues it → DP-15 |

@@ -97,6 +97,12 @@ Mon 3 wrong → Tue 4 · right → Fri 7 · wrong → Sat 8 · right → Tue 11 
 ```
 Q7 tagged #HSK4 #grammar · 07:00 Track #HSK4 has Q7 · 07:10 Track #grammar skips Q7
 ```
+- **DP-40** `confirmed` — "Save as card" (DP-10) appears only on single questions that make sense on their own: kind single, text only (no image, no audio, not part of a group). The card: front = the question and its choices, back = the correct answer and the explanation, tag = the track's tag. If the front would be longer than 500 characters (CARD-02), the button is hidden. (G-3, G-4)
+```
+Front: 我___学生。  A 是  B 在  C 有  D 去
+Back:  是 — 是 = to be
+Tag:   #HSK4
+```
 
 How a day's set is built (DP-30, DP-35, DP-28, DP-14):
 ```
