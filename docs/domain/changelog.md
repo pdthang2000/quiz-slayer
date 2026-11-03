@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-03 — Phase 6a Daily Practice domain + ADR-013 (continuous run)
+- ADR-013 (proposed): aggregates Track, DailySession, QuizProgress; buildDailySet domain service; streaks computed from finished sessions; the phone sends its timezone (`X-Time-Zone`) with each request; events and commands renamed (QuizAnswered, DailySessionStarted, DailySessionFinished).
+- daily-practice.md: Events, Commands, Aggregates sections rewritten (still draft). Glossary: design terms, events and errors added as draft.
+- Provisional (not confirmed): G-7 group answered as one, G-8 track kinds, G-9 no set when nothing matches, G-10 re-adding an active track, G-11 order inside a set.
+
 ## 2026-11-03 — Phase 4d Study (continuous run)
 - Built STUDY-01..STUDY-12 in the app: Study button on the Cards screen and a tag's card list, study screen with progress, Prev/Next, swipe, flip, Shuffle (unseen only), front/back switch remembered on the phone, "Done!" screen.
 - Provisional (not confirmed): C-62 texts, C-63 Shuffle on the first card, C-64 Study again.

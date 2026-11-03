@@ -66,6 +66,31 @@ Names confirmed 2026-10-22. How each error is handled: card-library.md → Error
 | Mistake | A question answered wrong; it comes back after 1, 3 and 7 days (DP-08). | confirmed |
 | Streak | Consecutive days with a finished daily set: one per track, plus one overall (any track) (DP-19, DP-23). | confirmed |
 
+### Daily Practice design terms (ADR-013, proposed)
+| Term | Meaning | Status |
+|---|---|---|
+| QuizProgress | One user's progress on one quiz across tracks: last answered, and the mistake's stage (1, 3 or 7 days) and due day (DP-33, DP-37). | draft |
+| Daily set | The quizzes chosen for a daily session when Start is tapped (DP-30, DP-31). Code: `buildDailySet`. | draft |
+
+| Event | Raised when | Status |
+|---|---|---|
+| `TrackAdded` / `TrackRemoved` / `TrackSettingsChanged` | Track lifecycle (DP-12, DP-15). | draft |
+| `DailySessionStarted` | Today's set was chosen (DP-31). | draft |
+| `QuizAnswered` | A quiz (single or whole group) was answered; carries right/wrong (DP-29). | draft |
+| `DailySessionFinished` | Every quiz of the set is answered (DP-23). | draft |
+
+| Error | Rule | Status |
+|---|---|---|
+| `InvalidTimeZone` | DP-05 (no or unknown timezone from the phone) | draft |
+| `InvalidDailySize` | DP-12 (not 1–50) | draft |
+| `InvalidTrackKinds` | DP-12 (no kind, or an unknown kind; G-8) | draft |
+| `TrackIsRemoved` | DP-15 (start a set on a removed track) | draft |
+| `NoQuizzesMatch` | DP-14 (nothing matches; no set, G-9) | draft |
+| `QuizAlreadyAnswered` | DP-03 | draft |
+| `QuizOutOfOrder` | DP-21 | draft |
+| `InvalidAnswer` | Bug: unknown quiz, wrong number of answers, unknown choice | draft |
+| `CannotSaveAsCard` | DP-10, DP-32, DP-40 | draft |
+
 ## Question Bank
 
 | Term | Meaning | Status |

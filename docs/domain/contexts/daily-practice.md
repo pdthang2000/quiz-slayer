@@ -6,14 +6,17 @@ Core subdomain. Rules are `confirmed` unless marked otherwise; Events, Commands 
 - `confirmed` Each day the user does a set of quizzes (X per day, 10 by default) loaded from stored questions of a test.
 - `confirmed` Quiz types include question/answer and listening; the full list is open (Q-04).
 
-## Events (draft)
-`DailySessionGenerated` → `ItemAnswered` → ... → `DailySessionCompleted`
-`ItemAnswered` → `MistakeRecorded` → (Card Library may suggest a card)
-`StreakExtended` / `StreakBroken`
+## Events (draft, ADR-013 proposed)
+`DailySessionStarted` → `QuizAnswered` → ... → `DailySessionFinished` (DP-23)
+`QuizAnswered` → `QuizProgress` applies DP-33 (through the outbox, B-10)
+`TrackAdded` / `TrackRemoved` / `TrackSettingsChanged`
+(Dropped: `MistakeRecorded`, `StreakExtended`, `StreakBroken`: Save as card is a user action and streaks are computed.)
 
-## Commands (draft)
-- `generateDailySession(user, track, day)`
-- `answerItem(session, item, answer)`
+## Commands (draft, ADR-013 proposed)
+- `addTrack(user, tagName)`, `removeTrack(track)`, `changeTrackSettings(track, kinds, dailySize)`
+- `startDailySession(user, track)` (today in the phone's timezone; resumes today's, DP-22)
+- `answerQuiz(session, quiz, choices)` (a whole quiz at once: one choice per question)
+- `saveQuestionAsCard(session, question)` (DP-10, DP-40 → Card Library `createCard`)
 
 ## Rules
 - **DP-01** `confirmed` — One daily session per user, per track, per day (DP-05, DP-09).
@@ -116,9 +119,12 @@ How a day's set is built (DP-30, DP-35, DP-28, DP-14):
 7. Save the chosen quiz ids as today's set
 ```
 
-## Aggregates (draft)
-- **DailySession**: protects DP-01..DP-03. `answerItem` touches only the session; streaks and cards react to events.
+## Aggregates (draft, ADR-013 proposed)
+- **Track** (unique per user and tag name): kinds, daily size, Active/Removed. DP-11, DP-12, DP-15.
+- **DailySession** (unique per user, track, day): snapshot of the quizzes, answers, saved-as-card questions. DP-01, DP-03, DP-05, DP-17, DP-18, DP-20..DP-23, DP-32, DP-40. `answerQuiz` touches only the session; progress reacts to `QuizAnswered`.
+- **QuizProgress** (per user and quiz): last answered, mistake stage and due day. DP-27, DP-29, DP-33, DP-37, DP-38.
+- `buildDailySet` (domain service) and `streakLength` (computed, nothing stored) are pure functions.
 
 ## Integrations
-- Reads published items from Question Bank and keeps a snapshot of what it served.
-- Emits `MistakeRecorded`. Card Library decides what to do with it (Q-06).
+- Reads pools and quiz content from Question Bank's public application service and keeps a snapshot of what it served (QB-04).
+- "Save as card" calls Card Library's `createCard` (context map). No event.
