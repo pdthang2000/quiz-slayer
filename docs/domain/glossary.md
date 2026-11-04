@@ -64,6 +64,7 @@ Names confirmed 2026-10-22. How each error is handled: card-library.md → Error
 | Quiz | One unit of a daily set: a single question, or a group (one passage or audio + its questions) (DP-17). | confirmed |
 | Attempt | The user's answer to one question in a daily session; can't be changed (DP-03). | confirmed |
 | Mistake | A question answered wrong; it comes back after 1, 3 and 7 days (DP-08). | confirmed |
+| Note | The user's private free text on one question, written after answering it; one per user and question (DP-41..DP-51). Code: `QuestionNote`. Not the Explanation (the author's text). | confirmed |
 | Streak | Consecutive days with a finished daily set: one per track, plus one overall (any track) (DP-19, DP-23). | confirmed |
 
 ### Daily Practice design terms (ADR-013, proposed)
@@ -90,6 +91,9 @@ Names confirmed 2026-10-22. How each error is handled: card-library.md → Error
 | `QuizOutOfOrder` | DP-21 | draft |
 | `InvalidAnswer` | Bug: unknown quiz, wrong number of answers, unknown choice | draft |
 | `CannotSaveAsCard` | DP-10, DP-32, DP-40 | draft |
+| `InvalidNoteText` | DP-46 (longer than 1,000) | draft |
+| `CannotWriteNote` | DP-45 (question not answered in that session) | draft |
+| `NoteChanged` | DP-50 (CONFLICT-01) | draft |
 
 ## Question Bank
 

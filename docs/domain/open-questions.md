@@ -111,6 +111,18 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | G-14 | Daily Practice error messages (daily-practice.md → Error handling). | provisional, built in 6d/6e: as in the table |
 | G-15 | Quiz screen flow: how is an answer given, and what after the last quiz? | provisional, built in 6e: tap a choice to select it (per question in a group), then "Check"; feedback stays until "Next" ("See result" after the last); result screen "Done! · 23 / 28 correct · #HSK4 · Sat, Nov 7 · 🔥6", Close, then every quiz with the answers (also used for a History day, DP-26). "Save as card" is in the feedback and on the result list. Track settings: −/+ stepper and kind checkboxes, saved with one "Save" button; Remove asks first |
 | G-16 | Slice 6e app texts not in the docs. | provisional, built: drawer "Today"; "🔥 4 day streak", "🔥5", "3 / 10", "Not started", "Start" / "Continue" / "Done ✓", "History"; no tracks "No tracks yet. Add one to get a daily set." + "Add a track"; "Only 4 quizzes match your settings." (DP-14, from the doc); "Check", "Next", "See result", "✓ Correct", "✗ Wrong", "Answer: 是", "Save as card", "Saved ✓", "Done!", "23 / 28 correct", "Close", "Your answers", "▶ Play" / "↻ Play again"; History "No days yet.", "2 / 2", unfinished "3 / 10 quizzes"; Settings "Tracks", "+ Add track", "Add a track", "41 quizzes", "Added", "10 a day", "Daily size", "Kinds", kind names "Single", "Single audio", "Reading group", "Audio group", "Save", "Settings saved. They apply from the next daily set.", "Remove track", "Remove #HSK4? Its history is kept." Remove / Cancel, "Track removed"; error messages as in daily-practice.md (G-14) |
+| G-17 | (Review of the run) An unfinished set can be finished days later from History, and that day then counts for the streak. DP-05 allows finishing after midnight; DP-06 says no making up. Until when can a started set be finished? A) until the end of the next day (recommended), B) until 04:00 the next morning, C) anytime, but it counts only if finished by the end of the next day | open |
+| N-1 | Who sees a note? | answered: only the user who wrote it → DP-42 |
+| N-2 | One note per question, or a new note each day? | answered: one per user and question, kept and editable → DP-43 |
+| N-3 | In a group: one note per question or per group? | answered: per question → DP-44 |
+| N-4 | When can a note be seen and written? | answered: only after answering, right or wrong → DP-45 |
+| N-5 | Note length? | answered: up to 1,000 characters, trimmed; empty removes it → DP-46 |
+| N-6 | Where is it edited, and how? | answered: feedback, result, History day; Save button, no autosave → DP-45, DP-47 |
+| N-7 | What does History show? | answered: the latest note → DP-48 |
+| N-8 | Does Save as card copy the note? | answered: yes, a copy on the back below the explanation; button hidden if the back would pass 3,000 → DP-49 |
+| N-9 | Two devices editing a note? | answered: CONFLICT-01 → DP-50 |
+| N-10 | Question fixed or deleted? | answered: fixed → note stays; deleted → note deleted → DP-51 |
+| N-11 | Name? | answered: "Note" (the user's), not "Explanation" (the author's) → glossary, DP-41 |
 | Q-06a | "Save as card" on an audio question (cards are text only, CARD-03): hide the button, or save the question text only? | answered: hidden for audio kinds → DP-16 |
 | Q-07a | Daily size per track: fixed 10, or set per track (default 10)? | answered: per track, default 10, allowed 1–50 → DP-12 |
 | Q-07b | Add/remove tracks anytime from Settings? | answered: yes; removing keeps history, re-adding continues it → DP-15 |

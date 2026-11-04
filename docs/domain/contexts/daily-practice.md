@@ -17,6 +17,7 @@ Core subdomain. Rules are `confirmed` unless marked otherwise; Events, Commands 
 - `startDailySession(user, track)` (today in the phone's timezone; resumes today's, DP-22)
 - `answerQuiz(session, quiz, choices)` (a whole quiz at once: one choice per question)
 - `saveQuestionAsCard(session, question)` (DP-10, DP-40 → Card Library `createCard`)
+- `writeQuestionNote(session, question, text, version)` (DP-41..DP-51; proposal for 6f)
 
 ## Rules
 - **DP-01** `confirmed` — One daily session per user, per track, per day (DP-05, DP-09).
@@ -100,7 +101,7 @@ Mon 3 wrong → Tue 4 · right → Fri 7 · wrong → Sat 8 · right → Tue 11 
 ```
 Q7 tagged #HSK4 #grammar · 07:00 Track #HSK4 has Q7 · 07:10 Track #grammar skips Q7
 ```
-- **DP-40** `confirmed` — "Save as card" (DP-10) appears only on single questions that make sense on their own: kind single, text only (no image, no audio, not part of a group). The card: front = the question and its choices, back = the correct answer and the explanation, tag = the track's tag. If the front would be longer than 500 characters (CARD-02), the button is hidden. (G-3, G-4)
+- **DP-40** `confirmed` — "Save as card" (DP-10) appears only on single questions that make sense on their own: kind single, text only (no image, no audio, not part of a group). The card: front = the question and its choices, back = the correct answer and the explanation, tag = the track's tag. If the front would be longer than 500 characters (CARD-02), the button is hidden. (G-3, G-4) The note is added to the back too (DP-49).
 ```
 Front: 我___学生。  A 是  B 在  C 有  D 去
 Back:  是 — 是 = to be
@@ -119,10 +120,35 @@ How a day's set is built (DP-30, DP-35, DP-28, DP-14):
 7. Save the chosen quiz ids as today's set
 ```
 
+### Notes (2026-11-04)
+- **DP-41** `confirmed` — The user can write a **Note** on any question they answered, right or wrong: free text, e.g. why an answer is right or wrong. It is the user's own text; the **Explanation** is the author's. (N-11)
+- **DP-42** `confirmed` — A note is private: only the user who wrote it sees it, also on System or public quizzes. (N-1)
+- **DP-43** `confirmed` — One note per user and question, kept across days and tracks. When the question comes back, the same note shows and can be edited. (N-2)
+```
+Mon  我___学生。 wrong → note "是 joins two nouns, 在 is for places"
+Thu  same question (mistake comeback) → answered → the same note shows, editable
+```
+- **DP-44** `confirmed` — In a group (reading or audio), each question has its own note. (N-3)
+- **DP-45** `confirmed` — A note is shown and can be written only after the question is answered in that session: on the feedback screen, the result screen and a History day. Never before answering, so a note can't give the answer away on a comeback. (N-4, N-6)
+- **DP-46** `confirmed` — A note is up to 1,000 characters (counted like CARD-02: code points after NFC), spaces trimmed at both ends. Saving an empty note removes it. (N-5)
+- **DP-47** `confirmed` — A note is saved with a **Save** button; no autosave. (N-6)
+- **DP-48** `confirmed` — History shows the latest note, not the note as it was that day. (N-7)
+- **DP-49** `confirmed` — "Save as card" (DP-40) copies the note onto the card's back, below the explanation, if a note exists when Save as card is tapped. It is a copy: editing the note later doesn't change the card. If the back would be longer than 3,000 characters (CARD-02), the button is hidden. (N-8)
+```
+Back:  是 — 是 = to be
+       📝 是 joins two nouns, 在 is for places
+```
+- **DP-50** `confirmed` — Notes follow CONFLICT-01: saving a note sends what the screen showed; if the server has a newer note, nothing is written and the app shows the latest. (N-9)
+```
+Phone A saves "X" · Phone B, still showing the old note, saves "Y" → "This note changed." and shows "X"
+```
+- **DP-51** `confirmed` — A note stays when its question's content is fixed (e.g. a corrected answer key, QB-04). Deleting the question deletes its notes. (N-10)
+
 ## Aggregates (draft, ADR-013 proposed)
 - **Track** (unique per user and tag name): kinds, daily size, Active/Removed. DP-11, DP-12, DP-15.
 - **DailySession** (unique per user, track, day): snapshot of the quizzes, answers, saved-as-card questions. DP-01, DP-03, DP-05, DP-17, DP-18, DP-20..DP-23, DP-32, DP-40. `answerQuiz` touches only the session; progress reacts to `QuizAnswered`.
 - **QuizProgress** (per user and quiz): last answered, mistake stage and due day. DP-27, DP-29, DP-33, DP-37, DP-38.
+- **QuestionNote** (per user and question; proposal for 6f): the note's text and a version. DP-41..DP-51.
 - `buildDailySet` (domain service) and `streakLength` (computed, nothing stored) are pure functions.
 
 ## API (draft, built in 6d)
@@ -149,6 +175,9 @@ GET    /practice/track-options                      question tags with quiz coun
 | `QuizAlreadyAnswered` | DP-03 | Answered on another device meanwhile | Stale screen | 409 | "Already answered. Refresh." |
 | `QuizOutOfOrder` | DP-21 | Not the next quiz | Stale screen | 409 | "Already answered. Refresh." |
 | `CannotSaveAsCard` | DP-10, DP-32, DP-40 | Button not allowed (e.g. already saved) | Stale screen | 409 | "Already saved." |
+| `InvalidNoteText` | DP-46 | Note longer than 1,000 characters | User input | 400 | "A note is at most 1,000 characters" (draft) |
+| `CannotWriteNote` | DP-45 | Question not answered in that session | Stale screen | 409 | "Answer the question first. Refresh." (draft) |
+| `NoteChanged` | DP-50 | The note changed on another device | Stale screen | 409 | "This note changed." (draft) |
 | `PracticeChanged` | — | Two devices at the same moment | Race | 409 | "Changed on another device. Refresh." |
 | `InvalidAnswer` | — | Wrong number of choices or an unknown choice | Bug | 400 | generic |
 | `DailySessionNotFound` / `TrackNotFound` / `QuestionTagNotFound` | — | No such item for this user | Stale screen | 404 | "Not found. Refresh." |

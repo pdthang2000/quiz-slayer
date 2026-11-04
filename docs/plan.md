@@ -1,6 +1,6 @@
 # QuizSlayer — build plan
 
-Status (2026-11-03): Phases 0–3 done; Phase 4 slices 4a–4d done; Phase 5 done; Phase 6 slices 6a–6e done (ADR-013 proposed, ADR-014 outbox); continuous run finished, waiting for Checkpoint 6 review. **Continuous run** from 4d through Phase 6 (see below and CLAUDE.md → Continuous run).
+Status (2026-11-03): Phases 0–3 done; Phase 4 slices 4a–4d done; Phase 5 done; Phase 6 slices 6a–6e done (ADR-013 proposed, ADR-014 outbox); continuous run finished, waiting for Checkpoint 6 review; 6f (Notes, DP-41..DP-51) planned. **Continuous run** from 4d through Phase 6 (see below and CLAUDE.md → Continuous run).
 Sizes are rough effort, not dates: S = a sitting, M = a few sittings, L = a week or more of evenings.
 
 Order: finish Card Library end-to-end first (small, fully modelled), then model and build Daily Practice (the core).
@@ -127,6 +127,7 @@ Source: `daily-practice.md` (DP-01..DP-40), `question-bank.md` (QB-06..QB-11), c
 - **6c Outbox + QuizProgress reaction (B-10)** — `QuizAnswered` saved in the same transaction as the answer; delivered after commit; `QuizProgress` applies DP-33 idempotently. Integration test: crash between commit and delivery loses nothing. → tag `phase-6c`
 - **6d API** — start today (DP-31, resume DP-22), answer (feedback DP-20), finish, today overview (tracks + streaks), history (DP-26), track list/add/remove/settings (DP-12..DP-15), "Save as card" → Card Library `createCard` (DP-10, DP-40; no event). Errors through the error table pattern. e2e tests. → tag `phase-6d`
 - **6e Mobile** — "Today" screen as the first drawer item and the start screen (G-1), overall + per-track streaks (G-5), quiz screen for single and reading-group kinds (audio kinds: show a simple player only if content exists; the seed has none), feedback + explanation, result "23 / 28", history, Settings → Tracks (add from question tags with quiz counts, G-2; kinds; daily size). i18n texts provisional (log them). → tag `phase-6e`, then STOP.
+- **6f Notes (DP-41..DP-51)** — after the Checkpoint 6 fixes. Domain: `QuestionNote` (per user and question, text, version; DP-43, DP-46, DP-50, DP-51). Write: `PUT /practice/sessions/:id/questions/:qid/note` { text } with `If-Match` (empty text removes it; only for a question answered in that session, DP-45). Session read returns each answered question's note (DP-45, DP-48). Save as card adds the note to the back; hidden over 3,000 (DP-49). Migration only adds a table. App: note box with Save on the feedback screen, the result screen and a History day (DP-45, DP-47); reload on 409. Tests named by rule ID. → tag `phase-6f`
 
 🔍 **Checkpoint 6**
 - [ ] Jackkie reviews ADR-013 and the provisional choices logged during the run.
