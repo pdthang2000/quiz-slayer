@@ -67,34 +67,35 @@ Names confirmed 2026-10-22. How each error is handled: card-library.md → Error
 | Note | The user's private free text on one question, written after answering it; one per user and question (DP-41..DP-51). Code: `QuestionNote`. Not the Explanation (the author's text). | confirmed |
 | Streak | Consecutive days with a finished daily set: one per track, plus one overall (any track) (DP-19, DP-23). | confirmed |
 
-### Daily Practice design terms (ADR-013, proposed)
+### Daily Practice design terms (ADR-013)
 | Term | Meaning | Status |
 |---|---|---|
-| QuizProgress | One user's progress on one quiz across tracks: last answered, and the mistake's stage (1, 3 or 7 days) and due day (DP-33, DP-37). | draft |
-| Daily set | The quizzes chosen for a daily session when Start is tapped (DP-30, DP-31). Code: `buildDailySet`. | draft |
+| QuizProgress | One user's progress on one quiz across tracks: last answered, and the mistake's stage (1, 3 or 7 days) and due day (DP-33, DP-37). | confirmed |
+| Daily set | The quizzes chosen for a daily session when Start is tapped (DP-30, DP-31). Code: `buildDailySet`. | confirmed |
 
 | Event | Raised when | Status |
 |---|---|---|
-| `TrackAdded` / `TrackRemoved` / `TrackSettingsChanged` | Track lifecycle (DP-12, DP-15). | draft |
-| `DailySessionStarted` | Today's set was chosen (DP-31). | draft |
-| `QuizAnswered` | A quiz (single or whole group) was answered; carries right/wrong (DP-29). | draft |
-| `DailySessionFinished` | Every quiz of the set is answered (DP-23). | draft |
+| `TrackAdded` / `TrackRemoved` / `TrackSettingsChanged` | Track lifecycle (DP-12, DP-15). | confirmed |
+| `DailySessionStarted` | Today's set was chosen (DP-31). | confirmed |
+| `QuizAnswered` | A quiz (single or whole group) was answered; carries right/wrong (DP-29). | confirmed |
+| `DailySessionFinished` | Every quiz of the set is answered (DP-23). | confirmed |
 
 | Error | Rule | Status |
 |---|---|---|
-| `InvalidTimeZone` | DP-05 (no or unknown timezone from the phone) | draft |
-| `InvalidDailySize` | DP-12 (not 1–50) | draft |
-| `InvalidTrackKinds` | DP-12 (no kind, or an unknown kind; G-8) | draft |
-| `TrackIsRemoved` | DP-15 (start a set on a removed track) | draft |
-| `NoQuizzesMatch` | DP-14 (nothing matches; no set, G-9) | draft |
-| `QuizAlreadyAnswered` | DP-03 | draft |
-| `QuizOutOfOrder` | DP-21 | draft |
-| `InvalidAnswer` | Bug: unknown quiz, wrong number of answers, unknown choice | draft |
-| `CannotSaveAsCard` | DP-10, DP-32, DP-40 | draft |
-| `InvalidNoteText` | DP-46 (longer than 1,000) | draft |
-| `CannotWriteNote` | DP-45 (question not answered in that session) | draft |
-| `NoteChanged` | DP-50 (CONFLICT-01) | draft |
-| `DailySessionClosed` | DP-52 (answer after the end of the next day) | draft |
+| `InvalidTimeZone` | DP-05 (no or unknown timezone from the phone) | confirmed |
+| `InvalidDailySize` | DP-12 (not 1–50) | confirmed |
+| `InvalidTrackKinds` | DP-12 (no kind, or an unknown kind; G-8) | confirmed |
+| `TrackIsRemoved` | DP-15 (start a set on a removed track) | confirmed |
+| `NoQuizzesMatch` | DP-14 (nothing matches; no set, G-9) | confirmed |
+| `QuizAlreadyAnswered` | DP-03 | confirmed |
+| `QuizOutOfOrder` | DP-21 | confirmed |
+| `InvalidAnswer` | Bug: unknown quiz, wrong number of answers, unknown choice | confirmed |
+| `CannotSaveAsCard` | DP-10, DP-32, DP-40 | confirmed |
+| `InvalidNoteText` | DP-46 (longer than 1,000) | confirmed |
+| `CannotWriteNote` | DP-45 (question not answered in that session) | confirmed |
+| `NoteChanged` | DP-50 (CONFLICT-01) | confirmed |
+| `DailySessionClosed` | DP-52 (answer after the end of the next day) | confirmed |
+| `TrackChanged` | DP-53 (CONFLICT-01 for tracks) | confirmed |
 
 ## Question Bank
 

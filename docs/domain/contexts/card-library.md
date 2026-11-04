@@ -37,7 +37,7 @@ Tags on one card change through the editor's Save (CARD-07); several cards chang
 ## Rules
 
 ### Conflicts
-**CONFLICT-01** `confirmed` — Any change made from an outdated view of a card, a tag or the Trash never goes through. The user sees the latest state and decides again. Every change sends what the screen showed (a version, or for the Trash a count and time); if the server has something newer, it answers 409 and changes nothing; the app reloads the screen with the message. One rule for every action, no exceptions. (C-44)
+**CONFLICT-01** `confirmed` — Any change made from an outdated view of a card, a tag, the Trash, a track (DP-53) or a note (DP-50) never goes through. The user sees the latest state and decides again. Every change sends what the screen showed (a version, or for the Trash a count and time); if the server has something newer, it answers 409 and changes nothing; the app reloads the screen with the message. One rule for every action, no exceptions. (C-44)
 ```
 Phone shows Rex (v7) → Laptop edits Rex (v8) → Phone ✕ Rex in #Dog (sends v7)
 → 409 CardChanged "Rex was changed on another device" → reload → user decides again
@@ -311,7 +311,7 @@ Dog [pitbull, Animals, động vật, apple] → Animals, apple, động vật, 
 
 **UI-08** `confirmed` — No "New tag" button in v1. Tags are created only by typing them on a card (TAG-05). (C-24)
 
-**UI-09** `confirmed` — Navigation is a menu on the left (a side drawer opened with ☰), with three items: Cards, Tags, Trash. No bottom tab bar. (U-1) A Settings item sits apart at the bottom of the drawer (UI-17, C-51).
+**UI-09** `confirmed` — Navigation is a menu on the left (a side drawer opened with ☰), with four items: Today, Cards, Tags, Trash; the app opens on Today (DP-62, G-1). No bottom tab bar. (U-1) A Settings item sits apart at the bottom of the drawer (UI-17, C-51).
 ```
 ☰ ┌──────────┐
   │ Cards    │
@@ -414,6 +414,10 @@ At 12 / 50 → Shuffle → cards 1–12 unchanged, 13–50 in a new random order
 **STUDY-11** `confirmed` — After the last card: "Done! 50 cards" with Study again · Shuffle & again · Close. Leaving in the middle (✕ or Back) leaves at once; there is no resume, because nothing is stored (STUDY-05). (S-13, S-14)
 
 **STUDY-12** `confirmed` — A card edited on another device during a session shows the content as fetched (20 at a time); a trashed or deleted card is skipped (STUDY-02). (S-15)
+
+**STUDY-13** `confirmed` — Shuffle on the first card (nothing seen yet) shuffles the whole session, card 1 included; from card 2 on, STUDY-09 applies. (C-63)
+
+**STUDY-14** `confirmed` — "Study again" uses the same cards as the session that just ended, newest first; "Shuffle & again" uses them in a new random order. Cards added meanwhile are not included. (C-64)
 
 How a session loads (technical, C): the app first loads only the matching card ids (small even for thousands of cards), orders or shuffles them on the phone, then fetches card content 20 at a time, fetching the next batch before it is needed.
 

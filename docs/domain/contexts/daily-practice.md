@@ -1,23 +1,23 @@
 # Daily Practice
 
-Core subdomain. Rules are `confirmed` unless marked otherwise; Events, Commands and Aggregates below are still `draft` design (Phase 6 proposes them).
+Core subdomain. Rules are `confirmed` unless marked otherwise. Events, Commands and Aggregates follow ADR-013 (accepted 2026-11-04).
 
 ## Purpose
 - `confirmed` Each day the user does a set of quizzes (X per day, 10 by default) loaded from stored questions of a test.
 - `confirmed` Quiz types include question/answer and listening; the full list is open (Q-04).
 
-## Events (draft, ADR-013 proposed)
+## Events (ADR-013)
 `DailySessionStarted` → `QuizAnswered` → ... → `DailySessionFinished` (DP-23)
 `QuizAnswered` → `QuizProgress` applies DP-33 (through the outbox, B-10)
 `TrackAdded` / `TrackRemoved` / `TrackSettingsChanged`
 (Dropped: `MistakeRecorded`, `StreakExtended`, `StreakBroken`: Save as card is a user action and streaks are computed.)
 
-## Commands (draft, ADR-013 proposed)
+## Commands (ADR-013)
 - `addTrack(user, tagName)`, `removeTrack(track)`, `changeTrackSettings(track, kinds, dailySize)`
 - `startDailySession(user, track)` (today in the phone's timezone; resumes today's, DP-22)
 - `answerQuiz(session, quiz, choices)` (a whole quiz at once: one choice per question)
 - `saveQuestionAsCard(session, question)` (DP-10, DP-40 → Card Library `createCard`)
-- `writeQuestionNote(session, question, text, version)` (DP-41..DP-51; proposal for 6f)
+- `writeQuestionNote(session, question, text, version)` (DP-41..DP-51; built in 6f)
 
 ## Rules
 - **DP-01** `confirmed` — One daily session per user, per track, per day (DP-05, DP-09).
@@ -120,6 +120,21 @@ How a day's set is built (DP-30, DP-35, DP-28, DP-14):
 7. Save the chosen quiz ids as today's set
 ```
 
+### Settled at Checkpoint 6 (2026-11-04)
+- **DP-53** `confirmed` — Changing a track's settings or removing it follows CONFLICT-01: the app sends the track's version; outdated → `TrackChanged`, nothing is written, the app shows the latest. Tracks show on Today in the order they were added. History lists every day with a set, today included, newest first. (G-13)
+```
+Phone A: size 10 → 20 ✓ · Phone B (shows 10) turns off "reading group" → "This track changed." shows size 20
+```
+- **DP-54** `confirmed` — A group is answered as one quiz: pick an answer for each of its questions, then Check; feedback shows for all of them (DP-20, DP-29). (G-7)
+- **DP-55** `confirmed` — A track has at least one kind switched on; a new track has every kind on. (G-8)
+- **DP-56** `confirmed` — If nothing matches a track at all, Start creates no set: "No quizzes match your settings." No set means no streak day. (G-9)
+- **DP-57** `confirmed` — Adding a tag that is already an Active track does nothing; the existing track stays. (G-10)
+- **DP-58** `confirmed` — Quizzes in a set keep the build order: due mistakes, new, more mistakes, seen. Not shuffled. (G-11)
+- **DP-59** `confirmed` — A track is added by picking a question tag that has quizzes, shown with its quiz count ("#HSK4 · 41 quizzes"). (G-2)
+- **DP-60** `confirmed` — Streaks show on Today: the overall streak at the top, each track's next to it. (G-5)
+- **DP-61** `confirmed` — Quiz flow: tap a choice (one per question in a group), then Check; feedback stays until Next ("See result" after the last quiz); the result screen shows the score, then every quiz with the answers (the same screen for a History day, DP-26). Save as card is in the feedback and on the result list. Track settings: a −/+ stepper and kind checkboxes, one Save button; Remove asks first. (G-15)
+- **DP-62** `confirmed` — Today is the first item of the drawer and the app opens on it (UI-09). (G-1)
+
 ### Notes (2026-11-04)
 - **DP-41** `confirmed` — The user can write a **Note** on any question they answered, right or wrong: free text, e.g. why an answer is right or wrong. It is the user's own text; the **Explanation** is the author's. (N-11)
 - **DP-42** `confirmed` — A note is private: only the user who wrote it sees it, also on System or public quizzes. (N-1)
@@ -145,20 +160,20 @@ Phone A saves "X" · Phone B, still showing the old note, saves "Y" → "This no
 - **DP-51** `confirmed` — A note stays when its question's content is fixed (e.g. a corrected answer key, QB-04). Deleting the question deletes its notes. (N-10)
 
 ### Finishing a set late (2026-11-04)
-- **DP-52** `confirmed` — A started set can be finished until the end of the next day (phone's timezone, DP-05); it still counts for the day it was started. After that it can only be viewed: answered quizzes and their results, no more answers. Refines DP-05, DP-06, DP-22. (G-17)
+- **DP-52** `confirmed` — A started set can be finished until the end of the next day (phone's timezone, DP-05); it still counts for the day it was started. After that it can only be viewed: answered quizzes and their results, no more answers. Refines DP-05, DP-06, DP-22. Quizzes not answered yet in that set are not seen (DP-27), so the next day's set may pick one of them too. (G-17)
 ```
 Mon 21:00 Start, answer 3 · Tue 20:00 answer the other 7 → Monday finished ✓, counts for Monday
 Mon 21:00 Start, answer 3 · Wed 08:00 open Monday in History → view only, Monday stays unfinished
 ```
 
-## Aggregates (draft, ADR-013 proposed)
+## Aggregates (ADR-013)
 - **Track** (unique per user and tag name): kinds, daily size, Active/Removed. DP-11, DP-12, DP-15.
 - **DailySession** (unique per user, track, day): snapshot of the quizzes, answers, saved-as-card questions. DP-01, DP-03, DP-05, DP-17, DP-18, DP-20..DP-23, DP-32, DP-40. `answerQuiz` touches only the session; progress reacts to `QuizAnswered`.
 - **QuizProgress** (per user and quiz): last answered, mistake stage and due day. DP-27, DP-29, DP-33, DP-37, DP-38.
 - **QuestionNote** (per user and question; proposal for 6f): the note's text and a version. DP-41..DP-51.
 - `buildDailySet` (domain service) and `streakLength` (computed, nothing stored) are pure functions.
 
-## API (draft, built in 6d)
+## API (built in 6d)
 Every call that depends on the day sends the phone's timezone in `X-Time-Zone` (DP-05, ADR-013).
 ```
 GET    /practice/today                              tracks, today's progress, streaks (G-5)
@@ -171,7 +186,7 @@ GET    /practice/tracks · POST /practice/tracks { tagName } · PATCH /practice/
 GET    /practice/track-options                      question tags with quiz counts (G-2)
 ```
 
-## Error handling (draft — messages provisional, G-14)
+## Error handling (G-14)
 | Error | Rule | When | Kind | HTTP | Message to the user |
 |---|---|---|---|---|---|
 | `InvalidTimeZone` | DP-05 | No or unknown `X-Time-Zone` | Bug | 400 | generic "Something went wrong" |
@@ -182,10 +197,11 @@ GET    /practice/track-options                      question tags with quiz coun
 | `QuizAlreadyAnswered` | DP-03 | Answered on another device meanwhile | Stale screen | 409 | "Already answered. Refresh." |
 | `QuizOutOfOrder` | DP-21 | Not the next quiz | Stale screen | 409 | "Already answered. Refresh." |
 | `CannotSaveAsCard` | DP-10, DP-32, DP-40 | Button not allowed (e.g. already saved) | Stale screen | 409 | "Already saved." |
-| `InvalidNoteText` | DP-46 | Note longer than 1,000 characters | User input | 400 | "A note is at most 1,000 characters" (draft) |
-| `CannotWriteNote` | DP-45 | Question not answered in that session | Stale screen | 409 | "Answer the question first. Refresh." (draft) |
-| `NoteChanged` | DP-50 | The note changed on another device | Stale screen | 409 | "This note changed." (draft) |
-| `DailySessionClosed` | DP-52 | Answer after the end of the next day | Stale screen | 409 | "This day is over." (draft) |
+| `InvalidNoteText` | DP-46 | Note longer than 1,000 characters | User input | 400 | "A note is at most 1,000 characters" |
+| `CannotWriteNote` | DP-45 | Question not answered in that session | Stale screen | 409 | "Answer the question first. Refresh." |
+| `NoteChanged` | DP-50 | The note changed on another device | Stale screen | 409 | "This note changed." |
+| `DailySessionClosed` | DP-52 | Answer after the end of the next day | Stale screen | 409 | "This day is over." |
+| `TrackChanged` | DP-53 | Track settings or removal from an outdated screen | Stale screen | 409 | "This track changed." |
 | `PracticeChanged` | — | Two devices at the same moment | Race | 409 | "Changed on another device. Refresh." |
 | `InvalidAnswer` | — | Wrong number of choices or an unknown choice | Bug | 400 | generic |
 | `DailySessionNotFound` / `TrackNotFound` / `QuestionTagNotFound` | — | No such item for this user | Stale screen | 404 | "Not found. Refresh." |

@@ -1,7 +1,7 @@
 # ADR-014: Transactional outbox for domain events (B-10)
 
 - Date: 2026-11-03
-- Status: accepted (technical, decided alone per CLAUDE.md during the continuous run; Jackkie reviews at Checkpoint 6)
+- Status: accepted (technical, decided alone during the continuous run; reviewed by Jackkie 2026-11-04). Review fixes in 6e.1: a failing event must not block newer ones; an event older than the progress it would change is ignored.
 
 ## Context
 Until now events were published after commit and only logged. Daily Practice is the first context where something depends on an event: `QuizProgress` must apply DP-33 for every `QuizAnswered` (context map, ADR-013). If the process stopped between the answer's commit and the reaction, the mistake schedule would silently miss an answer.

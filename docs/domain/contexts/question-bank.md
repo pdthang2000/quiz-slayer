@@ -36,6 +36,7 @@ Pool #HSK3 = every question/group tagged #HSK3, from every upload
 - **QB-10** `confirmed` — A pool (for a Daily Practice track) uses system-provided questions and the user's own; other users' public Quiz Sets come later. (M-3)
 - A track = one tag (DP-11).
 - **QB-11** `confirmed` — No Test, Level or Section fields: an exam, a level, a part or a topic is a question tag (`#HSK4`, `#part3`, `#grammar`). A track is one tag (DP-11). (M-1, M-4, M-5)
+- **QB-12** `confirmed` — Under QB-09 these question tag names are refused, ignoring case: `listening`, `audio`, and the kind names `single`, `single audio`, `reading group`, `audio group` (`InvalidQuestionTagName`). (G-12)
 
 - ~~Content is organised as Test → Section → Item Group → Item~~ — dropped (QB-11). A group shares one passage or audio (QB-06).
   ```

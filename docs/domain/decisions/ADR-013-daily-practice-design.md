@@ -1,7 +1,7 @@
 # ADR-013: Daily Practice design — aggregates, events, commands, streaks, the user's day
 
 - Date: 2026-11-03
-- Status: proposed (written during the continuous run, Phase 6a; Jackkie reviews at Checkpoint 6. Work continues on this design until then.)
+- Status: accepted (2026-11-04, Jackkie at Checkpoint 6; written during the continuous run, Phase 6a)
 
 ## Context
 Phase 5 confirmed the Daily Practice rules (DP-01..DP-40) and the Question Bank rules (QB-06..QB-11). The rules say what happens; they leave open how the model is cut into aggregates, which events and commands exist, whether streaks are stored, and where the user's timezone lives (DP-05: "a day is a calendar day in the phone's timezone"). These choices shape the database (6b), the outbox (6c) and the API (6d), and are expensive to change once data exists.

@@ -87,7 +87,7 @@ Always ask (write it in `docs/domain/open-questions.md`, keep working on what is
 - Follow `docs/plan.md`. Stop at each checkpoint and let Jackkie review before moving on — except during a **continuous run** (below).
 
 ## Continuous run
-When `docs/plan.md` says a stretch is a continuous run (currently 4d → 6e):
+When `docs/plan.md` says a stretch is a continuous run (currently 6e.1 → 6f):
 - Don't stop to ask. For a behaviour question, build the recommended choice, log it in `docs/domain/open-questions.md` as `provisional, built: <what>`, and keep going. Jackkie reviews these later.
 - Never record a provisional choice as `confirmed`.
 - Each slice: tests, lint, tsc, rules coverage → commit → tag → next slice. `git pull` first; don't push.

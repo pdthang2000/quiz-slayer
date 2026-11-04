@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-04 — Checkpoint 6 review
+- ADR-013 accepted; ADR-014 reviewed (two fixes for 6e.1).
+- Every provisional choice of the run accepted: STUDY-13, STUDY-14, QB-12, DP-53..DP-62; texts and error messages as built.
+- Changed: CONFLICT-01 now covers tracks (DP-53, `TrackChanged`); UI-09 drawer = Today, Cards, Tags, Trash (DP-62).
+- Daily Practice glossary terms, events and errors confirmed.
+- Plan: 6e.1 review fixes, then 6f Notes, as one continuous run.
+
 ## 2026-11-04 — Notes on questions
 - Confirmed: a private Note per user and question (DP-41..DP-51): written after answering, up to 1,000 characters, kept across days, latest shown in History, copied onto the card by Save as card, CONFLICT-01 applies.
 - Glossary: Note (confirmed); errors `InvalidNoteText`, `CannotWriteNote`, `NoteChanged` (draft).
