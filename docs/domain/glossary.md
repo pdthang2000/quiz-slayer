@@ -94,6 +94,7 @@ Names confirmed 2026-10-22. How each error is handled: card-library.md → Error
 | `InvalidNoteText` | DP-46 (longer than 1,000) | draft |
 | `CannotWriteNote` | DP-45 (question not answered in that session) | draft |
 | `NoteChanged` | DP-50 (CONFLICT-01) | draft |
+| `DailySessionClosed` | DP-52 (answer after the end of the next day) | draft |
 
 ## Question Bank
 

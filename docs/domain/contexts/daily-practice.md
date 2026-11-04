@@ -144,6 +144,13 @@ Phone A saves "X" · Phone B, still showing the old note, saves "Y" → "This no
 ```
 - **DP-51** `confirmed` — A note stays when its question's content is fixed (e.g. a corrected answer key, QB-04). Deleting the question deletes its notes. (N-10)
 
+### Finishing a set late (2026-11-04)
+- **DP-52** `confirmed` — A started set can be finished until the end of the next day (phone's timezone, DP-05); it still counts for the day it was started. After that it can only be viewed: answered quizzes and their results, no more answers. Refines DP-05, DP-06, DP-22. (G-17)
+```
+Mon 21:00 Start, answer 3 · Tue 20:00 answer the other 7 → Monday finished ✓, counts for Monday
+Mon 21:00 Start, answer 3 · Wed 08:00 open Monday in History → view only, Monday stays unfinished
+```
+
 ## Aggregates (draft, ADR-013 proposed)
 - **Track** (unique per user and tag name): kinds, daily size, Active/Removed. DP-11, DP-12, DP-15.
 - **DailySession** (unique per user, track, day): snapshot of the quizzes, answers, saved-as-card questions. DP-01, DP-03, DP-05, DP-17, DP-18, DP-20..DP-23, DP-32, DP-40. `answerQuiz` touches only the session; progress reacts to `QuizAnswered`.
@@ -178,6 +185,7 @@ GET    /practice/track-options                      question tags with quiz coun
 | `InvalidNoteText` | DP-46 | Note longer than 1,000 characters | User input | 400 | "A note is at most 1,000 characters" (draft) |
 | `CannotWriteNote` | DP-45 | Question not answered in that session | Stale screen | 409 | "Answer the question first. Refresh." (draft) |
 | `NoteChanged` | DP-50 | The note changed on another device | Stale screen | 409 | "This note changed." (draft) |
+| `DailySessionClosed` | DP-52 | Answer after the end of the next day | Stale screen | 409 | "This day is over." (draft) |
 | `PracticeChanged` | — | Two devices at the same moment | Race | 409 | "Changed on another device. Refresh." |
 | `InvalidAnswer` | — | Wrong number of choices or an unknown choice | Bug | 400 | generic |
 | `DailySessionNotFound` / `TrackNotFound` / `QuestionTagNotFound` | — | No such item for this user | Stale screen | 404 | "Not found. Refresh." |

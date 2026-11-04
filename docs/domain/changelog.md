@@ -4,7 +4,7 @@
 - Confirmed: a private Note per user and question (DP-41..DP-51): written after answering, up to 1,000 characters, kept across days, latest shown in History, copied onto the card by Save as card, CONFLICT-01 applies.
 - Glossary: Note (confirmed); errors `InvalidNoteText`, `CannotWriteNote`, `NoteChanged` (draft).
 - Plan: slice 6f (Notes) added after the Checkpoint 6 fixes.
-- Open: G-17 (finishing an old set from History counts for the streak), found reviewing the run.
+- Confirmed: DP-52 — a started set can be finished until the end of the next day; after that view only (G-17, found reviewing the run).
 
 ## 2026-11-03 — Phase 6e Daily Practice mobile (continuous run, end)
 - App: Today screen (first drawer item, start screen), quiz screen for single and reading-group quizzes (audio player when a quiz has audio), feedback + explanation, Save as card, result + answers, History, Settings → Tracks (add from question tags with counts, kinds, daily size, remove).
