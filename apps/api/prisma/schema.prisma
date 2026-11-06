@@ -224,6 +224,21 @@ model QuizProgress {
   @@map("quiz_progress")
 }
 
+/// DP-43: one per user and question, kept across days and tracks. `text` is empty once removed
+/// (DP-46); the row stays so its version keeps counting (DP-50). The question id points into
+/// the Question Bank without a foreign key (contexts don't share tables).
+model QuestionNote {
+  userId     String   @map("user_id") @db.Uuid
+  questionId String   @map("question_id") @db.Uuid
+  text       String
+  version    Int      @default(1)
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@id([userId, questionId])
+  @@index([questionId])
+  @@map("question_note")
+}
+
 // ---------- Outbox (B-10) ----------
 
 /// Domain events saved in the same transaction as the change that raised them, delivered

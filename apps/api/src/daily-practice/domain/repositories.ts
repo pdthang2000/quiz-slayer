@@ -1,6 +1,13 @@
 import type { DailySession } from './daily-session';
-import type { DailySessionId, QuizId, TrackId, UserId } from './ids';
+import type {
+  DailySessionId,
+  QuestionId,
+  QuizId,
+  TrackId,
+  UserId,
+} from './ids';
 import type { LocalDate } from './local-date';
+import type { QuestionNote } from './question-note';
 import type { QuizProgress } from './quiz-progress';
 import type { Track } from './track';
 
@@ -39,4 +46,19 @@ export interface QuizProgressRepository {
   findMany(userId: UserId, quizIds: readonly QuizId[]): Promise<QuizProgress[]>;
   add(progress: QuizProgress): Promise<void>;
   save(progress: QuizProgress): Promise<void>;
+}
+
+export interface QuestionNoteRepository {
+  find(userId: UserId, questionId: QuestionId): Promise<QuestionNote | null>;
+  /** DP-42: only this user's notes. DP-45: the caller asks for answered questions only. */
+  findMany(
+    userId: UserId,
+    questionIds: readonly QuestionId[],
+  ): Promise<QuestionNote[]>;
+  /** A second first note at the same moment fails with NoteChanged (DP-50). */
+  add(note: QuestionNote): Promise<void>;
+  /** Bumps the version; fails with NoteChanged if the stored version moved (DP-50). */
+  save(note: QuestionNote): Promise<void>;
+  /** DP-51: every user's notes on these questions. */
+  deleteOfQuestions(questionIds: readonly QuestionId[]): Promise<void>;
 }

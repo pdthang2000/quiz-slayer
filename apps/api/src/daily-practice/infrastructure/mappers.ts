@@ -1,6 +1,7 @@
 import { Prisma, QuizKind as DbKind } from '@prisma/client';
 import type {
   DailySession as DailySessionRow,
+  QuestionNote as QuestionNoteRow,
   QuizProgress as QuizProgressRow,
   Track as TrackRow,
 } from '@prisma/client';
@@ -14,6 +15,7 @@ import {
 } from '../domain/ids';
 import { LocalDate } from '../domain/local-date';
 import type { QuizKind } from '../domain/quiz-kind';
+import { QuestionNote } from '../domain/question-note';
 import { type MistakeStage, QuizProgress } from '../domain/quiz-progress';
 import type { QuizSnapshot } from '../domain/quiz-snapshot';
 import { Track } from '../domain/track';
@@ -105,6 +107,15 @@ export function toNewDailySessionRow(session: DailySession) {
     ...toDailySessionData(session),
     version: 0,
   } satisfies Prisma.DailySessionUncheckedCreateInput;
+}
+
+export function toQuestionNote(row: QuestionNoteRow): QuestionNote {
+  return QuestionNote.reconstitute({
+    userId: UserId(row.userId),
+    questionId: QuestionId(row.questionId),
+    text: row.text,
+    version: row.version,
+  });
 }
 
 export function toQuizProgress(row: QuizProgressRow): QuizProgress {

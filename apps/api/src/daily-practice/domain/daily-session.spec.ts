@@ -1,6 +1,7 @@
 import { DailySession } from './daily-session';
 import {
   CannotSaveAsCard,
+  CannotWriteNote,
   DailySessionClosed,
   InvalidAnswer,
   InvalidTimeZone,
@@ -10,6 +11,7 @@ import {
 } from './errors';
 import { QuestionId, QuizId } from './ids';
 import { LocalDate } from './local-date';
+import { cardFits } from './quiz-snapshot';
 import { question, readingGroup, single, startSession } from './test-data';
 
 const AT = new Date('2026-11-07T02:00:00Z');
@@ -191,7 +193,7 @@ describe('Save as card', () => {
     expect(noExplanation.cardDraftFor(QuestionId('b-q')).back).toBe('y');
   });
 
-  it('DP-40: not offered on group questions, images, or when the front would pass 500 characters', () => {
+  it('DP-40: not offered on group questions or images', () => {
     const group = startSession([readingGroup('g', 2)]);
     group.answerQuiz(q('g'), [1, 1], AT);
     expect(group.canSaveAsCard(QuestionId('g-q1'))).toBe(false);
@@ -199,10 +201,6 @@ describe('Save as card', () => {
     const image = startSession([single('i', { imageUrl: 'https://x/i.png' })]);
     image.answerQuiz(q('i'), [1], AT);
     expect(image.canSaveAsCard(QuestionId('i-q'))).toBe(false);
-
-    const long = startSession([single('l', { text: 'x'.repeat(480) })]);
-    long.answerQuiz(q('l'), [1], AT);
-    expect(long.canSaveAsCard(QuestionId('l-q'))).toBe(false); // 480 + choices > 500
   });
 
   it('DP-16: not offered for audio kinds', () => {
@@ -268,5 +266,64 @@ describe('DP-52: finishing a set late', () => {
     session.answerQuiz(q('a'), [1], new Date('2026-11-08T05:00:00Z'), TZ);
     const [, answered] = session.pullEvents();
     expect(answered).toMatchObject({ type: 'QuizAnswered', day: '2026-11-08' });
+  });
+});
+
+describe('Notes on a session', () => {
+  it('DP-45: a note can be written only on a question answered in this session', () => {
+    const session = startSession([single('a'), single('b')]);
+    session.answerQuiz(q('a'), [1], AT);
+    expect(() => session.assertCanWriteNote(QuestionId('a-q'))).not.toThrow();
+    expect(() => session.assertCanWriteNote(QuestionId('b-q'))).toThrow(
+      CannotWriteNote,
+    );
+    expect(() => session.assertCanWriteNote(QuestionId('nope'))).toThrow(
+      CannotWriteNote,
+    );
+  });
+
+  it('DP-41: right or wrong, an answered question can have a note', () => {
+    const session = startSession([single('a')]);
+    session.answerQuiz(q('a'), [0], AT); // right
+    expect(session.answeredQuestionIds).toEqual(['a-q']);
+  });
+
+  it('DP-44: in a group each question has its own note', () => {
+    const session = startSession([readingGroup('g', 3)]);
+    session.answerQuiz(q('g'), [0, 0, 0], AT);
+    expect(session.answeredQuestionIds).toEqual(['g-q1', 'g-q2', 'g-q3']);
+  });
+
+  it('DP-49: Save as card copies the note onto the back, below the explanation', () => {
+    const session = startSession([single('a', { explanation: 'because' })]);
+    session.answerQuiz(q('a'), [1], AT);
+    const { back } = session.cardDraftFor(QuestionId('a-q'), 'my note');
+    expect(back).toBe('A1 — because\n📝 my note');
+  });
+});
+
+describe('DP-64: a card that does not fit', () => {
+  it('DP-64: the button stays; the card fits or it does not, front and back', () => {
+    const tooLong = single('a', { text: 'x'.repeat(600) });
+    const session = startSession([tooLong]);
+    session.answerQuiz(q('a'), [1], AT);
+    expect(session.canSaveAsCard(QuestionId('a-q'))).toBe(true);
+    expect(cardFits(session.cardDraftFor(QuestionId('a-q')))).toBe(false);
+    expect(cardFits({ front: 'f', back: 'b'.repeat(3000), tagName: 't' })).toBe(
+      true,
+    );
+    expect(cardFits({ front: 'f', back: 'b'.repeat(3001), tagName: 't' })).toBe(
+      false,
+    );
+  });
+
+  it('DP-64: the note can push the back over the limit', () => {
+    const session = startSession([
+      single('a', { explanation: 'e'.repeat(2990) }),
+    ]);
+    session.answerQuiz(q('a'), [1], AT);
+    const id = QuestionId('a-q');
+    expect(cardFits(session.cardDraftFor(id))).toBe(true);
+    expect(cardFits(session.cardDraftFor(id, 'n'.repeat(50)))).toBe(false);
   });
 });

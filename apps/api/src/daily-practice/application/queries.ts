@@ -15,9 +15,9 @@ import type {
 import { bestStreak, streakLength } from '../domain/streak';
 import type { DailyPracticeQueries } from './daily-practice-queries';
 import { DailySessionNotFound, TrackNotFound } from './errors';
+import { SessionReader } from './session-reader';
 import {
   toSessionSummary,
-  toSessionView,
   toTrackView,
   type DailySessionSummary,
   type DailySessionView,
@@ -98,6 +98,7 @@ export class GetDailySession {
     @Inject(DAILY_SESSION_REPOSITORY)
     private readonly sessions: DailySessionRepository,
     @Inject(CLOCK) private readonly clock: Clock,
+    private readonly reader: SessionReader,
   ) {}
 
   async execute(input: {
@@ -107,7 +108,7 @@ export class GetDailySession {
   }): Promise<DailySessionView> {
     const session = await this.sessions.findById(input.userId, input.sessionId);
     if (!session) throw new DailySessionNotFound(input.sessionId);
-    return toSessionView(session, {
+    return this.reader.view(session, {
       now: this.clock.now(),
       timeZone: input.timeZone,
     });

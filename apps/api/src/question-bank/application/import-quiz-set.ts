@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
+import { OUTBOX, type Outbox } from '../../shared/application/outbox';
 import type { TransactionRunner } from '../../shared/application/transaction-runner';
 import { TRANSACTION_RUNNER } from '../../shared/application/transaction-runner';
 import { QuestionId, QuizId, QuizSetId, type UserId } from '../domain/ids';
@@ -89,14 +90,15 @@ export class ImportQuizSet {
     @Inject(QUIZ_SET_REPOSITORY) private readonly quizSets: QuizSetRepository,
     @Inject(TRANSACTION_RUNNER)
     private readonly transactions: TransactionRunner,
+    @Inject(OUTBOX) private readonly outbox: Outbox,
   ) {}
 
-  execute(
+  async execute(
     file: ImportFile,
   ): Promise<{ quizSetId: QuizSetId; quizCount: number }> {
     const owner = file.owner === 'system' ? null : file.owner;
     const quizzes = file.quizzes.map((q) => toQuizInput(q, file.tags ?? []));
-    return this.transactions.run(async () => {
+    const result = await this.transactions.run(async () => {
       let set = await this.quizSets.findByOwnerAndName(owner, file.quizSet);
       if (set) set.replaceQuizzes(quizzes);
       else {
@@ -108,7 +110,10 @@ export class ImportQuizSet {
         });
       }
       await this.quizSets.save(set);
+      await this.outbox.add(set.pullEvents());
       return { quizSetId: set.id, quizCount: set.quizzes.length };
     });
+    this.outbox.deliverSoon();
+    return result;
   }
 }

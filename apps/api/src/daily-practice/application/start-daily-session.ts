@@ -33,7 +33,8 @@ import type {
   TrackRepository,
 } from '../domain/repositories';
 import { TrackNotFound } from './errors';
-import { toSessionView, type DailySessionView } from './views';
+import { SessionReader } from './session-reader';
+import type { DailySessionView } from './views';
 
 /**
  * DP-31: today's set is chosen when the user taps Start. DP-22: today's set exists → resume.
@@ -53,6 +54,7 @@ export class StartDailySession {
     @Inject(CLOCK) private readonly clock: Clock,
     private readonly pool: ListPoolQuizIds,
     private readonly quizzes: GetQuizzesForPractice,
+    private readonly reader: SessionReader,
   ) {}
 
   async execute(input: {
@@ -73,7 +75,7 @@ export class StartDailySession {
         track.id,
         today,
       );
-      if (existing) return toSessionView(existing, time); // DP-22
+      if (existing) return this.reader.view(existing, time); // DP-22
       if (!track.isActive) throw new TrackIsRemoved(); // DP-15
 
       // DP-39: one set is built at a time per user, so two tracks can't pick the same quiz.
@@ -83,7 +85,7 @@ export class StartDailySession {
         track.id,
         today,
       );
-      if (raced) return toSessionView(raced, time);
+      if (raced) return this.reader.view(raced, time);
 
       // 1. Pool: the track's tag, allowed kinds, System + own (DP-11, DP-12, QB-10).
       const poolIds = (
@@ -141,7 +143,7 @@ export class StartDailySession {
       });
       await this.sessions.add(session);
       await this.outbox.add(session.pullEvents());
-      return toSessionView(session, time);
+      return this.reader.view(session, time);
     });
   }
 }

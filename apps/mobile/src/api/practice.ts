@@ -36,11 +36,24 @@ export const practiceApi = {
       body: { choices },
     }),
 
-  /** DP-10, DP-40. */
-  saveAsCard: (sessionId: string, questionId: string) =>
+  /** DP-10, DP-40; DP-64: `edited` comes from the card editor. */
+  saveAsCard: (
+    sessionId: string,
+    questionId: string,
+    edited?: { front: string; back: string; tagNames: string[] },
+  ) =>
     request<{ cardId: string }>(
       'POST',
       `/practice/sessions/${sessionId}/questions/${questionId}/save-as-card`,
+      edited ? { body: edited } : {},
+    ),
+
+  /** DP-41..DP-51: empty text removes the note; DP-50: the version the screen showed. */
+  writeNote: (sessionId: string, questionId: string, text: string, version: number) =>
+    request<{ text: string | null; version: number }>(
+      'PUT',
+      `/practice/sessions/${sessionId}/questions/${questionId}/note`,
+      { body: { text }, version },
     ),
 
   /** DP-26 */

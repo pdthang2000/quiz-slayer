@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-06 — Slice 6f Notes + Save as card editor (continuous run, end)
+- Notes: `QuestionNote` per user and question, with a version (DP-41..DP-51). `PUT .../questions/:qid/note` with If-Match; `InvalidNoteText`, `CannotWriteNote`, `NoteChanged`. Additive migration: `question_note`.
+- A session shows each answered question's latest note; on feedback, result and History, closed sets included (DP-45, DP-48, DP-68).
+- App: "📝 Add note", Edit, counter, Save and Cancel (DP-66); "Discard your note?" on Next, Close and Back (DP-67).
+- Save as card copies the note onto the back (DP-49). A card that doesn't fit opens the card editor, and the session read carries the filled-in card (DP-64).
+- Question Bank raises `QuestionsDeleted` on a re-import that drops questions; their notes are deleted (DP-51).
+- Provisional (not confirmed): R-17, R-18 (6e.1), R-19, R-20.
+
 ## 2026-11-06 — Slice 6e.1 Review fixes (continuous run)
 - DP-52: answering after the end of the session's next day fails with `DailySessionClosed`; such a set opens view only, also from History.
 - DP-63: Today shows "Finish yesterday's set · 3 / 10" with Continue. DP-65 tested. DP-69: best streak per track and overall, computed.

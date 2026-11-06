@@ -1,6 +1,7 @@
 import { AggregateRoot } from './aggregate-root';
 import {
   CannotSaveAsCard,
+  CannotWriteNote,
   DailySessionClosed,
   InvalidAnswer,
   NoQuizzesMatch,
@@ -248,12 +249,12 @@ export class DailySession extends AggregateRoot<DailySessionEvent> {
     return this.s.savedAsCard.includes(questionId);
   }
 
-  /** DP-10, DP-40: the card to create. Checks the button may be shown. */
-  cardDraftFor(questionId: QuestionId): CardDraft {
+  /** DP-10, DP-40, DP-49: the card to create. Checks the button may be shown. */
+  cardDraftFor(questionId: QuestionId, note: string | null = null): CardDraft {
     const problem = this.saveAsCardProblem(questionId);
     if (problem) throw new CannotSaveAsCard(questionId, problem);
     const quiz = this.quizOfQuestion(questionId)!;
-    return cardDraftFor(quiz.questions[0], this.s.tagName);
+    return cardDraftFor(quiz.questions[0], this.s.tagName, note);
   }
 
   /** DP-32: the card was created; the question can't create a second one in this session. */
@@ -261,6 +262,19 @@ export class DailySession extends AggregateRoot<DailySessionEvent> {
     const problem = this.saveAsCardProblem(questionId);
     if (problem) throw new CannotSaveAsCard(questionId, problem);
     this.s.savedAsCard = [...this.s.savedAsCard, questionId];
+  }
+
+  /** DP-45: the questions whose notes this session may show. */
+  get answeredQuestionIds(): QuestionId[] {
+    return this.s.answers.flatMap((a) =>
+      this.quiz(a.quizId)!.questions.map((q) => q.id),
+    );
+  }
+
+  /** DP-45: a note is written only on a question answered in this session. */
+  assertCanWriteNote(questionId: QuestionId): void {
+    if (!this.answeredQuestionIds.includes(questionId))
+      throw new CannotWriteNote(questionId);
   }
 
   toSnapshot(): DailySessionSnapshot {
@@ -277,7 +291,7 @@ export class DailySession extends AggregateRoot<DailySessionEvent> {
   ): 'notAnswered' | 'notWrong' | 'notEligible' | 'alreadySaved' | null {
     const quiz = this.quizOfQuestion(questionId);
     if (!quiz) return 'notEligible';
-    if (!canBeSavedAsCard(quiz, this.s.tagName)) return 'notEligible';
+    if (!canBeSavedAsCard(quiz)) return 'notEligible';
     const answer = this.answerOf(quiz.id);
     if (!answer) return 'notAnswered';
     if (answer.choices[0] === quiz.questions[0].correctChoice)

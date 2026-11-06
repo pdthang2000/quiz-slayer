@@ -1,5 +1,8 @@
 import type { DailySession } from '../domain/daily-session';
+import type { QuestionId } from '../domain/ids';
+import type { QuestionNote } from '../domain/question-note';
 import type { QuizKind } from '../domain/quiz-kind';
+import { cardFits, type CardDraft } from '../domain/quiz-snapshot';
 import type { Track } from '../domain/track';
 
 // Read types: plain data for screens (ADR-013). The correct choice of a quiz is only sent
@@ -24,6 +27,15 @@ export type AnsweredQuestionView = {
   canSaveAsCard: boolean;
   /** DP-32: show "Saved ✓". */
   savedAsCard: boolean;
+  /**
+   * DP-64: only when the card doesn't fit: Save as card opens the editor with this.
+   * Absent = one tap saves.
+   */
+  cardDraft?: CardDraft;
+  /** DP-45, DP-48: the latest note; null = none. */
+  note: string | null;
+  /** DP-50: sent back when saving the note; 0 = no note stored yet. */
+  noteVersion: number;
 };
 
 export type QuizView = {
@@ -97,6 +109,7 @@ export function toSessionSummary(
 export function toSessionView(
   s: DailySession,
   time: ReadTime,
+  notes: ReadonlyMap<QuestionId, QuestionNote>,
 ): DailySessionView {
   const snap = s.toSnapshot();
   return {
@@ -118,11 +131,21 @@ export function toSessionView(
           choices: [...q.choices],
         })),
         answer: answer && {
-          questions: s.feedbackFor(quiz, answer.choices).questions.map((f) => ({
-            ...f,
-            canSaveAsCard: s.canSaveAsCard(f.questionId),
-            savedAsCard: s.isSavedAsCard(f.questionId),
-          })),
+          questions: s.feedbackFor(quiz, answer.choices).questions.map((f) => {
+            const note = notes.get(f.questionId);
+            const canSaveAsCard = s.canSaveAsCard(f.questionId);
+            const draft = canSaveAsCard
+              ? s.cardDraftFor(f.questionId, note?.text ?? null)
+              : null;
+            return {
+              ...f,
+              canSaveAsCard,
+              savedAsCard: s.isSavedAsCard(f.questionId),
+              cardDraft: draft && !cardFits(draft) ? draft : undefined,
+              note: note?.text ?? null,
+              noteVersion: note?.version ?? 0,
+            };
+          }),
         },
       };
     }),

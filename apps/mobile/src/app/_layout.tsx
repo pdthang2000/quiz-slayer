@@ -70,6 +70,10 @@ export default function RootLayout() {
                 <Stack.Screen name="tag/[id]/add" options={{ presentation: 'modal' }} />
                 <Stack.Screen name="practice/[id]" options={{ title: '' }} />
                 <Stack.Screen
+                  name="practice/save-card"
+                  options={{ presentation: 'modal', title: t('practice.saveAsCard') }}
+                />
+                <Stack.Screen
                   name="practice/history/[trackId]"
                   options={{ title: t('practice.history') }}
                 />

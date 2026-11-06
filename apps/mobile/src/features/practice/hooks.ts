@@ -27,6 +27,12 @@ export const useTracks = () => useQuery({ queryKey: practiceKeys.tracks, queryFn
 export const useTrackOptions = () =>
   useQuery({ queryKey: practiceKeys.options, queryFn: practiceApi.trackOptions });
 
+/** CARD-02, DP-46: characters as the server counts them (code points after NFC + trim). */
+export const textLength = (text: string) => [...text.normalize('NFC').trim()].length;
+
+/** 1000 → "1,000", as in the counters ("120 / 1,000"). */
+export const formatCount = (n: number) => String(n).replace(/\B(?=(\d{3})+$)/g, ',');
+
 /** "2026-11-07" → "Sat, Nov 7" in the phone's language. A plain day: no timezone shift. */
 export function formatDay(day: string): string {
   const [y, m, d] = day.split('-').map(Number);

@@ -8,6 +8,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
 } from '@nestjs/common';
 import { CurrentUser } from '../../shared/api/current-user.decorator';
 import { IfMatchVersion } from '../../shared/api/if-match-version.decorator';
@@ -22,6 +23,7 @@ import {
 } from '../application/queries';
 import { SaveQuestionAsCard } from '../application/save-question-as-card';
 import { StartDailySession } from '../application/start-daily-session';
+import { WriteQuestionNote } from '../application/write-question-note';
 import {
   AddTrack,
   ChangeTrackSettings,
@@ -34,7 +36,13 @@ import {
   TrackId,
   UserId,
 } from '../domain/ids';
-import { AddTrackDto, AnswerDto, TrackSettingsDto } from './dto';
+import {
+  AddTrackDto,
+  AnswerDto,
+  NoteDto,
+  SaveAsCardDto,
+  TrackSettingsDto,
+} from './dto';
 import { TimeZone } from './time-zone.decorator';
 
 /** Daily Practice (daily-practice.md, ADR-013). Day-dependent calls need X-Time-Zone (DP-05). */
@@ -46,6 +54,7 @@ export class PracticeController {
     private readonly getDailySession: GetDailySession,
     private readonly answerQuiz: AnswerQuiz,
     private readonly saveQuestionAsCard: SaveQuestionAsCard,
+    private readonly writeQuestionNote: WriteQuestionNote,
     private readonly listTrackHistory: ListTrackHistory,
     private readonly getTrackBestStreak: GetTrackBestStreak,
     private readonly listTracks: ListTracks,
@@ -112,18 +121,38 @@ export class PracticeController {
     return this.getDailySession.execute({ userId, sessionId, timeZone });
   }
 
-  /** DP-10, DP-32, DP-40: creates a Card through Card Library. */
+  /** DP-10, DP-32, DP-40, DP-49, DP-64: creates a Card through Card Library. */
   @Post('sessions/:id/questions/:questionId/save-as-card')
   @HttpCode(201)
   saveAsCard(
     @CurrentUser() user: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Param('questionId', ParseUUIDPipe) questionId: string,
+    @Body() body?: SaveAsCardDto,
   ) {
     return this.saveQuestionAsCard.execute({
       userId: UserId(user),
       sessionId: DailySessionId(id),
       questionId: QuestionId(questionId),
+      edited: body,
+    });
+  }
+
+  /** DP-41..DP-51: empty text removes the note. */
+  @Put('sessions/:id/questions/:questionId/note')
+  writeNote(
+    @CurrentUser() user: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('questionId', ParseUUIDPipe) questionId: string,
+    @Body() body: NoteDto,
+    @IfMatchVersion() version: number,
+  ) {
+    return this.writeQuestionNote.execute({
+      userId: UserId(user),
+      sessionId: DailySessionId(id),
+      questionId: QuestionId(questionId),
+      text: body.text,
+      version,
     });
   }
 

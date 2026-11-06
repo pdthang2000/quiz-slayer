@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { router, usePreventRemove } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { errorMessageKey } from '../../api/errors';
@@ -17,7 +18,11 @@ const RELOAD = new Set([
   'QuizOutOfOrder',
   'CannotSaveAsCard',
   'DailySessionClosed',
+  'NoteChanged',
   'PracticeChanged',
+  // DP-64: the card stopped fitting after this screen loaded (e.g. a longer note).
+  'InvalidCardFront',
+  'InvalidCardBack',
 ]);
 
 /**
@@ -25,6 +30,7 @@ const RELOAD = new Set([
  * progress in quizzes (DP-18), no timer (DP-24). Leaving keeps the progress (DP-22).
  * Finished: "23 / 28 correct" and the streak, then every quiz with the answers (DP-26).
  * DP-52: a closed set opens view only, with the quizzes that were answered.
+ * DP-67: leaving with a typed note not saved asks first (Next, Close, Back).
  */
 export function SessionView({ id, onClose }: { id: string; onClose: () => void }) {
   const { t } = useTranslation();
@@ -35,6 +41,49 @@ export function SessionView({ id, onClose }: { id: string; onClose: () => void }
   const [selected, setSelected] = useState<(number | undefined)[]>([]);
   /** The quiz just answered, shown with its feedback until Next. */
   const [reviewing, setReviewing] = useState<string | null>(null);
+  /** Questions whose note box holds typed text that is not saved. */
+  const [typing, setTyping] = useState<ReadonlySet<string>>(new Set());
+  const [closing, setClosing] = useState(false);
+
+  const onNoteTyping = useCallback((questionId: string, isTyping: boolean) => {
+    setTyping((old) => {
+      if (old.has(questionId) === isTyping) return old;
+      const next = new Set(old);
+      if (isTyping) next.add(questionId);
+      else next.delete(questionId);
+      return next;
+    });
+  }, []);
+
+  const askDiscard = useCallback(
+    (discard: () => void) =>
+      Alert.alert(t('practice.discardNote'), undefined, [
+        { text: t('practice.keepEditing'), style: 'cancel' },
+        { text: t('practice.discard'), style: 'destructive', onPress: discard },
+      ]),
+    [t],
+  );
+  const discardThen = (leave: () => void) => {
+    if (typing.size === 0) return leave();
+    askDiscard(() => {
+      setTyping(new Set());
+      leave();
+    });
+  };
+  const close = () => discardThen(() => setClosing(true));
+
+  // Back or a swipe.
+  usePreventRemove(typing.size > 0, ({ repeat }) => {
+    askDiscard(() => {
+      setTyping(new Set());
+      repeat();
+    });
+  });
+
+  // Leave only after the re-render that turned the Back prompt off.
+  useEffect(() => {
+    if (closing) onClose();
+  }, [closing, onClose]);
 
   const setSession = (s: DailySession) => queryClient.setQueryData(practiceKeys.session(id), s);
   const onError = (error: unknown) => {
@@ -80,7 +129,27 @@ export function SessionView({ id, onClose }: { id: string; onClose: () => void }
       ? undefined
       : s.quizzes.find((q) => !q.answer);
 
-  if (!current) return <ResultView session={s} onClose={onClose} onSaveAsCard={saveAsCard.mutate} saving={saveAsCard.isPending} />;
+  // DP-64: a card that fits saves with one tap; one that doesn't opens the card editor.
+  const onSaveAsCard = (questionId: string) => {
+    const question = s.quizzes
+      .flatMap((q) => q.answer?.questions ?? [])
+      .find((q) => q.questionId === questionId);
+    if (question?.cardDraft) {
+      router.push({ pathname: '/practice/save-card', params: { sessionId: id, questionId } });
+    } else saveAsCard.mutate(questionId);
+  };
+
+  if (!current) {
+    return (
+      <ResultView
+        session={s}
+        onClose={close}
+        onSaveAsCard={onSaveAsCard}
+        saving={saveAsCard.isPending}
+        onNoteTyping={onNoteTyping}
+      />
+    );
+  }
 
   const ready =
     current.questions.length > 0 && current.questions.every((_, i) => selected[i] !== undefined);
@@ -110,14 +179,16 @@ export function SessionView({ id, onClose }: { id: string; onClose: () => void }
               return next;
             })
           }
-          onSaveAsCard={saveAsCard.mutate}
+          onSaveAsCard={onSaveAsCard}
           saving={saveAsCard.isPending}
+          sessionId={id}
+          onNoteTyping={onNoteTyping}
         />
       </ScrollView>
       <View style={styles.footer}>
         {reviewing ? (
           <Pressable
-            onPress={() => setReviewing(null)}
+            onPress={() => discardThen(() => setReviewing(null))}
             accessibilityRole="button"
             testID="session-next"
             style={[styles.button, { backgroundColor: colors.primary }]}
@@ -149,11 +220,13 @@ function ResultView({
   onClose,
   onSaveAsCard,
   saving,
+  onNoteTyping,
 }: {
   session: DailySession;
   onClose: () => void;
   onSaveAsCard: (questionId: string) => void;
   saving: boolean;
+  onNoteTyping: (questionId: string, typing: boolean) => void;
 }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
@@ -186,7 +259,13 @@ function ResultView({
       <Text style={[styles.reviewTitle, { color: colors.textMuted }]}>{t('practice.review')}</Text>
       {session.quizzes.filter((quiz) => quiz.answer).map((quiz) => (
         <View key={quiz.id} style={[styles.reviewItem, { borderColor: colors.border }]}>
-          <QuizCard quiz={quiz} onSaveAsCard={onSaveAsCard} saving={saving} />
+          <QuizCard
+            quiz={quiz}
+            onSaveAsCard={onSaveAsCard}
+            saving={saving}
+            sessionId={session.id}
+            onNoteTyping={onNoteTyping}
+          />
         </View>
       ))}
     </ScrollView>

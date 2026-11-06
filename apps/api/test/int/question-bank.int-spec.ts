@@ -9,6 +9,7 @@ import {
 } from '../../src/question-bank/application/import-quiz-set';
 import { QuizId, UserId } from '../../src/question-bank/domain/ids';
 import { PrismaQuestionBankQueries } from '../../src/question-bank/infrastructure/prisma-question-bank.queries';
+import { OutboxRelay } from '../../src/prisma/outbox-relay';
 import { PrismaQuizSetRepository } from '../../src/question-bank/infrastructure/prisma-quiz-set.repository';
 
 const prisma = connectTestDb();
@@ -17,6 +18,7 @@ const queries = new PrismaQuestionBankQueries(prisma);
 const importQuizSet = new ImportQuizSet(
   repo,
   new PrismaTransactionRunner(prisma),
+  new OutboxRelay(prisma),
 );
 
 const SEED = join(__dirname, '../../prisma/seed/questions/hsk4-sample.json');

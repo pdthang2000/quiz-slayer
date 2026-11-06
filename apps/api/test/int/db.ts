@@ -13,5 +13,5 @@ export async function resetDb(prisma: PrismaService): Promise<void> {
 /** Empties every Question Bank and Daily Practice table. Test setup only. */
 export async function resetPracticeDb(prisma: PrismaService): Promise<void> {
   await prisma.db
-    .$executeRaw`TRUNCATE outbox_event, quiz_progress, daily_session, track, quiz_tag, question, quiz, quiz_set`;
+    .$executeRaw`TRUNCATE outbox_event, question_note, quiz_progress, daily_session, track, quiz_tag, question, quiz, quiz_set`;
 }

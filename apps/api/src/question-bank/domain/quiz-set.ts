@@ -1,4 +1,5 @@
 import { InvalidQuiz } from './errors';
+import type { QuestionsDeleted } from './events';
 import type { QuestionId, QuizId, QuizSetId, UserId } from './ids';
 import { QuestionTagName } from './question-tag-name';
 import { isGroupKind, isQuizKind, type QuizKind } from './quiz-kind';
@@ -98,6 +99,8 @@ export type QuizSetSnapshot = {
 
 /** One uploaded test (Quiz Set): its quizzes and their question tags (QB-01, QB-07, QB-11). */
 export class QuizSet {
+  private events: QuestionsDeleted[] = [];
+
   private constructor(private readonly s: QuizSetSnapshot) {}
 
   /** QB-02: a new Quiz Set is Private. */
@@ -124,8 +127,10 @@ export class QuizSet {
   /**
    * Re-import (seed): the quizzes are replaced by the file's. A quiz keeps its id when its
    * external id is the same (so progress and past sessions still point at it, DP-38).
+   * Questions that are gone raise QuestionsDeleted (DP-51).
    */
   replaceQuizzes(quizzes: QuizInput[]): void {
+    const before = this.s.quizzes.flatMap((q) => q.questions.map((x) => x.id));
     const byExternal = new Map(this.s.quizzes.map((q) => [q.externalId, q]));
     this.s.quizzes = QuizSet.checkAll(quizzes).map((q) => {
       const old = byExternal.get(q.externalId);
@@ -142,6 +147,19 @@ export class QuizSet {
         })),
       };
     });
+    const after = new Set(
+      this.s.quizzes.flatMap((q) => q.questions.map((x) => x.id)),
+    );
+    const questionIds = before.filter((id) => !after.has(id));
+    if (questionIds.length > 0) {
+      this.events.push({ type: 'QuestionsDeleted', questionIds });
+    }
+  }
+
+  pullEvents(): QuestionsDeleted[] {
+    const events = this.events;
+    this.events = [];
+    return events;
   }
 
   get id() {

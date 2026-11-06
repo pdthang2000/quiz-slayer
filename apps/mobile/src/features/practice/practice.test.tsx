@@ -1,5 +1,5 @@
 import { Alert, type AlertButton } from 'react-native';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import type { DailySession, Quiz, Today, Track } from '../../api/types';
 import { fakeApi, type FetchCall, Providers } from '../../test/harness';
@@ -12,11 +12,13 @@ import { AddTrackList, TrackSettings } from './TrackScreens';
 jest.mock('expo-router', () => ({
   router: { push: jest.fn(), back: jest.fn() },
   useNavigation: () => ({ addListener: () => () => {} }),
+  usePreventRemove: (...args: unknown[]) => mockPreventRemove(...args),
 }));
 jest.mock('expo-localization', () => ({
   ...jest.requireActual('expo-localization'),
   getCalendars: () => [{ timeZone: 'Asia/Ho_Chi_Minh' }],
 }));
+const mockPreventRemove = jest.fn();
 const mockPlay = jest.fn();
 const mockSeekTo = jest.fn();
 jest.mock('expo-audio', () => ({
@@ -82,6 +84,8 @@ const answered = (quiz: Quiz, chosen: number, correctChoice = 0, extra = {}): Qu
       explanation: '是 = to be',
       canSaveAsCard: chosen !== correctChoice,
       savedAsCard: false,
+      note: null,
+      noteVersion: 0,
       ...extra,
     })),
   },
@@ -425,6 +429,226 @@ describe('Review fixes (6e.1)', () => {
     ]);
     await wrap(<HistoryList trackId="t1" />);
     expect(await screen.findByText('Best: 12 days')).toBeTruthy();
+  });
+});
+
+describe('Notes', () => {
+  /** The user picks a button in the "Discard your note?" dialog. */
+  const answerDialog = (button: string) =>
+    jest
+      .spyOn(Alert, 'alert')
+      .mockImplementation((_title, _message, buttons?: AlertButton[]) =>
+        buttons?.find((b) => b.text === button)?.onPress?.(),
+      );
+  const openSession = async (s: DailySession, routes: Parameters<typeof fakeApi>[0] = []) => {
+    const api = fakeApi([
+      { method: 'GET', path: /^\/practice\/sessions\/s1$/, reply: { body: s } },
+      { method: 'GET', path: /^\/practice\/today$/, reply: { body: today() } },
+      ...routes,
+    ]);
+    await wrap(<SessionView id="s1" onClose={onClose} />);
+    await screen.findByTestId('quiz-a');
+    return api;
+  };
+  const onClose = jest.fn();
+  const NOTE = /questions\/a-q\/note$/;
+
+  beforeEach(() => {
+    onClose.mockClear();
+    mockPreventRemove.mockClear();
+  });
+
+  it('DP-45: no note box before answering', async () => {
+    await openSession(session([single('a')]));
+    expect(screen.queryByTestId('note-add-a-q')).toBeNull();
+  });
+
+  it('DP-66: no note: "📝 Add note" opens a box with Save, Cancel and the counter', async () => {
+    await openSession(session([answered(single('a'), 1)]));
+    await waitFor(() => expect(screen.getByText('📝 Add note')).toBeTruthy());
+    await press('note-add-a-q');
+    expect(screen.getByTestId('note-counter-a-q').props.children).toBe('0 / 1,000');
+    await fireEvent.changeText(screen.getByTestId('note-input-a-q'), 'a'.repeat(120));
+    expect(screen.getByTestId('note-counter-a-q').props.children).toBe('120 / 1,000');
+    await press('note-cancel-a-q');
+    expect(screen.getByText('📝 Add note')).toBeTruthy();
+  });
+
+  it('DP-66: a note shows its text with Edit, ready to change', async () => {
+    await openSession(session([answered(single('a'), 1, 0, { note: 'mine', noteVersion: 2 })]));
+    expect(screen.getByText('mine')).toBeTruthy();
+    await press('note-edit-a-q');
+    expect(screen.getByTestId('note-input-a-q').props.value).toBe('mine');
+  });
+
+  it('DP-66: over 1,000 the counter turns red and Save is off', async () => {
+    await openSession(session([answered(single('a'), 1)]));
+    await waitFor(() => expect(screen.getByTestId('note-add-a-q')).toBeTruthy());
+    await press('note-add-a-q');
+    await fireEvent.changeText(screen.getByTestId('note-input-a-q'), 'a'.repeat(1001));
+    expect(screen.getByTestId('note-counter-a-q').props.children).toBe('1,001 / 1,000');
+    expect(screen.getByTestId('note-save-a-q').props.accessibilityState.disabled).toBe(true);
+    await fireEvent.changeText(screen.getByTestId('note-input-a-q'), 'a'.repeat(1000));
+    expect(screen.getByTestId('note-save-a-q').props.accessibilityState.disabled).toBe(false);
+  });
+
+  it('DP-47, DP-50: saved only with Save, sending the version the screen showed', async () => {
+    let saved = false;
+    const shown = (note: string | null) =>
+      session([answered(single('a'), 1, 0, { note, noteVersion: 2 })]);
+    const { calls } = fakeApi([
+      {
+        method: 'GET',
+        path: /^\/practice\/sessions\/s1$/,
+        reply: () => ({ body: shown(saved ? 'new' : 'old') }),
+      },
+      {
+        method: 'PUT',
+        path: NOTE,
+        reply: () => {
+          saved = true;
+          return { body: { text: 'new', version: 3 } };
+        },
+      },
+    ]);
+    await wrap(<SessionView id="s1" onClose={onClose} />);
+    await screen.findByText('old');
+    await press('note-edit-a-q');
+    await fireEvent.changeText(screen.getByTestId('note-input-a-q'), 'new');
+    expect(calls.some((c) => c.method === 'PUT')).toBe(false);
+    await press('note-save-a-q');
+    expect(await screen.findByText('new')).toBeTruthy();
+    const put = calls.find((c) => c.method === 'PUT')!;
+    expect(put.ifMatch).toBe('"2"');
+    expect(put.body).toEqual({ text: 'new' });
+  });
+
+  it('DP-50: outdated → "This note changed." and the latest note shows', async () => {
+    let reads = 0;
+    const shown = (note: string, noteVersion: number) =>
+      session([answered(single('a'), 1, 0, { note, noteVersion })]);
+    fakeApi([
+      {
+        method: 'GET',
+        path: /^\/practice\/sessions\/s1$/,
+        reply: () => ({ body: reads++ === 0 ? shown('old', 1) : shown('X', 2) }),
+      },
+      { method: 'PUT', path: NOTE, reply: { status: 409, body: { error: 'NoteChanged' } } },
+    ]);
+    await wrap(<SessionView id="s1" onClose={onClose} />);
+    await screen.findByText('old');
+    await press('note-edit-a-q');
+    await fireEvent.changeText(screen.getByTestId('note-input-a-q'), 'Y');
+    await press('note-save-a-q');
+    expect(await screen.findByText('This note changed.')).toBeTruthy();
+    expect(await screen.findByText('X')).toBeTruthy();
+  });
+
+  it('DP-68: a closed set from History: answers locked, the note can still be edited', async () => {
+    await openSession(
+      session([answered(single('a'), 1, 0, { note: 'mine', noteVersion: 1 }), single('b')], {
+        finished: false,
+        closed: true,
+      }),
+    );
+    expect(screen.getByTestId('session-result')).toBeTruthy();
+    await press('note-edit-a-q');
+    expect(screen.getByTestId('note-save-a-q')).toBeTruthy();
+  });
+
+  it('DP-67: Next with a typed note asks; Keep editing stays', async () => {
+    const alert = answerDialog('Keep editing');
+    await openSession(session([single('a'), single('b')]), [
+      {
+        method: 'POST',
+        path: /answer$/,
+        reply: { body: session([answered(single('a'), 1), single('b')], { finished: false }) },
+      },
+    ]);
+    await press('choice-a-q-1');
+    await press('session-check');
+    await press('note-add-a-q');
+    await fireEvent.changeText(screen.getByTestId('note-input-a-q'), 'typed');
+    await press('session-next');
+    expect(alert.mock.calls.at(-1)![0]).toBe('Discard your note?');
+    expect(screen.getByTestId('quiz-a')).toBeTruthy();
+    alert.mockRestore();
+  });
+
+  it('DP-67: Next with a typed note asks; Discard goes on', async () => {
+    const alert = answerDialog('Discard');
+    await openSession(session([single('a'), single('b')]), [
+      {
+        method: 'POST',
+        path: /answer$/,
+        reply: { body: session([answered(single('a'), 1), single('b')], { finished: false }) },
+      },
+    ]);
+    await press('choice-a-q-1');
+    await press('session-check');
+    await press('note-add-a-q');
+    await fireEvent.changeText(screen.getByTestId('note-input-a-q'), 'typed');
+    await press('session-next');
+    expect(await screen.findByTestId('quiz-b')).toBeTruthy();
+    alert.mockRestore();
+  });
+
+  it('DP-67: Close with a typed note asks; Discard leaves', async () => {
+    const alert = answerDialog('Discard');
+    await openSession(session([answered(single('a'), 1)]));
+    await press('note-add-a-q');
+    await fireEvent.changeText(screen.getByTestId('note-input-a-q'), 'typed');
+    await press('session-close');
+    expect(alert.mock.calls.at(-1)![0]).toBe('Discard your note?');
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    alert.mockRestore();
+  });
+
+  it('DP-67: Close with nothing typed leaves without asking', async () => {
+    const alert = answerDialog('Discard');
+    await openSession(session([answered(single('a'), 1)]));
+    await press('note-add-a-q');
+    await press('session-close');
+    await waitFor(() => expect(onClose).toHaveBeenCalled());
+    expect(alert).not.toHaveBeenCalled();
+    alert.mockRestore();
+  });
+
+  it('DP-67: Back with a typed note is held until Discard', async () => {
+    const alert = answerDialog('Discard');
+    await openSession(session([answered(single('a'), 1)]));
+    await press('note-add-a-q');
+    expect(mockPreventRemove.mock.lastCall![0]).toBe(false);
+    await fireEvent.changeText(screen.getByTestId('note-input-a-q'), 'typed');
+    const [held, onBack] = mockPreventRemove.mock.lastCall!;
+    expect(held).toBe(true);
+    const repeat = jest.fn();
+    await act(async () => onBack({ repeat }));
+    expect(alert.mock.calls.at(-1)![0]).toBe('Discard your note?');
+    expect(repeat).toHaveBeenCalled();
+    alert.mockRestore();
+  });
+
+  it('DP-64: a card that fits saves with one tap', async () => {
+    const { calls } = await openSession(session([answered(single('a'), 1)]), [
+      { method: 'POST', path: /save-as-card$/, reply: { status: 201, body: { cardId: 'c1' } } },
+    ]);
+    await press('save-as-card-a-q');
+    await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true));
+    expect(router.push).not.toHaveBeenCalledWith(expect.objectContaining({ pathname: '/practice/save-card' }));
+  });
+
+  it("DP-64: a card that doesn't fit opens the card editor and saves nothing yet", async () => {
+    const cardDraft = { front: 'f', back: 'b'.repeat(3400), tagName: 'HSK4' };
+    const { calls } = await openSession(
+      session([answered(single('a'), 1, 0, { cardDraft })]),
+    );
+    await press('save-as-card-a-q');
+    expect(router.push).toHaveBeenCalledWith({
+      pathname: '/practice/save-card',
+      params: { sessionId: 's1', questionId: 'a-q' },
+    });
+    expect(calls.some((c) => c.method === 'POST')).toBe(false);
   });
 });
 

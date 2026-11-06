@@ -87,6 +87,8 @@ export type Track = {
 /** G-2: a question tag to add a track from. */
 export type TrackOption = { name: string; quizCount: number; tracked: boolean };
 
+export type CardDraft = { front: string; back: string; tagName: string };
+
 export type AnsweredQuestion = {
   questionId: string;
   chosen: number;
@@ -95,6 +97,12 @@ export type AnsweredQuestion = {
   explanation?: string;
   canSaveAsCard: boolean;
   savedAsCard: boolean;
+  /** DP-64: present when the card doesn't fit; Save as card opens the editor with it. */
+  cardDraft?: CardDraft;
+  /** DP-45, DP-48: the latest note. */
+  note: string | null;
+  /** DP-50: sent back when saving the note. */
+  noteVersion: number;
 };
 
 export type Quiz = {

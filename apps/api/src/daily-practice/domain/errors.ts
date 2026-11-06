@@ -102,6 +102,30 @@ export class TrackChanged extends DomainError {
   }
 }
 
+/** DP-46: a note is at most 1,000 characters. */
+export class InvalidNoteText extends DomainError {
+  readonly code = 'InvalidNoteText';
+  constructor() {
+    super('A note is at most 1,000 characters');
+  }
+}
+
+/** DP-45: a note is written only after the question is answered in that session. */
+export class CannotWriteNote extends DomainError {
+  readonly code = 'CannotWriteNote';
+  constructor(readonly questionId: QuestionId) {
+    super(`Question ${questionId} is not answered in this session`);
+  }
+}
+
+/** DP-50, CONFLICT-01: the note changed since the screen showed it. */
+export class NoteChanged extends DomainError {
+  readonly code = 'NoteChanged';
+  constructor() {
+    super('This note changed');
+  }
+}
+
 /** DP-01: the track already has a session that day (two Start taps at once). */
 export class DailySessionExists extends DomainError {
   readonly code = 'DailySessionExists';

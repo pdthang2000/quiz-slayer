@@ -4,19 +4,23 @@ import { PrismaService } from '../../prisma/prisma.service';
 import type { DailySession } from '../domain/daily-session';
 import {
   DailySessionExists,
+  NoteChanged,
   PracticeChanged,
   TrackChanged,
 } from '../domain/errors';
 import {
   type DailySessionId,
+  type QuestionId,
   QuizId,
   type TrackId,
   type UserId,
 } from '../domain/ids';
 import type { LocalDate } from '../domain/local-date';
+import type { QuestionNote } from '../domain/question-note';
 import type { QuizProgress } from '../domain/quiz-progress';
 import type {
   DailySessionRepository,
+  QuestionNoteRepository,
   QuizProgressRepository,
   TrackRepository,
 } from '../domain/repositories';
@@ -26,6 +30,7 @@ import {
   toDailySessionData,
   toDbDate,
   toNewDailySessionRow,
+  toQuestionNote,
   toQuizProgress,
   toQuizProgressData,
   toTrack,
@@ -191,5 +196,58 @@ export class PrismaQuizProgressRepository implements QuizProgressRepository {
       data: { ...toQuizProgressData(progress), version: { increment: 1 } },
     });
     if (count === 0) throw new PracticeChanged('progress');
+  }
+}
+
+@Injectable()
+export class PrismaQuestionNoteRepository implements QuestionNoteRepository {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async find(
+    userId: UserId,
+    questionId: QuestionId,
+  ): Promise<QuestionNote | null> {
+    const row = await this.prisma.db.questionNote.findUnique({
+      where: { userId_questionId: { userId, questionId } },
+    });
+    return row ? toQuestionNote(row) : null;
+  }
+
+  async findMany(
+    userId: UserId,
+    questionIds: readonly QuestionId[],
+  ): Promise<QuestionNote[]> {
+    if (questionIds.length === 0) return [];
+    const rows = await this.prisma.db.questionNote.findMany({
+      where: { userId, questionId: { in: [...questionIds] } },
+    });
+    return rows.map(toQuestionNote);
+  }
+
+  async add(note: QuestionNote): Promise<void> {
+    const { userId, questionId, text } = note.toSnapshot();
+    try {
+      await this.prisma.db.questionNote.create({
+        data: { userId, questionId, text, version: 1 },
+      });
+    } catch (e) {
+      if (isUniqueViolation(e)) throw new NoteChanged();
+      throw e;
+    }
+  }
+
+  async save(note: QuestionNote): Promise<void> {
+    const { userId, questionId, text, version } = note.toSnapshot();
+    const { count } = await this.prisma.db.questionNote.updateMany({
+      where: { userId, questionId, version },
+      data: { text, version: { increment: 1 } },
+    });
+    if (count === 0) throw new NoteChanged();
+  }
+
+  async deleteOfQuestions(questionIds: readonly QuestionId[]): Promise<void> {
+    await this.prisma.db.questionNote.deleteMany({
+      where: { questionId: { in: [...questionIds] } },
+    });
   }
 }

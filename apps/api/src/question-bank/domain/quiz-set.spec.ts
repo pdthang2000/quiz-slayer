@@ -213,3 +213,23 @@ describe('Quiz Set', () => {
     ).toThrow(InvalidQuiz);
   });
 });
+
+describe('Questions leaving the bank', () => {
+  it('DP-51: a question dropped by a re-import raises QuestionsDeleted; a fixed one keeps its id', () => {
+    const set = QuizSet.create({
+      id: QuizSetId('set'),
+      ownerUserId: null,
+      name: 'S',
+      quizzes: [single('a'), single('b')],
+    });
+    const before = set.quizzes.map((q) => q.questions[0].id);
+
+    set.replaceQuizzes([single('a', { tags: ['HSK4', 'fixed'] })]);
+
+    expect(set.quizzes[0].questions[0].id).toBe(before[0]);
+    expect(set.pullEvents()).toEqual([
+      { type: 'QuestionsDeleted', questionIds: [before[1]] },
+    ]);
+    expect(set.pullEvents()).toEqual([]);
+  });
+});

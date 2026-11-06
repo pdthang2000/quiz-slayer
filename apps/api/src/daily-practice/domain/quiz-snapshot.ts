@@ -28,8 +28,9 @@ export type QuizSnapshot = {
   readonly questions: readonly QuestionSnapshot[];
 };
 
-/** CARD-02: a card front is at most 500 characters (code points after NFC + trim, CARD-05). */
+/** CARD-02: a card's limits, in code points after NFC + trim (CARD-05). */
 export const CARD_FRONT_MAX = 500;
+export const CARD_BACK_MAX = 3000;
 
 const LETTERS = 'ABCDEF';
 
@@ -38,32 +39,43 @@ export type CardDraft = { front: string; back: string; tagName: string };
 
 /**
  * DP-40: front = the question and its choices, back = the correct answer and the
- * explanation, tag = the track's tag.
+ * explanation, tag = the track's tag. DP-49: the note goes on the back, below the explanation.
  *   Front: 我___学生。  A 是  B 在  C 有  D 去
  *   Back:  是 — 是 = to be
+ *          📝 是 joins two nouns, 在 is for places
  */
 export function cardDraftFor(
   question: QuestionSnapshot,
   tagName: string,
+  note: string | null = null,
 ): CardDraft {
   const choices = question.choices
     .map((c, i) => `${LETTERS[i]} ${c}`)
     .join('  ');
   const answer = question.choices[question.correctChoice];
+  const back = question.explanation
+    ? `${answer} — ${question.explanation}`
+    : answer;
   return {
     front: `${question.text}  ${choices}`,
-    back: question.explanation ? `${answer} — ${question.explanation}` : answer,
+    back: note ? `${back}\n📝 ${note}` : back,
     tagName,
   };
 }
 
 const cardLength = (text: string) => [...text.normalize('NFC').trim()].length;
 
+/** DP-64: a card that fits saves with one tap; one that doesn't opens the card editor. */
+export const cardFits = (draft: CardDraft): boolean =>
+  cardLength(draft.front) <= CARD_FRONT_MAX &&
+  cardLength(draft.back) <= CARD_BACK_MAX;
+
 /**
  * DP-16, DP-40: "Save as card" only for a single question that makes sense on its own:
- * kind single, text only (no image, no audio, not in a group), and a front that fits a card.
+ * kind single, text only (no image, no audio, not in a group). Length never hides the
+ * button (DP-64).
  */
-export function canBeSavedAsCard(quiz: QuizSnapshot, tagName: string): boolean {
+export function canBeSavedAsCard(quiz: QuizSnapshot): boolean {
   if (
     quiz.kind !== 'single' ||
     quiz.questions.length !== 1 ||
@@ -73,6 +85,5 @@ export function canBeSavedAsCard(quiz: QuizSnapshot, tagName: string): boolean {
     return false;
   }
   const [q] = quiz.questions;
-  if (q.imageUrl || q.audioUrl) return false;
-  return cardLength(cardDraftFor(q, tagName).front) <= CARD_FRONT_MAX;
+  return !q.imageUrl && !q.audioUrl;
 }

@@ -2,16 +2,25 @@ import { randomUUID } from 'node:crypto';
 import { connectTestDb, resetPracticeDb } from '../../../test/int/db';
 import {
   DailySessionExists,
+  NoteChanged,
   PracticeChanged,
   TrackChanged,
 } from '../domain/errors';
-import { DailySessionId, QuizId, TrackId, UserId } from '../domain/ids';
+import {
+  DailySessionId,
+  QuestionId,
+  QuizId,
+  TrackId,
+  UserId,
+} from '../domain/ids';
 import { LocalDate } from '../domain/local-date';
+import { QuestionNote } from '../domain/question-note';
 import { QuizProgress } from '../domain/quiz-progress';
 import { single, startSession, readingGroup } from '../domain/test-data';
 import { Track } from '../domain/track';
 import {
   PrismaDailySessionRepository,
+  PrismaQuestionNoteRepository,
   PrismaQuizProgressRepository,
   PrismaTrackRepository,
 } from './prisma-practice.repositories';
@@ -162,5 +171,50 @@ describe('Daily Practice persistence', () => {
       dueOn: LocalDate.parse('2026-11-06'),
     });
     expect(again.isDueOn(LocalDate.parse('2026-11-06'))).toBe(true);
+  });
+});
+
+describe('QuestionNote persistence', () => {
+  const notes = new PrismaQuestionNoteRepository(prisma);
+  const me = UserId(randomUUID());
+  const other = UserId(randomUUID());
+  const question = QuestionId(randomUUID());
+
+  const write = async (user: UserId, text: string) => {
+    const note = QuestionNote.none(user, question);
+    note.write(text, 0);
+    await notes.add(note);
+  };
+
+  it('DP-42: a note is private: only the user who wrote it sees it', async () => {
+    await write(me, 'mine');
+    await write(other, 'theirs');
+    const [mine] = await notes.findMany(me, [question]);
+    expect(mine.text).toBe('mine');
+    expect(await notes.findMany(UserId(randomUUID()), [question])).toEqual([]);
+  });
+
+  it('DP-43: one note per user and question: a second first note → NoteChanged', async () => {
+    await write(me, 'first');
+    await expect(write(me, 'second')).rejects.toThrow(NoteChanged);
+  });
+
+  it('DP-50: saved from an outdated copy → NoteChanged', async () => {
+    await write(me, 'first');
+    const phone = (await notes.find(me, question))!;
+    const tablet = (await notes.find(me, question))!;
+    phone.write('phone', 1);
+    await notes.save(phone);
+    tablet.write('tablet', 1);
+    await expect(notes.save(tablet)).rejects.toThrow(NoteChanged);
+    expect((await notes.find(me, question))!.text).toBe('phone');
+  });
+
+  it("DP-51: deleting a question deletes every user's notes on it", async () => {
+    await write(me, 'mine');
+    await write(other, 'theirs');
+    await notes.deleteOfQuestions([question]);
+    expect(await notes.find(me, question)).toBeNull();
+    expect(await notes.find(other, question)).toBeNull();
   });
 });

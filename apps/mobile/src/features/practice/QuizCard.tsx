@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { Quiz } from '../../api/types';
 import { spacing, useTheme } from '../../theme';
 import { AudioPlayer } from './AudioPlayer';
+import { NoteBox } from './NoteBox';
 
 type Props = {
   quiz: Quiz;
@@ -12,13 +13,25 @@ type Props = {
   /** DP-10, DP-40: "Save as card" on a wrong single text question. */
   onSaveAsCard?: (questionId: string) => void;
   saving?: boolean;
+  /** DP-45: notes show once a question is answered, on this session. */
+  sessionId?: string;
+  onNoteTyping?: (questionId: string, typing: boolean) => void;
 };
 
 /**
  * One quiz: a group's passage or audio, then its questions with their choices (DP-07).
- * Once answered (DP-20): ✓/✗, the correct answer, the explanation, and Save as card.
+ * Once answered (DP-20): ✓/✗, the correct answer, the explanation, Save as card, and the
+ * user's note (DP-45).
  */
-export function QuizCard({ quiz, selected = [], onSelect, onSaveAsCard, saving }: Props) {
+export function QuizCard({
+  quiz,
+  selected = [],
+  onSelect,
+  onSaveAsCard,
+  saving,
+  sessionId,
+  onNoteTyping,
+}: Props) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const answered = quiz.answer?.questions;
@@ -99,6 +112,15 @@ export function QuizCard({ quiz, selected = [], onSelect, onSaveAsCard, saving }
                   >
                     <Text style={[styles.link, { color: colors.primary }]}>{t('practice.saveAsCard')}</Text>
                   </Pressable>
+                ) : null}
+                {sessionId && onNoteTyping ? (
+                  <NoteBox
+                    sessionId={sessionId}
+                    questionId={question.id}
+                    note={feedback.note}
+                    version={feedback.noteVersion}
+                    onTyping={onNoteTyping}
+                  />
                 ) : null}
               </View>
             ) : null}

@@ -196,7 +196,7 @@ Back   是 — (long explanation) …   🔴 3,400 / 3,000   [Save] off
 - **Track** (unique per user and tag name): kinds, daily size, Active/Removed. DP-11, DP-12, DP-15.
 - **DailySession** (unique per user, track, day): snapshot of the quizzes, answers, saved-as-card questions. DP-01, DP-03, DP-05, DP-17, DP-18, DP-20..DP-23, DP-32, DP-40. `answerQuiz` touches only the session; progress reacts to `QuizAnswered`.
 - **QuizProgress** (per user and quiz): last answered, mistake stage and due day. DP-27, DP-29, DP-33, DP-37, DP-38.
-- **QuestionNote** (per user and question; proposal for 6f): the note's text and a version. DP-41..DP-51.
+- **QuestionNote** (per user and question): the note's text and a version. Removing keeps the row with empty text, so its version keeps counting (DP-50). DP-41..DP-51.
 - `buildDailySet` (domain service) and `streakLength` (computed, nothing stored) are pure functions.
 
 ## API (built in 6d)
@@ -204,9 +204,10 @@ Every call that depends on the day sends the phone's timezone in `X-Time-Zone` (
 ```
 GET    /practice/today                              tracks, today's progress, streaks (G-5)
 POST   /practice/tracks/:id/start                   Start (DP-31) or resume (DP-22)
-GET    /practice/sessions/:id                       quizzes; the key only for answered ones (DP-20)
+GET    /practice/sessions/:id                       quizzes; the key only for answered ones (DP-20); each answered question's latest note (DP-45, DP-48), and `cardDraft` when its card doesn't fit (DP-64)
 POST   /practice/sessions/:id/quizzes/:quizId/answer  { choices: [i, …] } one per question (G-7)
-POST   /practice/sessions/:id/questions/:qid/save-as-card  DP-10, DP-32, DP-40
+POST   /practice/sessions/:id/questions/:qid/save-as-card  DP-10, DP-32, DP-40; optional { front, back, tagNames } from the card editor (DP-64)
+PUT    /practice/sessions/:id/questions/:qid/note   { text } with If-Match; empty text removes it (DP-41..DP-51). No note yet = version 0
 GET    /practice/tracks/:id/history                 DP-26, newest day first
 GET    /practice/tracks/:id/best-streak             DP-69, History header
 GET    /practice/tracks · POST /practice/tracks { tagName } · PATCH /practice/tracks/:id { kinds, dailySize } · DELETE /practice/tracks/:id
@@ -237,3 +238,4 @@ GET    /practice/track-options                      question tags with quiz coun
 ## Integrations
 - Reads pools and quiz content from Question Bank's public application service and keeps a snapshot of what it served (QB-04).
 - "Save as card" calls Card Library's `createCard` (context map). No event.
+- Question Bank's `QuestionsDeleted` deletes the notes of those questions (DP-51), through the outbox.

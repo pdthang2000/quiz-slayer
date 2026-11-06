@@ -649,6 +649,292 @@ describe('Daily Practice (e2e)', () => {
     });
   });
 
+  describe('Notes (6f)', () => {
+    /** A track with one wrong single quiz answered; returns the session and its question. */
+    async function answeredWrong(dailySize = 1) {
+      const track = await addTrack('HSK4', { kinds: ['single'], dailySize });
+      const session = await start(track);
+      const [quiz] = session.quizzes;
+      await answer(session, quiz, await wrongOf(quiz.id)).expect(200);
+      return { track, session, quiz, questionId: quiz.questions[0].id };
+    }
+    const note = (
+      sessionId: string,
+      questionId: string,
+      text: string,
+      version: number | null = 0,
+    ) => {
+      const req = http().put(
+        `/practice/sessions/${sessionId}/questions/${questionId}/note`,
+      );
+      if (version !== null) void req.set('If-Match', `"${version}"`);
+      return req.send({ text });
+    };
+    const read = async (id: string) =>
+      (await http().get(`/practice/sessions/${id}`).expect(200))
+        .body as DailySessionView;
+    const shown = (s: DailySessionView, questionId: string) =>
+      s.quizzes
+        .flatMap((q) => q.answer?.questions ?? [])
+        .find((q) => q.questionId === questionId);
+
+    it('DP-41, DP-45: a note on an answered question shows with its answer', async () => {
+      const { session, questionId } = await answeredWrong();
+      const res = await note(session.id, questionId, ' 是 joins nouns ').expect(
+        200,
+      );
+      expect(res.body).toEqual({ text: '是 joins nouns', version: 1 });
+      expect(shown(await read(session.id), questionId)).toMatchObject({
+        note: '是 joins nouns',
+        noteVersion: 1,
+      });
+    });
+
+    it('DP-45: not answered in that session → 409 CannotWriteNote', async () => {
+      const track = await addTrack('HSK4', {
+        kinds: ['single'],
+        dailySize: 2,
+      });
+      const session = await start(track);
+      const res = await note(
+        session.id,
+        session.quizzes[1].questions[0].id,
+        'early',
+      ).expect(409);
+      expect(res.body.error).toBe('CannotWriteNote');
+    });
+
+    it('DP-45, DP-43: on a comeback the note stays hidden until the question is answered again, then shows', async () => {
+      // Daily size 2: half of 1 is 0, so a mistake would not come back (DP-36).
+      const { track, session, quiz, questionId } = await answeredWrong(2);
+      await note(session.id, questionId, 'hint').expect(200);
+      await deliver();
+      now = hanoi('2026-11-08T08:00:00');
+      const comeback = await start(track);
+      expect(comeback.quizzes[0].id).toBe(quiz.id);
+      expect(JSON.stringify(comeback)).not.toContain('hint');
+      await answer(comeback, comeback.quizzes[0], [0]).expect(200);
+      expect(shown(await read(comeback.id), questionId)).toMatchObject({
+        note: 'hint',
+        noteVersion: 1,
+      });
+    });
+
+    it('DP-48: History shows the latest note, not the note as it was that day', async () => {
+      const { track, session, questionId } = await answeredWrong(2);
+      await note(session.id, questionId, 'first').expect(200);
+      await deliver();
+      now = hanoi('2026-11-08T08:00:00');
+      const comeback = await start(track);
+      await answer(comeback, comeback.quizzes[0], [0]).expect(200);
+      await note(comeback.id, questionId, 'latest', 1).expect(200);
+      expect(shown(await read(session.id), questionId)?.note).toBe('latest');
+    });
+
+    it('DP-44: each question of a group has its own note', async () => {
+      const track = await addTrack('HSK4', {
+        kinds: ['readingGroup'],
+        dailySize: 1,
+      });
+      const session = await start(track);
+      const [quiz] = session.quizzes;
+      await answer(
+        session,
+        quiz,
+        quiz.questions.map(() => 0),
+      ).expect(200);
+      const [q1, q2] = quiz.questions;
+      await note(session.id, q1.id, 'one').expect(200);
+      await note(session.id, q2.id, 'two').expect(200);
+      const view = await read(session.id);
+      expect(shown(view, q1.id)?.note).toBe('one');
+      expect(shown(view, q2.id)?.note).toBe('two');
+    });
+
+    it('DP-46: an empty note removes it; over 1,000 → 400 InvalidNoteText', async () => {
+      const { session, questionId } = await answeredWrong();
+      const long = await note(session.id, questionId, 'a'.repeat(1001)).expect(
+        400,
+      );
+      expect(long.body.error).toBe('InvalidNoteText');
+      await note(session.id, questionId, 'x').expect(200);
+      const removed = await note(session.id, questionId, '  ', 1).expect(200);
+      expect(removed.body).toEqual({ text: null, version: 2 });
+      expect(shown(await read(session.id), questionId)).toMatchObject({
+        note: null,
+        noteVersion: 2,
+      });
+    });
+
+    it('DP-50: If-Match is needed; an outdated note → 409 NoteChanged and nothing is written', async () => {
+      const { session, questionId } = await answeredWrong();
+      await note(session.id, questionId, 'X', null).expect(428);
+      await note(session.id, questionId, 'X').expect(200);
+      const stale = await note(session.id, questionId, 'Y').expect(409);
+      expect(stale.body.error).toBe('NoteChanged');
+      expect(shown(await read(session.id), questionId)?.note).toBe('X');
+    });
+
+    it('DP-50: a phone showing a removed note cannot overwrite a newer one', async () => {
+      const { session, questionId } = await answeredWrong();
+      await note(session.id, questionId, 'old').expect(200); // v1, shown on phone B
+      await note(session.id, questionId, '', 1).expect(200); // v2
+      await note(session.id, questionId, 'new', 2).expect(200); // v3
+      await note(session.id, questionId, 'B', 1).expect(409);
+    });
+
+    it('DP-68: a note can be edited on a closed set; only the answers are locked', async () => {
+      const { session, questionId } = await answeredWrong(2);
+      now = hanoi('2026-11-10T08:00:00');
+      await note(session.id, questionId, 'later').expect(200);
+      const view = await read(session.id);
+      expect(view.closed).toBe(true);
+      expect(shown(view, questionId)?.note).toBe('later');
+    });
+
+    it('DP-49: Save as card copies the note onto the back; editing it later does not change the card', async () => {
+      const { session, questionId } = await answeredWrong();
+      await note(session.id, questionId, 'my note').expect(200);
+      const saved = await http()
+        .post(
+          `/practice/sessions/${session.id}/questions/${questionId}/save-as-card`,
+        )
+        .expect(201);
+      await note(session.id, questionId, 'edited', 1).expect(200);
+      const card = await http().get(`/cards/${saved.body.cardId}`).expect(200);
+      expect(card.body.back).toMatch(/\n📝 my note$/);
+    });
+
+    it('DP-51: a question dropped by a re-import loses its notes; a fixed one keeps them', async () => {
+      const file = (explanation: string, withQ2: boolean): ImportFile => ({
+        quizSet: 'Notes',
+        owner: 'system',
+        tags: ['NOTES'],
+        quizzes: [
+          {
+            id: 'n1',
+            kind: 'single',
+            question: 'one',
+            choices: ['a', 'b'],
+            answer: 0,
+            explanation,
+          },
+          ...(withQ2
+            ? [
+                {
+                  id: 'n2',
+                  kind: 'single',
+                  question: 'two',
+                  choices: ['a', 'b'],
+                  answer: 0,
+                },
+              ]
+            : []),
+        ],
+      });
+      const prisma = app.get(PrismaService);
+      await app.get(ImportQuizSet).execute(file('v1', true));
+      const track = await addTrack('NOTES');
+      const session = await start(track);
+      for (const quiz of session.quizzes) {
+        await answer(session, quiz, [0]).expect(200);
+        await note(session.id, quiz.questions[0].id, quiz.id).expect(200);
+      }
+      expect(await prisma.db.questionNote.count()).toBe(2);
+
+      await app.get(ImportQuizSet).execute(file('fixed', true));
+      await deliver();
+      expect(await prisma.db.questionNote.count()).toBe(2);
+
+      await app.get(ImportQuizSet).execute(file('fixed', false));
+      await deliver();
+      const left = await prisma.db.questionNote.findMany();
+      expect(left).toHaveLength(1);
+      const kept = await prisma.db.question.findUniqueOrThrow({
+        where: { id: left[0].questionId },
+      });
+      expect(kept.text).toBe('one');
+    });
+
+    describe('DP-64: a card that does not fit', () => {
+      /** A wrong answer on a question whose explanation is too long for a card. */
+      async function tooLong() {
+        await app.get(ImportQuizSet).execute({
+          quizSet: 'Long',
+          owner: 'system',
+          tags: ['LONG'],
+          quizzes: [
+            {
+              id: 'l1',
+              kind: 'single',
+              question: 'long one',
+              choices: ['right', 'wrong'],
+              answer: 0,
+              explanation: 'e'.repeat(3100),
+            },
+          ],
+        });
+        const track = await addTrack('LONG');
+        const session = await start(track);
+        await answer(session, session.quizzes[0], [1]).expect(200);
+        const questionId = session.quizzes[0].questions[0].id;
+        const save = (body?: object) =>
+          http()
+            .post(
+              `/practice/sessions/${session.id}/questions/${questionId}/save-as-card`,
+            )
+            .send(body);
+        return { session, questionId, save };
+      }
+
+      it('DP-64: the session offers the filled-in card; one that fits offers nothing', async () => {
+        const { session, questionId } = await tooLong();
+        const q = shown(await read(session.id), questionId);
+        expect(q?.canSaveAsCard).toBe(true);
+        expect(q?.cardDraft).toMatchObject({
+          front: expect.stringContaining('long one'),
+          tagName: 'LONG',
+        });
+        expect(q?.cardDraft?.back).toHaveLength('right — '.length + 3100);
+
+        const fits = await answeredWrong();
+        expect(
+          shown(await read(fits.session.id), fits.questionId)?.cardDraft,
+        ).toBeUndefined();
+      });
+
+      it('DP-64: without edits it is refused like any card that is too long, and nothing is saved', async () => {
+        const { session, questionId, save } = await tooLong();
+        const res = await save().expect(400);
+        expect(res.body.error).toBe('InvalidCardBack');
+        expect(shown(await read(session.id), questionId)?.savedAsCard).toBe(
+          false,
+        );
+      });
+
+      it('DP-64: edited text and tags are saved, the tag may be removed; then "Saved ✓"', async () => {
+        const { session, questionId, save } = await tooLong();
+        const res = await save({
+          front: 'short front',
+          back: 'short back',
+          tagNames: [],
+        }).expect(201);
+        const card = await http().get(`/cards/${res.body.cardId}`).expect(200);
+        expect(card.body).toMatchObject({
+          front: 'short front',
+          back: 'short back',
+          tags: [],
+        });
+        expect(shown(await read(session.id), questionId)).toMatchObject({
+          savedAsCard: true,
+          canSaveAsCard: false,
+        });
+        const twice = await save({ back: 'x' }).expect(409);
+        expect(twice.body.error).toBe('CannotSaveAsCard');
+      });
+    });
+  });
+
   it('DP-59: tracks are added from question tags with quiz counts; unknown tags are refused', async () => {
     await addTrack('HSK4');
     const options = (await http().get('/practice/track-options').expect(200))

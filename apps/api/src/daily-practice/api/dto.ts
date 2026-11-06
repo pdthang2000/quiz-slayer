@@ -30,6 +30,31 @@ export class TrackSettingsDto {
   dailySize?: number;
 }
 
+/** DP-64: what the card editor sends; nothing = the card as it is. */
+export class SaveAsCardDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(100_000)
+  front?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100_000)
+  back?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @ArrayMaxSize(100)
+  tagNames?: string[];
+}
+
+export class NoteDto {
+  @IsString()
+  @MaxLength(100_000)
+  text!: string;
+}
+
 export class AnswerDto {
   /** One choice index per question of the quiz (a group answers all at once, G-7). */
   @IsArray()
