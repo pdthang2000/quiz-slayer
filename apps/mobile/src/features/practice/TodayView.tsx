@@ -13,7 +13,7 @@ import { practiceKeys, useToday } from './hooks';
 /**
  * G-1, G-5: the Today screen — overall streak at the top, then each track with today's
  * progress (DP-18 quizzes), its streak (DP-19) and Start / Continue / Done. DP-69: the best
- * streak under the overall one. DP-63: yesterday's set, while it can still be finished.
+ * streak under the overall one, hidden while it is 0. DP-63: yesterday's set, while it can still be finished.
  */
 export function TodayView() {
   const { t } = useTranslation();
@@ -66,9 +66,11 @@ export function TodayView() {
       <Text style={[styles.overall, { color: colors.text }]} testID="overall-streak">
         {t('practice.overallStreak', { count: overallStreak })}
       </Text>
-      <Text style={[styles.best, { color: colors.textMuted }]} testID="overall-best">
-        {t('practice.bestOverall', { count: overallBestStreak })}
-      </Text>
+      {overallBestStreak > 0 ? (
+        <Text style={[styles.best, { color: colors.textMuted }]} testID="overall-best">
+          {t('practice.bestOverall', { count: overallBestStreak })}
+        </Text>
+      ) : null}
 
       {tracks.length === 0 ? (
         <View style={styles.empty}>
@@ -140,7 +142,7 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
   content: { padding: spacing.lg, gap: spacing.md },
   overall: { fontSize: 22, fontWeight: '700' },
-  best: { fontSize: 14, marginBottom: spacing.sm },
+  best: { fontSize: 14 },
   yesterday: { fontSize: 15, flexShrink: 1 },
   empty: { alignItems: 'center', gap: spacing.md, marginTop: spacing.xl },
   card: { borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, padding: spacing.lg, gap: spacing.sm },

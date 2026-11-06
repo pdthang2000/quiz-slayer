@@ -7,7 +7,7 @@ import { formatDay, useBestStreak, useHistory } from './hooks';
 
 /**
  * DP-26: a track's days with their result, newest first; a tap shows that day's answers.
- * DP-69: the best streak in the header.
+ * DP-69: the best streak in the header, hidden while it is 0.
  */
 export function HistoryList({ trackId }: { trackId: string }) {
   const { t } = useTranslation();
@@ -31,7 +31,7 @@ export function HistoryList({ trackId }: { trackId: string }) {
           }} tintColor={colors.textMuted} />
       }
       ListHeaderComponent={
-        best.data ? (
+        best.data && best.data.bestStreak > 0 ? (
           <Text style={[styles.best, { color: colors.text }]} testID="history-best">
             {t('practice.bestDays', { count: best.data.bestStreak })}
           </Text>

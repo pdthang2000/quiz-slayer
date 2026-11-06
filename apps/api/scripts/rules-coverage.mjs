@@ -1,18 +1,30 @@
-// Lists every rule ID in docs/domain/contexts/<context>.md and whether a test name starts with it.
-// Usage: node scripts/rules-coverage.mjs [context]   (default: card-library)
-// Exits 1 if a test names a rule ID that is not in the doc (typo or removed rule).
+// Checks every rule ID in docs/domain/contexts/*.md against the test names.
+// Usage: node scripts/rules-coverage.mjs             one summary per context
+//        node scripts/rules-coverage.mjs <context>   that context, rule by rule
+// Exits 1 if a test names a rule ID that is in no context doc (typo or removed rule).
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const apiRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = join(apiRoot, '..', '..');
-const context = process.argv[2] ?? 'card-library';
-const docPath = join(repoRoot, 'docs', 'domain', 'contexts', `${context}.md`);
+const docsDir = join(repoRoot, 'docs', 'domain', 'contexts');
 
-const rules = [...readFileSync(docPath, 'utf8').matchAll(/\*\*([A-Z]+-\d+)\*\* `(\w+)`/g)].map(
-  ([, id, status]) => ({ id, status }),
-);
+const contexts = readdirSync(docsDir)
+  .filter((name) => name.endsWith('.md'))
+  .sort()
+  .map((name) => ({
+    name: name.replace(/\.md$/, ''),
+    rules: [
+      ...readFileSync(join(docsDir, name), 'utf8').matchAll(/\*\*([A-Z]+-\d+)\*\* `(\w+)`/g),
+    ].map(([, id, status]) => ({ id, status })),
+  }));
+
+const only = process.argv.slice(2).find((arg) => arg !== '--'); // pnpm passes "--" on
+if (only && !contexts.some((c) => c.name === only)) {
+  console.error(`No context "${only}". Contexts: ${contexts.map((c) => c.name).join(', ')}`);
+  process.exit(2);
+}
 
 function* specFiles(dir) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -39,27 +51,29 @@ for (const dir of ['src', 'test', '../mobile/src']) {
   }
 }
 
-console.log(`Rule coverage: ${relative(repoRoot, docPath)}\n`);
-console.log('Rule          Status     Tests');
-for (const { id, status } of rules) {
-  const files = tests.get(id);
-  const mark = files ? `✓ ${[...files].join(', ')}` : '✗';
-  console.log(`${id.padEnd(13)} ${status.padEnd(10)} ${mark}`);
+for (const { name, rules } of contexts) {
+  if (only && name !== only) continue;
+  console.log(`Rule coverage: ${name}`);
+  if (only) {
+    console.log('\nRule          Status     Tests');
+    for (const { id, status } of rules) {
+      const files = tests.get(id);
+      const mark = files ? `✓ ${[...files].join(', ')}` : '✗';
+      console.log(`${id.padEnd(13)} ${status.padEnd(10)} ${mark}`);
+    }
+    console.log('');
+  }
+  const confirmed = rules.filter((r) => r.status === 'confirmed');
+  const uncovered = confirmed.filter((r) => !tests.has(r.id));
+  console.log(`${confirmed.length - uncovered.length}/${confirmed.length} confirmed rules covered.`);
+  if (uncovered.length) console.log(`Not covered: ${uncovered.map((r) => r.id).join(', ')}`);
+  console.log('');
 }
 
-const confirmed = rules.filter((r) => r.status === 'confirmed');
-const uncovered = confirmed.filter((r) => !tests.has(r.id));
-console.log(
-  `\n${confirmed.length - uncovered.length}/${confirmed.length} confirmed rules covered.`,
-);
-if (uncovered.length) console.log(`Not covered: ${uncovered.map((r) => r.id).join(', ')}`);
-
-const known = new Set(rules.map((r) => r.id));
-const prefixes = new Set(rules.map((r) => r.id.split('-')[0]));
-const unknown = [...tests.keys()].filter(
-  (id) => prefixes.has(id.split('-')[0]) && !known.has(id),
-);
+// Every context's rules count here, so a single-context run refuses the same names.
+const known = new Set(contexts.flatMap((c) => c.rules.map((r) => r.id)));
+const unknown = [...tests.keys()].filter((id) => !known.has(id));
 if (unknown.length) {
-  console.log(`\nTests name rule IDs that are not in the doc: ${unknown.join(', ')}`);
+  console.log(`Tests name rule IDs that are in no context doc: ${unknown.join(', ')}`);
   process.exit(1);
 }

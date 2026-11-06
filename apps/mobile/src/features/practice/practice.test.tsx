@@ -152,7 +152,7 @@ describe('Today', () => {
     expect(await screen.findByText('No quizzes match your settings.')).toBeTruthy();
   });
 
-  it('G-1: with no track yet, Today offers to add one', async () => {
+  it('DP-59: with no track yet, Today offers to add one', async () => {
     fakeApi([{ method: 'GET', path: /^\/practice\/today$/, reply: { body: today({ tracks: [], overallStreak: 0 }) } }]);
     await wrap(<TodayView />);
     await press(await screen.findByTestId('add-first-track').then(() => 'add-first-track'));
@@ -359,6 +359,19 @@ describe('Review fixes (6e.1)', () => {
     expect(await screen.findByText('Best 21')).toBeTruthy();
   });
 
+  it('DP-69: from 1 on Today shows "Best 1"', async () => {
+    fakeApi([{ method: 'GET', path: /^\/practice\/today$/, reply: { body: today({ overallBestStreak: 1 }) } }]);
+    await wrap(<TodayView />);
+    expect(await screen.findByText('Best 1')).toBeTruthy();
+  });
+
+  it('DP-69: Today hides the best streak while it is 0', async () => {
+    fakeApi([{ method: 'GET', path: /^\/practice\/today$/, reply: { body: today({ overallBestStreak: 0 }) } }]);
+    await wrap(<TodayView />);
+    await screen.findByTestId('overall-streak');
+    expect(screen.queryByTestId('overall-best')).toBeNull();
+  });
+
   it('DP-63: "Finish yesterday\'s set · 3 / 10" under its track; Continue opens that set', async () => {
     const base = today();
     const tracks = [{ ...base.tracks[0], yesterdaySession: summary() }, base.tracks[1]];
@@ -429,6 +442,27 @@ describe('Review fixes (6e.1)', () => {
     ]);
     await wrap(<HistoryList trackId="t1" />);
     expect(await screen.findByText('Best: 12 days')).toBeTruthy();
+  });
+
+  it('DP-69: the History header reads "Best: 1 day" at 1', async () => {
+    fakeApi([
+      { method: 'GET', path: /tracks\/t1\/history$/, reply: { body: [] } },
+      { method: 'GET', path: /tracks\/t1\/best-streak$/, reply: { body: { bestStreak: 1 } } },
+    ]);
+    await wrap(<HistoryList trackId="t1" />);
+    expect(await screen.findByText('Best: 1 day')).toBeTruthy();
+  });
+
+  it('DP-69: the History header hides the best streak while it is 0', async () => {
+    const { calls } = fakeApi([
+      { method: 'GET', path: /tracks\/t1\/history$/, reply: { body: [] } },
+      { method: 'GET', path: /tracks\/t1\/best-streak$/, reply: { body: { bestStreak: 0 } } },
+    ]);
+    await wrap(<HistoryList trackId="t1" />);
+    await screen.findByText('No days yet.');
+    await waitFor(() => expect(calls.some((c) => c.path.endsWith('best-streak'))).toBe(true));
+    await act(async () => {});
+    expect(screen.queryByTestId('history-best')).toBeNull();
   });
 });
 

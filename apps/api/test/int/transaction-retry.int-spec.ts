@@ -28,7 +28,7 @@ function signal() {
 }
 
 describe('Transaction retry (B-11)', () => {
-  it('B-11: a Save and a merge that deadlock both succeed, the aborted one after a retry', async () => {
+  it('a Save and a merge that deadlock both succeed, the aborted one after a retry (B-11)', async () => {
     const pitbull = newTag(user, 'pitbull');
     await new PrismaTagRepository(prisma).add(pitbull);
     const rex = newCard(user, 'Rex');
@@ -70,7 +70,7 @@ describe('Transaction retry (B-11)', () => {
     expect(await prisma.db.cardTag.count()).toBe(1);
   });
 
-  it('B-11: still conflicting after 3 retries → TransactionConflict', async () => {
+  it('still conflicting after 3 retries → TransactionConflict (B-11)', async () => {
     let attempts = 0;
     const deadlock = Object.assign(new Error('deadlock detected'), {
       code: '40P01',
@@ -84,7 +84,7 @@ describe('Transaction retry (B-11)', () => {
     expect(attempts).toBe(4);
   });
 
-  it('B-11: other errors are not retried', async () => {
+  it('other errors are not retried (B-11)', async () => {
     let attempts = 0;
     await expect(
       prisma.runInTransaction(() => {

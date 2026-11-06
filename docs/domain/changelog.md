@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-06 — Slice 6f.1 Review touch-ups
+- DP-69: the best streak is hidden while 0, on Today and in the History header; from 1 it shows "Best 1" and "Best: 1 day".
+- `rules:coverage` checks every context in docs/domain/contexts/ by default, with one summary per context; naming a context lists its rules one by one. A test naming a rule ID that is in no context doc fails the run.
+
 ## 2026-11-06 — Review of 6e.1 and 6f
 - Confirmed: R-17 (DP-65 example fixed: 🔥6 / 🔥7), R-18 (best streak hidden while 0, DP-69), R-19 (`QuestionsDeleted`), R-20 (Save as card works on a closed set, DP-68).
 - To build (6f.1): hide the best streak while 0; `rules:coverage` checks every context by default.

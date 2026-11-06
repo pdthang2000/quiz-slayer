@@ -202,7 +202,7 @@ describe('PrismaCardRepository', () => {
     expect((await cards.findActive(user, dog.id))?.tagIds).toEqual([]);
   });
 
-  it('C-21: saving a card with a deleted tag throws TagNoLongerExists', async () => {
+  it('CARD-04, TAG-06: saving a card with a deleted tag throws TagNoLongerExists', async () => {
     const animals = newTag(user, 'Animals');
     await tags.add(animals);
     const dog = newCard(user, 'Dog');
