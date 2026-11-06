@@ -139,10 +139,10 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | R-14 | Removing the track's tag in that editor | answered: allowed, same rules as any new card → DP-64 |
 | R-15 | Texts for 6e.1 and 6f | answered: as written in daily-practice.md (after DP-68) |
 | R-16 | Best streak (R-6): what it counts and where it shows | answered: longest run ever, per track and overall; History header + small line under the overall streak on Today → DP-69 |
-| R-17 | (Found building 6e.1) DP-65's example says "Sun and before ✓ (5 days)" and then 🔥5 after finishing Monday, but 5 days + Monday is 6. Is the example off by one, or does Monday not add a day? | provisional, built: the rule as written, consecutive finished days, so 5 days + Monday = 🔥6 and Tuesday = 🔥7; the tests use 4 days before Monday |
-| R-18 | (Found building 6e.1) Best streak of 0 or 1: DP-69 only shows "Best: 12 days" and "Best 21". | provisional, built: always shown, "Best 0", "Best: 0 days", "Best: 1 day" |
-| R-19 | (Found building 6f) DP-51 needs Question Bank to tell Daily Practice a question was deleted; the only way today is a re-import that drops it. New event name? | provisional, built: `QuestionsDeleted` (draft in the glossary), raised by the re-import, handled through the outbox |
-| R-20 | (Found building 6f) Does Save as card still work on a closed set (DP-52)? DP-52 locks answers and DP-68 keeps notes editable; neither mentions cards. | provisional, built: it still works, only answers are locked |
+| R-17 | (Found building 6e.1) DP-65's example says "Sun and before ✓ (5 days)" and then 🔥5 after finishing Monday, but 5 days + Monday is 6. Is the example off by one, or does Monday not add a day? | answered: the example was off by one; fixed to 🔥6 / 🔥7 (DP-65). The rule as built is right |
+| R-18 | (Found building 6e.1) Best streak of 0 or 1: DP-69 only shows "Best: 12 days" and "Best 21". | answered: hidden while 0; shown from 1 ("Best: 1 day", "Best 1") → DP-69 |
+| R-19 | (Found building 6f) DP-51 needs Question Bank to tell Daily Practice a question was deleted; the only way today is a re-import that drops it. New event name? | answered: `QuestionsDeleted` confirmed (glossary, context map) |
+| R-20 | (Found building 6f) Does Save as card still work on a closed set (DP-52)? DP-52 locks answers and DP-68 keeps notes editable; neither mentions cards. | answered: yes, only answers are locked → DP-68 |
 | Q-06a | "Save as card" on an audio question (cards are text only, CARD-03): hide the button, or save the question text only? | answered: hidden for audio kinds → DP-16 |
 | Q-07a | Daily size per track: fixed 10, or set per track (default 10)? | answered: per track, default 10, allowed 1–50 → DP-12 |
 | Q-07b | Add/remove tracks anytime from Settings? | answered: yes; removing keeps history, re-adding continues it → DP-15 |

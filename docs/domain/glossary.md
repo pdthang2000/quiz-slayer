@@ -80,7 +80,7 @@ Names confirmed 2026-10-22. How each error is handled: card-library.md → Error
 | `DailySessionStarted` | Today's set was chosen (DP-31). | confirmed |
 | `QuizAnswered` | A quiz (single or whole group) was answered; carries right/wrong (DP-29). | confirmed |
 | `DailySessionFinished` | Every quiz of the set is answered (DP-23). | confirmed |
-| `QuestionsDeleted` | Questions left the Question Bank, e.g. a re-import dropped them; their notes go too (DP-51). | draft |
+| `QuestionsDeleted` | Questions left the Question Bank, e.g. a re-import dropped them; their notes go too (DP-51). | confirmed |
 
 | Error | Rule | Status |
 |---|---|---|

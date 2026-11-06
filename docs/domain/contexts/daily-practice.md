@@ -139,9 +139,9 @@ Phone A: size 10 → 20 ✓ · Phone B (shows 10) turns off "reading group" → 
 - **DP-65** `confirmed` — The streak shows the truth: while yesterday's set is not finished, the streak is 0. Finishing yesterday's set in time (DP-52) counts for yesterday, so the streak comes back. (R-6)
 ```
 Tue 08:00  Sun and before ✓ (5 days), Mon 3/10 → 🔥0
-Tue 20:00  finish Monday's set → 🔥5 (Mon counts)    · then Tuesday's set → 🔥6
+Tue 20:00  finish Monday's set → 🔥6 (Mon counts)    · then Tuesday's set → 🔥7
 ```
-- **DP-69** `confirmed` — **Best streak**: the longest run of consecutive finished days ever, the current run included; one per track and one overall; computed from finished days like the streak (nothing stored); a removed and re-added track keeps it (DP-15). Shown in each track's History header ("Best: 12 days") and as a small line under the overall streak on Today ("Best 21"). (R-16)
+- **DP-69** `confirmed` — **Best streak**: the longest run of consecutive finished days ever, the current run included; one per track and one overall; computed from finished days like the streak (nothing stored); a removed and re-added track keeps it (DP-15). Shown in each track's History header ("Best: 12 days") and as a small line under the overall streak on Today ("Best 21"). Hidden while it is 0; from 1 on it shows ("Best: 1 day", "Best 1"). (R-16, R-18)
 ```
 #HSK4: ✓×12 · — · ✓×3 · today — → 🔥0 · Best: 12 days
 ```
@@ -171,7 +171,7 @@ Phone A saves "X" · Phone B, still showing the old note, saves "Y" → "This no
 - **DP-51** `confirmed` — A note stays when its question's content is fixed (e.g. a corrected answer key, QB-04). Deleting the question deletes its notes. (N-10)
 - **DP-66** `confirmed` — No note yet: a link "📝 Add note" opens a text box with Save and Cancel. A note exists: its text with "Edit". While typing, a counter "120 / 1,000" is always shown; over the limit it turns red and Save is off. (R-8, R-10)
 - **DP-67** `confirmed` — Leaving with a typed note not saved (Next, Close, Back) asks "Discard your note?" with Discard and Keep editing. (R-9)
-- **DP-68** `confirmed` — Notes can still be edited on a closed set (DP-52) from History; only its answers are locked. (R-11)
+- **DP-68** `confirmed` — Notes can still be edited on a closed set (DP-52) from History, and "Save as card" still works there; only its answers are locked. (R-11, R-20)
 
 App texts for 6e.1 and 6f (R-15): "📝 Add note" · "Edit" · "Save" · "Cancel" · "Discard your note?" · "Discard" · "Keep editing" · "This note changed." · "A note is at most 1,000 characters" · "Finish yesterday's set · 3 / 10" · "Continue" · "This day is over." · editor title "Save as card" · "Best: 12 days" (History) · "Best 21" (Today).
 

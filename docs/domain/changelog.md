@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-06 — Review of 6e.1 and 6f
+- Confirmed: R-17 (DP-65 example fixed: 🔥6 / 🔥7), R-18 (best streak hidden while 0, DP-69), R-19 (`QuestionsDeleted`), R-20 (Save as card works on a closed set, DP-68).
+- To build (6f.1): hide the best streak while 0; `rules:coverage` checks every context by default.
+
 ## 2026-11-06 — Slice 6f Notes + Save as card editor (continuous run, end)
 - Notes: `QuestionNote` per user and question, with a version (DP-41..DP-51). `PUT .../questions/:qid/note` with If-Match; `InvalidNoteText`, `CannotWriteNote`, `NoteChanged`. Additive migration: `question_note`.
 - A session shows each answered question's latest note; on feedback, result and History, closed sets included (DP-45, DP-48, DP-68).
