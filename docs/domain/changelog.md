@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-06 — Review up to 6e
+- Confirmed: DP-63 (Today shows "Finish yesterday's set" while DP-52 allows it), DP-64 (Save as card opens the card editor when the card doesn't fit; replaces "button hidden" in DP-40 and DP-49). (R-1..R-5)
+
 ## 2026-11-04 — Checkpoint 6 review
 - ADR-013 accepted; ADR-014 reviewed (two fixes for 6e.1).
 - Every provisional choice of the run accepted: STUDY-13, STUDY-14, QB-12, DP-53..DP-62; texts and error messages as built.

@@ -123,6 +123,11 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | N-9 | Two devices editing a note? | answered: CONFLICT-01 → DP-50 |
 | N-10 | Question fixed or deleted? | answered: fixed → note stays; deleted → note deleted → DP-51 |
 | N-11 | Name? | answered: "Note" (the user's), not "Explanation" (the author's) → glossary, DP-41 |
+| R-1 | (Review 2026-11-06) DP-52: where does the user find yesterday's unfinished set? | answered: on Today, "Finish yesterday's set · 3 / 10" under its track → DP-63 |
+| R-2 | A card too long for CARD-02 (e.g. a 3,400-character explanation): raise the limit, cut it, hide the button, or open the editor? | answered: open the card editor with a red counter; Save off until it fits → DP-64 |
+| R-3 | The front too (DP-40 hid the button over 500)? | answered: yes, same editor for both sides → DP-40, DP-64 |
+| R-4 | In that editor, can front, back and tag be changed? | answered: yes, all three → DP-64 |
+| R-5 | Cancel in that editor? | answered: nothing saved, the button still reads "Save as card" → DP-64 |
 | Q-06a | "Save as card" on an audio question (cards are text only, CARD-03): hide the button, or save the question text only? | answered: hidden for audio kinds → DP-16 |
 | Q-07a | Daily size per track: fixed 10, or set per track (default 10)? | answered: per track, default 10, allowed 1–50 → DP-12 |
 | Q-07b | Add/remove tracks anytime from Settings? | answered: yes; removing keeps history, re-adding continues it → DP-15 |

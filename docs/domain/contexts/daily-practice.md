@@ -16,7 +16,7 @@ Core subdomain. Rules are `confirmed` unless marked otherwise. Events, Commands 
 - `addTrack(user, tagName)`, `removeTrack(track)`, `changeTrackSettings(track, kinds, dailySize)`
 - `startDailySession(user, track)` (today in the phone's timezone; resumes today's, DP-22)
 - `answerQuiz(session, quiz, choices)` (a whole quiz at once: one choice per question)
-- `saveQuestionAsCard(session, question)` (DP-10, DP-40 → Card Library `createCard`)
+- `saveQuestionAsCard(session, question, edited front/back/tags?)` (DP-10, DP-40, DP-64 → Card Library `createCard`)
 - `writeQuestionNote(session, question, text, version)` (DP-41..DP-51; built in 6f)
 
 ## Rules
@@ -101,7 +101,7 @@ Mon 3 wrong → Tue 4 · right → Fri 7 · wrong → Sat 8 · right → Tue 11 
 ```
 Q7 tagged #HSK4 #grammar · 07:00 Track #HSK4 has Q7 · 07:10 Track #grammar skips Q7
 ```
-- **DP-40** `confirmed` — "Save as card" (DP-10) appears only on single questions that make sense on their own: kind single, text only (no image, no audio, not part of a group). The card: front = the question and its choices, back = the correct answer and the explanation, tag = the track's tag. If the front would be longer than 500 characters (CARD-02), the button is hidden. (G-3, G-4) The note is added to the back too (DP-49).
+- **DP-40** `confirmed` — "Save as card" (DP-10) appears only on single questions that make sense on their own: kind single, text only (no image, no audio, not part of a group). The card: front = the question and its choices, back = the correct answer and the explanation, tag = the track's tag. If the card would not fit (CARD-02: front over 500 or back over 3,000 characters), Save as card opens the card editor instead of saving at once (DP-64). (G-3, G-4, R-3) The note is added to the back too (DP-49).
 ```
 Front: 我___学生。  A 是  B 在  C 有  D 去
 Back:  是 — 是 = to be
@@ -148,7 +148,7 @@ Thu  same question (mistake comeback) → answered → the same note shows, edit
 - **DP-46** `confirmed` — A note is up to 1,000 characters (counted like CARD-02: code points after NFC), spaces trimmed at both ends. Saving an empty note removes it. (N-5)
 - **DP-47** `confirmed` — A note is saved with a **Save** button; no autosave. (N-6)
 - **DP-48** `confirmed` — History shows the latest note, not the note as it was that day. (N-7)
-- **DP-49** `confirmed` — "Save as card" (DP-40) copies the note onto the card's back, below the explanation, if a note exists when Save as card is tapped. It is a copy: editing the note later doesn't change the card. If the back would be longer than 3,000 characters (CARD-02), the button is hidden. (N-8)
+- **DP-49** `confirmed` — "Save as card" (DP-40) copies the note onto the card's back, below the explanation, if a note exists when Save as card is tapped. It is a copy: editing the note later doesn't change the card. If the back would be longer than 3,000 characters (CARD-02), the card editor opens instead (DP-64). (N-8, R-2)
 ```
 Back:  是 — 是 = to be
        📝 是 joins two nouns, 在 is for places
@@ -164,6 +164,16 @@ Phone A saves "X" · Phone B, still showing the old note, saves "Y" → "This no
 ```
 Mon 21:00 Start, answer 3 · Tue 20:00 answer the other 7 → Monday finished ✓, counts for Monday
 Mon 21:00 Start, answer 3 · Wed 08:00 open Monday in History → view only, Monday stays unfinished
+```
+- **DP-63** `confirmed` — While yesterday's set can still be finished (DP-52), Today shows it under its track: "Finish yesterday's set · 3 / 10" with Continue. At most one such row per track; the day before yesterday never shows (it is closed); a day never started has no set, so nothing shows. (R-1)
+```
+Today (Tue)
+  #HSK4  🔥0   Not started   [Start]
+  ↳ Finish yesterday's set · 3 / 10   [Continue]
+```
+- **DP-64** `confirmed` — "Save as card" when the card fits: one tap saves it (DP-10). When it doesn't fit (front over 500 or back over 3,000, CARD-02): the card editor opens, filled in with the front, the back and the track's tag; all three can be changed; a counter turns red over the limit and Save stays off until the card fits. Save → the card is created and the button shows "Saved ✓" (DP-32). Cancel → nothing is saved, the button still reads "Save as card". (R-2, R-3, R-4, R-5)
+```
+Back   是 — (long explanation) …   🔴 3,400 / 3,000   [Save] off
 ```
 
 ## Aggregates (ADR-013)
