@@ -14,6 +14,7 @@ import { DailySessionNotFound } from './errors';
 /**
  * DP-03, DP-20, DP-21, DP-23, DP-29: answers one quiz of a session (a whole group at once,
  * G-7). The session and its events (QuizAnswered → QuizProgress) commit together (B-10).
+ * DP-33, DP-52: `timeZone` (X-Time-Zone) decides the day of the answer.
  */
 @Injectable()
 export class AnswerQuiz {
@@ -23,7 +24,7 @@ export class AnswerQuiz {
     @Inject(DAILY_SESSION_REPOSITORY)
     private readonly sessions: DailySessionRepository,
     @Inject(OUTBOX) private readonly outbox: Outbox,
-    @Inject(CLOCK) private readonly clock: Clock = { now: () => new Date() },
+    @Inject(CLOCK) private readonly clock: Clock,
   ) {}
 
   async execute(input: {
@@ -31,6 +32,7 @@ export class AnswerQuiz {
     sessionId: DailySessionId;
     quizId: QuizId;
     choices: number[];
+    timeZone?: string;
   }): Promise<QuizFeedback> {
     const feedback = await this.transactions.run(async () => {
       const session = await this.sessions.findById(
@@ -42,6 +44,7 @@ export class AnswerQuiz {
         input.quizId,
         input.choices,
         this.clock.now(),
+        input.timeZone,
       );
       await this.sessions.save(session);
       await this.outbox.add(session.pullEvents());

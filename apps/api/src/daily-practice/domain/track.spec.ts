@@ -1,4 +1,4 @@
-import { InvalidDailySize, InvalidTrackKinds } from './errors';
+import { InvalidDailySize, InvalidTrackKinds, TrackChanged } from './errors';
 import { TrackId, UserId } from './ids';
 import { Track } from './track';
 
@@ -19,7 +19,7 @@ describe('Track', () => {
     ]);
   });
 
-  it('DP-12: daily size 10 and every kind by default; size allowed 1–50', () => {
+  it('DP-12, DP-55: daily size 10 and every kind by default; size allowed 1–50', () => {
     const track = add();
     expect(track.dailySize).toBe(10);
     expect(track.kinds).toEqual([
@@ -35,7 +35,7 @@ describe('Track', () => {
     expect(() => add({ dailySize: 2.5 })).toThrow(InvalidDailySize);
   });
 
-  it('DP-12: kinds are chosen per track; unknown kinds and no kind at all are refused', () => {
+  it('DP-12, DP-55: kinds are chosen per track; unknown kinds and no kind at all are refused', () => {
     expect(add({ kinds: ['readingGroup', 'single'] }).kinds).toEqual([
       'single',
       'readingGroup',
@@ -79,5 +79,17 @@ describe('Track', () => {
     track.remove();
     track.remove();
     expect(track.pullEvents().map((e) => e.type)).toEqual(['TrackRemoved']);
+  });
+});
+
+describe('DP-53: CONFLICT-01 for tracks', () => {
+  it('DP-53: an outdated version → TrackChanged; the shown one passes', () => {
+    const track = Track.add({
+      id: TrackId('t1'),
+      userId: UserId('u1'),
+      tagName: 'HSK4',
+    });
+    expect(() => track.assertVersion(1)).toThrow(TrackChanged);
+    expect(() => track.assertVersion(0)).not.toThrow();
   });
 });

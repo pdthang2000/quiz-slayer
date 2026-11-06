@@ -151,6 +151,22 @@ describe('Quiz Set', () => {
     );
   });
 
+  it('QB-12: listening, audio and the kind names are refused, ignoring case', () => {
+    for (const name of [
+      'LISTENING',
+      'audio',
+      'Single',
+      'single audio',
+      'Reading Group',
+      'audio group',
+    ]) {
+      expect(() => QuestionTagName.create(name)).toThrow(
+        InvalidQuestionTagName,
+      );
+    }
+    expect(QuestionTagName.create('reading').value).toBe('reading');
+  });
+
   it('QB-11: exam, level, part and topic are plain tags, not fields', () => {
     const quiz = checkQuiz(single('t', { tags: ['HSK4', 'part3', 'grammar'] }));
     expect(quiz.tags).toEqual(['HSK4', 'part3', 'grammar']);

@@ -6,6 +6,7 @@ export const practiceKeys = {
   today: ['practice', 'today'] as const,
   session: (id: string) => ['practice', 'session', id] as const,
   history: (trackId: string) => ['practice', 'history', trackId] as const,
+  bestStreak: (trackId: string) => ['practice', 'best-streak', trackId] as const,
   tracks: ['practice', 'tracks'] as const,
   options: ['practice', 'options'] as const,
 };
@@ -17,6 +18,9 @@ export const useSession = (id: string) =>
 
 export const useHistory = (trackId: string) =>
   useQuery({ queryKey: practiceKeys.history(trackId), queryFn: () => practiceApi.history(trackId) });
+
+export const useBestStreak = (trackId: string) =>
+  useQuery({ queryKey: practiceKeys.bestStreak(trackId), queryFn: () => practiceApi.bestStreak(trackId) });
 
 export const useTracks = () => useQuery({ queryKey: practiceKeys.tracks, queryFn: practiceApi.tracks });
 

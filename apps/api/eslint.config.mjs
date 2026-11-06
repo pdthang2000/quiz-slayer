@@ -76,6 +76,11 @@ export default tseslint.config(
               group: ['**/prisma/prisma.service'],
               message: 'Only repositories (infrastructure/) use PrismaService.',
             },
+            {
+              group: ['../../*/domain', '../../*/domain/**'],
+              message:
+                "Contexts talk through public application services or events, never through each other's domain.",
+            },
           ],
         },
       ],
@@ -100,6 +105,11 @@ export default tseslint.config(
               ],
               message:
                 'infrastructure/ may import domain/ and application/*-queries only.',
+            },
+            {
+              group: ['../../*/domain', '../../*/domain/**'],
+              message:
+                "Contexts talk through public application services or events, never through each other's domain.",
             },
           ],
         },

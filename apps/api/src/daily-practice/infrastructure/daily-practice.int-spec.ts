@@ -1,6 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { connectTestDb, resetPracticeDb } from '../../../test/int/db';
-import { DailySessionExists, PracticeChanged } from '../domain/errors';
+import {
+  DailySessionExists,
+  PracticeChanged,
+  TrackChanged,
+} from '../domain/errors';
 import { DailySessionId, QuizId, TrackId, UserId } from '../domain/ids';
 import { LocalDate } from '../domain/local-date';
 import { QuizProgress } from '../domain/quiz-progress';
@@ -64,7 +68,7 @@ describe('Daily Practice persistence', () => {
     a.changeSettings({ dailySize: 5 });
     await tracks.save(a);
     b.changeSettings({ dailySize: 6 });
-    await expect(tracks.save(b)).rejects.toThrow(PracticeChanged);
+    await expect(tracks.save(b)).rejects.toThrow(TrackChanged);
   });
 
   it('DP-01: one daily session per user, track and day', async () => {

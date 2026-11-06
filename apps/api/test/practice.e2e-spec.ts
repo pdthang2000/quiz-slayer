@@ -65,7 +65,11 @@ describe('Daily Practice (e2e)', () => {
       .expect(201);
     const id = (res.body as { id: string }).id;
     if (settings)
-      await http().patch(`/practice/tracks/${id}`).send(settings).expect(200);
+      await http()
+        .patch(`/practice/tracks/${id}`)
+        .set('If-Match', '"0"')
+        .send(settings)
+        .expect(200);
     return id;
   }
   const today = async () =>
@@ -87,6 +91,15 @@ describe('Daily Practice (e2e)', () => {
     const quiz = s.quizzes.find((q) => q.id === quizId)!;
     return quiz.answer!.questions.map((q) => q.correctChoice);
   };
+  /** Choices that are wrong for every question of a quiz (read from the DB, DP-20). */
+  async function wrongOf(quizId: string) {
+    const questions = await app.get(PrismaService).db.question.findMany({
+      where: { quizId },
+      orderBy: { position: 'asc' },
+    });
+    return questions.map((q) => (q.correctChoice + 1) % q.choices.length);
+  }
+
   /** Answers every quiz: `wrong` quiz ids get a wrong answer, the rest right. Learns keys by answering. */
   async function finish(session: DailySessionView, wrong: string[] = []) {
     let s = session;
@@ -126,7 +139,11 @@ describe('Daily Practice (e2e)', () => {
     const [q] = await prisma.db.question.findMany({
       where: { quizId: s.quizzes[0].id },
     });
-    await answer(s, s.quizzes[0], [q.correctChoice]).expect(200);
+    await answer(
+      s,
+      s.quizzes[0],
+      s.quizzes[0].questions.map(() => q.correctChoice),
+    ).expect(200);
     const again = await start(track);
     expect(again.id).toBe(s.id);
     expect(again.progress).toEqual({ answered: 1, total: 10 });
@@ -179,7 +196,7 @@ describe('Daily Practice (e2e)', () => {
     expect(s.short).toBe(true);
   });
 
-  it('DP-14: nothing matches at all → no set (G-9)', async () => {
+  it('DP-56: nothing matches at all → no set', async () => {
     const track = await addTrack('HSK4', { kinds: ['audioGroup'] });
     const res = await http()
       .post(`/practice/tracks/${track}/start`)
@@ -194,6 +211,7 @@ describe('Daily Practice (e2e)', () => {
       (
         await http()
           .patch(`/practice/tracks/${track}`)
+          .set('If-Match', '"0"')
           .send({ dailySize: 51 })
           .expect(400)
       ).body.error,
@@ -202,6 +220,7 @@ describe('Daily Practice (e2e)', () => {
       (
         await http()
           .patch(`/practice/tracks/${track}`)
+          .set('If-Match', '"0"')
           .send({ kinds: [] })
           .expect(400)
       ).body.error,
@@ -213,6 +232,7 @@ describe('Daily Practice (e2e)', () => {
     const s = await start(track);
     await http()
       .patch(`/practice/tracks/${track}`)
+      .set('If-Match', '"1"')
       .send({ dailySize: 6 })
       .expect(200);
     expect((await start(track)).quizzes).toHaveLength(4);
@@ -296,7 +316,10 @@ describe('Daily Practice (e2e)', () => {
   it('DP-15: removing a track keeps its history; adding the tag again continues it', async () => {
     const track = await addTrack('HSK4', { kinds: ['single'], dailySize: 1 });
     await finish(await start(track));
-    await http().delete(`/practice/tracks/${track}`).expect(204);
+    await http()
+      .delete(`/practice/tracks/${track}`)
+      .set('If-Match', '"1"')
+      .expect(204);
     expect((await today()).tracks).toEqual([]);
     expect(
       (await http().get(`/practice/tracks/${track}/history`).expect(200)).body,
@@ -406,7 +429,227 @@ describe('Daily Practice (e2e)', () => {
     ).toBe(true);
   });
 
-  it('G-2: tracks are added from question tags with quiz counts; unknown tags are refused', async () => {
+  describe('Review fixes (6e.1)', () => {
+    /** Answers the first unanswered quizzes, `count` of them. */
+    async function answerSome(session: DailySessionView, count: number) {
+      let s = session;
+      for (const quiz of session.quizzes.slice(0, count)) {
+        s = (
+          await answer(
+            s,
+            quiz,
+            quiz.questions.map(() => 0),
+          ).expect(200)
+        ).body as DailySessionView;
+      }
+      return s;
+    }
+
+    it('DP-52: a set is answered until the end of the next day and counts for its day', async () => {
+      const track = await addTrack('HSK4', { dailySize: 2 });
+      const session = await start(track);
+      await answerSome(session, 1);
+      now = hanoi('2026-11-08T23:59:00');
+      const done = await finish(
+        (await http().get(`/practice/sessions/${session.id}`).expect(200))
+          .body as DailySessionView,
+      );
+      expect(done.finished).toBe(true);
+      expect(done.day).toBe('2026-11-07');
+      expect((await today()).tracks[0].streak).toBe(1);
+    });
+
+    it('DP-52: after the end of the next day → 409 DailySessionClosed; view only, also from History', async () => {
+      const track = await addTrack('HSK4', { dailySize: 2 });
+      const session = await start(track);
+      await answerSome(session, 1);
+      now = hanoi('2026-11-09T00:00:00');
+
+      const res = await answer(session, session.quizzes[1], [0])
+        .set('X-Time-Zone', TZ)
+        .expect(409);
+      expect(res.body.error).toBe('DailySessionClosed');
+      expect(res.body.message).toBe('This day is over');
+
+      const view = (
+        await http()
+          .get(`/practice/sessions/${session.id}`)
+          .set('X-Time-Zone', TZ)
+          .expect(200)
+      ).body as DailySessionView;
+      expect(view).toMatchObject({
+        closed: true,
+        finished: false,
+        progress: { answered: 1 },
+      });
+      const history = await http()
+        .get(`/practice/tracks/${track}/history`)
+        .set('X-Time-Zone', TZ)
+        .expect(200);
+      expect(history.body[0]).toMatchObject({
+        day: '2026-11-07',
+        closed: true,
+      });
+    });
+
+    it("DP-63: Today shows yesterday's unfinished set under its track while it can be finished", async () => {
+      const track = await addTrack('HSK4', { dailySize: 2 });
+      const session = await start(track);
+      await answerSome(session, 1);
+
+      expect((await today()).tracks[0].yesterdaySession).toBeNull();
+      now = hanoi('2026-11-08T09:00:00');
+      const row = (await today()).tracks[0].yesterdaySession;
+      expect(row).toMatchObject({
+        id: session.id,
+        progress: { answered: 1, total: 2 },
+        closed: false,
+      });
+
+      now = hanoi('2026-11-09T09:00:00');
+      expect((await today()).tracks[0].yesterdaySession).toBeNull();
+    });
+
+    it('DP-63: a finished set and a day never started show nothing', async () => {
+      const track = await addTrack('HSK4', { dailySize: 1 });
+      await finish(await start(track));
+      now = hanoi('2026-11-08T09:00:00');
+      expect((await today()).tracks[0].yesterdaySession).toBeNull();
+      now = hanoi('2026-11-10T09:00:00'); // yesterday was never started
+      expect((await today()).tracks[0].yesterdaySession).toBeNull();
+    });
+
+    it('DP-63: a removed track is not on Today, so neither is its yesterday', async () => {
+      const track = await addTrack('HSK4', { dailySize: 2 });
+      await answerSome(await start(track), 1);
+      await http()
+        .delete(`/practice/tracks/${track}`)
+        .set('If-Match', '"1"')
+        .expect(204);
+      now = hanoi('2026-11-08T09:00:00');
+      expect((await today()).tracks).toEqual([]);
+    });
+
+    it('DP-65: the streak is 0 while yesterday is unfinished; finishing it in time brings it back', async () => {
+      const track = await addTrack('HSK4', { dailySize: 2 });
+      await finish(await start(track)); // Sat ✓
+      now = hanoi('2026-11-08T09:00:00');
+      const sunday = await start(track);
+      await answerSome(sunday, 1);
+      expect((await today()).tracks[0].streak).toBe(1); // Sat ✓, Sunday in progress
+
+      now = hanoi('2026-11-09T08:00:00'); // Mon: Sunday unfinished
+      let view = await today();
+      expect(view.tracks[0].streak).toBe(0);
+      expect(view.overallStreak).toBe(0);
+
+      now = hanoi('2026-11-09T20:00:00');
+      await finish(
+        (await http().get(`/practice/sessions/${sunday.id}`).expect(200))
+          .body as DailySessionView,
+      );
+      view = await today();
+      expect(view.tracks[0].streak).toBe(2); // Sat + Sun
+      expect(view.overallStreak).toBe(2);
+    });
+
+    it('DP-69: best streak per track and overall, kept when the current streak is 0', async () => {
+      const track = await addTrack('HSK4', { dailySize: 1 });
+      await finish(await start(track));
+      now = hanoi('2026-11-08T09:00:00');
+      await finish(await start(track));
+      now = hanoi('2026-11-11T09:00:00');
+
+      const view = await today();
+      expect(view.overallStreak).toBe(0);
+      expect(view.overallBestStreak).toBe(2);
+      const best = await http()
+        .get(`/practice/tracks/${track}/best-streak`)
+        .expect(200);
+      expect(best.body).toEqual({ bestStreak: 2 });
+    });
+
+    it('DP-69: a removed and re-added track keeps its best streak', async () => {
+      const track = await addTrack('HSK4', { dailySize: 1 });
+      await finish(await start(track));
+      await http()
+        .delete(`/practice/tracks/${track}`)
+        .set('If-Match', '"1"')
+        .expect(204);
+      await http()
+        .post('/practice/tracks')
+        .send({ tagName: 'HSK4' })
+        .expect(201);
+      const best = await http()
+        .get(`/practice/tracks/${track}/best-streak`)
+        .expect(200);
+      expect(best.body.bestStreak).toBe(1);
+    });
+
+    it("DP-33: the schedule counts from the answer's day (X-Time-Zone at answer time)", async () => {
+      const track = await addTrack('HSK4', { dailySize: 2 });
+      const session = await start(track);
+      const [first] = session.quizzes;
+      const wrongChoices = await wrongOf(first.id);
+      now = hanoi('2026-11-08T09:00:00'); // answered the day after it started (DP-52)
+      await answer(session, first, wrongChoices)
+        .set('X-Time-Zone', TZ)
+        .expect(200);
+      await deliver();
+      const row = await app
+        .get(PrismaService)
+        .db.quizProgress.findFirstOrThrow({ where: { quizId: first.id } });
+      expect(row.lastAnsweredOn.toISOString().slice(0, 10)).toBe('2026-11-08');
+      expect(row.mistakeDueOn!.toISOString().slice(0, 10)).toBe('2026-11-09');
+    });
+
+    it('DP-53: settings and remove need If-Match (missing 428, malformed 400)', async () => {
+      const track = await addTrack();
+      await http()
+        .patch(`/practice/tracks/${track}`)
+        .send({ dailySize: 5 })
+        .expect(428);
+      await http()
+        .patch(`/practice/tracks/${track}`)
+        .set('If-Match', 'abc')
+        .send({ dailySize: 5 })
+        .expect(400);
+      await http().delete(`/practice/tracks/${track}`).expect(428);
+    });
+
+    it('DP-53: an outdated version → 409 TrackChanged and nothing is written', async () => {
+      const added = await http()
+        .post('/practice/tracks')
+        .send({ tagName: 'HSK4' })
+        .expect(201);
+      const track = added.body as { id: string; version: number };
+      expect(track.version).toBe(0);
+
+      const first = await http()
+        .patch(`/practice/tracks/${track.id}`)
+        .set('If-Match', '"0"')
+        .send({ dailySize: 20 })
+        .expect(200);
+      expect(first.body.version).toBe(1);
+
+      const stale = await http()
+        .patch(`/practice/tracks/${track.id}`)
+        .set('If-Match', '"0"')
+        .send({ kinds: ['single'] })
+        .expect(409);
+      expect(stale.body.error).toBe('TrackChanged');
+      await http()
+        .delete(`/practice/tracks/${track.id}`)
+        .set('If-Match', '"0"')
+        .expect(409);
+
+      const [shown] = (await today()).tracks;
+      expect(shown).toMatchObject({ dailySize: 20, version: 1 });
+      expect(shown.kinds).toHaveLength(4);
+    });
+  });
+
+  it('DP-59: tracks are added from question tags with quiz counts; unknown tags are refused', async () => {
     await addTrack('HSK4');
     const options = (await http().get('/practice/track-options').expect(200))
       .body;
@@ -421,7 +664,7 @@ describe('Daily Practice (e2e)', () => {
     expect(res.body.error).toBe('QuestionTagNotFound');
   });
 
-  it('G-10: adding a tag that is already a track returns the same track', async () => {
+  it('DP-57: adding a tag that is already a track returns the same track', async () => {
     expect(await addTrack('HSK4')).toBe(await addTrack('HSK4'));
   });
 });

@@ -200,7 +200,7 @@ Back   是 — (long explanation) …   🔴 3,400 / 3,000   [Save] off
 - `buildDailySet` (domain service) and `streakLength` (computed, nothing stored) are pure functions.
 
 ## API (built in 6d)
-Every call that depends on the day sends the phone's timezone in `X-Time-Zone` (DP-05, ADR-013).
+Every call that depends on the day sends the phone's timezone in `X-Time-Zone` (DP-05, ADR-013). Reading a session or history and answering need it for DP-33 and DP-52; a request without it (an older app) uses the timezone the session was started in.
 ```
 GET    /practice/today                              tracks, today's progress, streaks (G-5)
 POST   /practice/tracks/:id/start                   Start (DP-31) or resume (DP-22)
@@ -208,7 +208,9 @@ GET    /practice/sessions/:id                       quizzes; the key only for an
 POST   /practice/sessions/:id/quizzes/:quizId/answer  { choices: [i, …] } one per question (G-7)
 POST   /practice/sessions/:id/questions/:qid/save-as-card  DP-10, DP-32, DP-40
 GET    /practice/tracks/:id/history                 DP-26, newest day first
+GET    /practice/tracks/:id/best-streak             DP-69, History header
 GET    /practice/tracks · POST /practice/tracks { tagName } · PATCH /practice/tracks/:id { kinds, dailySize } · DELETE /practice/tracks/:id
+       PATCH and DELETE send If-Match (DP-53): missing 428, malformed 400, outdated 409 TrackChanged
 GET    /practice/track-options                      question tags with quiz counts (G-2)
 ```
 

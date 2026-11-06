@@ -76,3 +76,32 @@ describe('QuizProgress', () => {
     expect(due(p)).toEqual({ stage: 3, dueOn: '2026-11-06' });
   });
 });
+
+describe('QuizProgress and late events', () => {
+  const event = (over: Partial<QuizAnswered>): QuizAnswered => ({
+    type: 'QuizAnswered',
+    sessionId: DailySessionId('s1'),
+    userId: UserId('u1'),
+    quizId: QuizId('q1'),
+    day: '2026-11-07',
+    answeredAt: '2026-11-07T02:00:00.000Z',
+    correct: false,
+    ...over,
+  });
+
+  it('ignores an event older than the last answer applied', () => {
+    const progress = QuizProgress.firstAnswer(
+      event({ answeredAt: '2026-11-08T02:00:00.000Z', correct: true }),
+    );
+    const applied = progress.apply(
+      event({ sessionId: DailySessionId('s0'), correct: false }),
+    );
+    expect(applied).toBe(false);
+    expect(progress.mistake).toBeNull();
+  });
+
+  it('DP-33: the schedule counts from the day of the answer', () => {
+    const progress = QuizProgress.firstAnswer(event({ day: '2026-11-08' }));
+    expect(progress.mistake?.dueOn.value).toBe('2026-11-09');
+  });
+});

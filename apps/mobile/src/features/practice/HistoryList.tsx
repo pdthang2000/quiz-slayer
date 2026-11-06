@@ -3,13 +3,17 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { errorMessageKey } from '../../api/errors';
 import { spacing, useTheme } from '../../theme';
-import { formatDay, useHistory } from './hooks';
+import { formatDay, useBestStreak, useHistory } from './hooks';
 
-/** DP-26: a track's days with their result, newest first; a tap shows that day's answers. */
+/**
+ * DP-26: a track's days with their result, newest first; a tap shows that day's answers.
+ * DP-69: the best streak in the header.
+ */
 export function HistoryList({ trackId }: { trackId: string }) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const history = useHistory(trackId);
+  const best = useBestStreak(trackId);
 
   if (history.isPending) return <ActivityIndicator style={styles.spacer} color={colors.textMuted} />;
   if (history.isError) {
@@ -21,7 +25,17 @@ export function HistoryList({ trackId }: { trackId: string }) {
       data={history.data}
       keyExtractor={(s) => s.id}
       refreshControl={
-        <RefreshControl refreshing={history.isRefetching} onRefresh={() => void history.refetch()} tintColor={colors.textMuted} />
+        <RefreshControl refreshing={history.isRefetching} onRefresh={() => {
+            void history.refetch();
+            void best.refetch();
+          }} tintColor={colors.textMuted} />
+      }
+      ListHeaderComponent={
+        best.data ? (
+          <Text style={[styles.best, { color: colors.text }]} testID="history-best">
+            {t('practice.bestDays', { count: best.data.bestStreak })}
+          </Text>
+        ) : undefined
       }
       ListEmptyComponent={<Text style={[styles.empty, { color: colors.textMuted }]}>{t('practice.noHistory')}</Text>}
       renderItem={({ item }) => (
@@ -43,6 +57,7 @@ export function HistoryList({ trackId }: { trackId: string }) {
 
 const styles = StyleSheet.create({
   spacer: { marginVertical: spacing.xl },
+  best: { fontSize: 16, fontWeight: '600', marginHorizontal: spacing.lg, marginTop: spacing.lg },
   empty: { textAlign: 'center', marginTop: spacing.xl * 2 },
   row: {
     flexDirection: 'row',

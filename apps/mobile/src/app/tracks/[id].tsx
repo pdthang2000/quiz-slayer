@@ -16,7 +16,7 @@ export default function TrackSettingsScreen() {
     <>
       <Stack.Screen options={{ title: track ? `#${track.tagName}` : '' }} />
       {track ? (
-        <TrackSettings key={`${track.id}-${track.dailySize}-${track.kinds.join()}`} track={track} onRemoved={() => router.back()} />
+        <TrackSettings key={`${track.id}-${track.version}`} track={track} onRemoved={() => router.back()} />
       ) : tracks.data ? (
         <Text style={{ color: colors.textMuted, textAlign: 'center', marginTop: 48 }}>{t('errors.TrackNotFound')}</Text>
       ) : null}

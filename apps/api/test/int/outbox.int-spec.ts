@@ -9,6 +9,7 @@ import {
   TrackId,
   UserId,
 } from '../../src/daily-practice/domain/ids';
+import { LocalDate } from '../../src/daily-practice/domain/local-date';
 import {
   readingGroup,
   single,
@@ -45,8 +46,10 @@ function crashingRelay() {
   return relay;
 }
 
+const CLOCK = { now: () => new Date('2026-11-07T02:00:00Z') };
+
 const answerQuiz = (relay: OutboxRelay) =>
-  new AnswerQuiz(new PrismaTransactionRunner(prisma), sessions, relay);
+  new AnswerQuiz(new PrismaTransactionRunner(prisma), sessions, relay, CLOCK);
 
 async function sessionWith(quizIds: { single?: string[]; group?: string }) {
   const track = Track.add({
@@ -70,6 +73,13 @@ async function sessionWith(quizIds: { single?: string[]; group?: string }) {
 
 const undelivered = () =>
   prisma.db.outboxEvent.findMany({ where: { deliveredAt: null } });
+
+/** The time a failing event waits has passed. */
+const retryDueNow = () =>
+  prisma.db.outboxEvent.updateMany({
+    where: { deliveredAt: null },
+    data: { nextAttemptAt: new Date(0) },
+  });
 
 beforeEach(() => resetPracticeDb(prisma));
 afterAll(() => prisma.onModuleDestroy());
@@ -163,7 +173,112 @@ describe('Outbox (B-10)', () => {
     expect(await broken.deliverPending()).toBe(0);
     const [row] = await undelivered();
     expect(row).toMatchObject({ attempts: 1, lastError: 'boom' });
+    expect(await startedRelay().deliverPending()).toBe(0); // waits for its next attempt
+    await retryDueNow();
     expect(await startedRelay().deliverPending()).toBe(1);
+  });
+
+  it('a failing event waits with backoff and does not block newer ones', async () => {
+    const q1 = randomUUID();
+    const q2 = randomUUID();
+    const session = await sessionWith({ single: [q1, q2, randomUUID()] });
+    const use = answerQuiz(crashingRelay());
+    const answer = (q: string) =>
+      use.execute({
+        userId: user,
+        sessionId: session.id,
+        quizId: QuizId(q),
+        choices: [1],
+      });
+    await answer(q1);
+    await answer(q2);
+
+    const relay = new OutboxRelay(prisma);
+    const apply = new ApplyQuizAnswered(progress);
+    relay.register('QuizAnswered', (e) => {
+      const event = e as QuizAnswered;
+      return event.quizId === q1
+        ? Promise.reject(new Error('boom'))
+        : apply.handle(event);
+    });
+
+    const before = Date.now();
+    expect(await relay.deliverPending()).toBe(1); // q2 passes the failing q1
+    expect(await progress.find(user, QuizId(q2))).not.toBeNull();
+    const [first] = await undelivered();
+    expect(first.nextAttemptAt.getTime()).toBeGreaterThan(before + 4_000);
+
+    // A second failure waits longer.
+    await retryDueNow();
+    await relay.deliverPending();
+    const [second] = await undelivered();
+    expect(second.attempts).toBe(2);
+    expect(second.nextAttemptAt.getTime()).toBeGreaterThan(Date.now() + 8_000);
+  });
+
+  it('a full batch of failing events does not stop the run before newer ones', async () => {
+    const payload = { type: 'Broken' };
+    await prisma.db.outboxEvent.createMany({
+      data: Array.from({ length: 50 }, (_, i) => ({
+        id: randomUUID(),
+        type: 'Broken',
+        payload,
+        occurredAt: new Date(Date.UTC(2026, 0, 1, 0, 0, i)),
+        nextAttemptAt: new Date(0),
+      })),
+    });
+    await prisma.db.outboxEvent.create({
+      data: {
+        id: randomUUID(),
+        type: 'Fine',
+        payload: { type: 'Fine' },
+        nextAttemptAt: new Date(0),
+      },
+    });
+    const relay = new OutboxRelay(prisma);
+    relay.register('Broken', () => Promise.reject(new Error('boom')));
+    expect(await relay.deliverPending()).toBe(1);
+  });
+
+  it('QuizProgress ignores an event older than the last answer it applied', async () => {
+    const q = randomUUID();
+    const older = await sessionWith({ single: [q] });
+    const newer = startSession([single(q)], {
+      id: DailySessionId(randomUUID()),
+      userId: user,
+      trackId: older.trackId,
+      day: LocalDate.parse('2026-11-08'),
+    });
+    await sessions.add(newer);
+
+    const answer = (sessionId: DailySessionId, at: string, choices: number[]) =>
+      new AnswerQuiz(
+        new PrismaTransactionRunner(prisma),
+        sessions,
+        crashingRelay(),
+        { now: () => new Date(at) },
+      ).execute({ userId: user, sessionId, quizId: QuizId(q), choices });
+    await answer(older.id, '2026-11-08T02:00:00Z', [1]); // wrong, older
+    await answer(newer.id, '2026-11-08T03:00:00Z', [0]); // right, newer
+
+    const relay = new OutboxRelay(prisma);
+    const apply = new ApplyQuizAnswered(progress);
+    let failOlder = true;
+    relay.register('QuizAnswered', (e) => {
+      const event = e as QuizAnswered;
+      if (failOlder && event.sessionId === older.id)
+        return Promise.reject(new Error('boom'));
+      return apply.handle(event);
+    });
+    await relay.deliverPending(); // the newer one passes the failing older one
+    failOlder = false;
+    await retryDueNow();
+    await relay.deliverPending();
+
+    const p = await progress.find(user, QuizId(q));
+    expect(p!.mistake).toBeNull(); // the late wrong answer changed nothing
+    expect(p!.lastAnsweredAt).toEqual(new Date('2026-11-08T03:00:00Z'));
+    expect(await undelivered()).toEqual([]);
   });
 
   it('DP-29: a group with one wrong question comes back as a whole', async () => {

@@ -3,6 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react-nativ
 import { router } from 'expo-router';
 import type { DailySession, Quiz, Today, Track } from '../../api/types';
 import { fakeApi, type FetchCall, Providers } from '../../test/harness';
+import { useTracks } from './hooks';
 import { HistoryList } from './HistoryList';
 import { SessionView } from './SessionView';
 import { TodayView } from './TodayView';
@@ -28,20 +29,33 @@ const press = (id: string) => fireEvent.press(screen.getByTestId(id));
 const today = (over: Partial<Today> = {}): Today => ({
   day: '2026-11-07',
   overallStreak: 4,
+  overallBestStreak: 21,
   tracks: [
-    { id: 't1', tagName: 'HSK4', kinds: ['single'], dailySize: 10, streak: 5, session: null },
+    {
+      id: 't1',
+      tagName: 'HSK4',
+      kinds: ['single'],
+      dailySize: 10,
+      version: 0,
+      streak: 5,
+      session: null,
+      yesterdaySession: null,
+    },
     {
       id: 't2',
       tagName: 'TOEIC',
       kinds: ['single'],
       dailySize: 10,
+      version: 0,
       streak: 2,
+      yesterdaySession: null,
       session: {
         id: 's2',
         trackId: 't2',
         day: '2026-11-07',
         short: false,
         finished: false,
+        closed: false,
         progress: { answered: 3, total: 10 },
         result: { correct: 3, total: 3 },
       },
@@ -81,6 +95,7 @@ const session = (quizzes: Quiz[], over: Partial<DailySession> = {}): DailySessio
   dailySize: 10,
   short: false,
   finished: quizzes.every((q) => q.answer),
+  closed: false,
   progress: { answered: quizzes.filter((q) => q.answer).length, total: quizzes.length },
   result: { correct: 0, total: quizzes.length },
   quizzes,
@@ -90,7 +105,7 @@ const session = (quizzes: Quiz[], over: Partial<DailySession> = {}): DailySessio
 beforeEach(() => jest.clearAllMocks());
 
 describe('Today', () => {
-  it('G-5, DP-19: the overall streak on top, each track with its own streak and progress', async () => {
+  it('DP-60, DP-19: the overall streak on top, each track with its own streak and progress', async () => {
     fakeApi([{ method: 'GET', path: /^\/practice\/today$/, reply: { body: today() } }]);
     await wrap(<TodayView />);
     expect(await screen.findByText('🔥 4 day streak')).toBeTruthy();
@@ -122,7 +137,7 @@ describe('Today', () => {
     expect(calls.filter((c) => c.method === 'POST')).toHaveLength(1);
   });
 
-  it('DP-14: nothing matching shows the message (G-9)', async () => {
+  it('DP-56: nothing matching shows the message', async () => {
     fakeApi([
       { method: 'GET', path: /^\/practice\/today$/, reply: { body: today() } },
       { method: 'POST', path: /start$/, reply: { status: 422, body: { error: 'NoQuizzesMatch' } } },
@@ -144,7 +159,7 @@ describe('Today', () => {
 describe('Daily session', () => {
   const showSession = () => wrap(<SessionView id="s1" onClose={jest.fn()} />);
 
-  it('DP-21, DP-20: Check needs a choice; then right/wrong, the correct answer and the explanation; Next goes on', async () => {
+  it('DP-61, DP-21, DP-20: Check needs a choice; then right/wrong, the correct answer and the explanation; Next goes on', async () => {
     const a = single('a');
     const b = single('b');
     const { calls } = fakeApi([
@@ -170,7 +185,7 @@ describe('Daily session', () => {
     expect(screen.getByTestId('session-progress').props.children).toBe('2 / 2');
   });
 
-  it('DP-17, DP-03: a reading group shows its passage and is answered as a whole', async () => {
+  it('DP-54, DP-17, DP-03: a reading group shows its passage and is answered as a whole', async () => {
     const g: Quiz = {
       id: 'g',
       kind: 'readingGroup',
@@ -321,10 +336,102 @@ describe('History', () => {
   });
 });
 
-describe('Tracks', () => {
-  const track: Track = { id: 't1', tagName: 'HSK4', kinds: ['single', 'readingGroup'], dailySize: 10 };
+describe('Review fixes (6e.1)', () => {
+  const summary = (over = {}) => ({
+    id: 's6',
+    trackId: 't1',
+    day: '2026-11-06',
+    short: false,
+    finished: false,
+    closed: false,
+    progress: { answered: 3, total: 10 },
+    result: { correct: 2, total: 3 },
+    ...over,
+  });
 
-  it('G-2: a track is added from question tags with quiz counts; ones already added are greyed', async () => {
+  it('DP-69: Today shows "Best 21" under the overall streak', async () => {
+    fakeApi([{ method: 'GET', path: /^\/practice\/today$/, reply: { body: today() } }]);
+    await wrap(<TodayView />);
+    expect(await screen.findByText('Best 21')).toBeTruthy();
+  });
+
+  it('DP-63: "Finish yesterday\'s set · 3 / 10" under its track; Continue opens that set', async () => {
+    const base = today();
+    const tracks = [{ ...base.tracks[0], yesterdaySession: summary() }, base.tracks[1]];
+    fakeApi([{ method: 'GET', path: /^\/practice\/today$/, reply: { body: today({ tracks }) } }]);
+    await wrap(<TodayView />);
+    expect(await screen.findByText("Finish yesterday's set · 3 / 10")).toBeTruthy();
+    expect(screen.queryByTestId('yesterday-TOEIC')).toBeNull();
+    await press('continue-yesterday-HSK4');
+    expect(router.push).toHaveBeenCalledWith({ pathname: '/practice/[id]', params: { id: 's6' } });
+  });
+
+  it('DP-52: a closed set opens view only: answered quizzes, no more answers', async () => {
+    const closed = session([answered(single('a'), 0), single('b')], {
+      finished: false,
+      closed: true,
+    });
+    fakeApi([
+      { method: 'GET', path: /^\/practice\/sessions\/s1$/, reply: { body: closed } },
+      { method: 'GET', path: /^\/practice\/today$/, reply: { body: today() } },
+    ]);
+    await wrap(<SessionView id="s1" onClose={jest.fn()} />);
+    expect(await screen.findByTestId('session-result')).toBeTruthy();
+    expect(screen.getByTestId('session-title').props.children).toBe('This day is over.');
+    expect(screen.getByText('question a')).toBeTruthy();
+    expect(screen.queryByText('question b')).toBeNull();
+    expect(screen.queryByTestId('session-check')).toBeNull();
+  });
+
+  it('DP-52: answering after the day closed shows the message and reloads to view only', async () => {
+    const open = session([single('a')]);
+    const closed = session([single('a')], { finished: false, closed: true });
+    let reads = 0;
+    fakeApi([
+      {
+        method: 'GET',
+        path: /^\/practice\/sessions\/s1$/,
+        reply: () => ({ body: reads++ === 0 ? open : closed }),
+      },
+      { method: 'GET', path: /^\/practice\/today$/, reply: { body: today() } },
+      { method: 'POST', path: /answer$/, reply: { status: 409, body: { error: 'DailySessionClosed' } } },
+    ]);
+    await wrap(<SessionView id="s1" onClose={jest.fn()} />);
+    await screen.findByTestId('choice-a-q-0');
+    await press('choice-a-q-0');
+    await press('session-check');
+    expect(await screen.findByTestId('session-result')).toBeTruthy();
+    expect(screen.getAllByText('This day is over.').length).toBeGreaterThan(0);
+  });
+
+  it("DP-05, DP-33: answering and reading a session send the phone's timezone", async () => {
+    const { calls } = fakeApi([
+      { method: 'GET', path: /^\/practice\/sessions\/s1$/, reply: { body: session([single('a')]) } },
+      { method: 'POST', path: /answer$/, reply: { body: session([answered(single('a'), 0)]) } },
+      { method: 'GET', path: /^\/practice\/today$/, reply: { body: today() } },
+    ]);
+    await wrap(<SessionView id="s1" onClose={jest.fn()} />);
+    await screen.findByTestId('choice-a-q-0');
+    await press('choice-a-q-0');
+    await press('session-check');
+    await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true));
+    expect(calls.every((c) => c.headers['X-Time-Zone'] === 'Asia/Ho_Chi_Minh')).toBe(true);
+  });
+
+  it('DP-69: the History header shows the best streak', async () => {
+    fakeApi([
+      { method: 'GET', path: /tracks\/t1\/history$/, reply: { body: [] } },
+      { method: 'GET', path: /tracks\/t1\/best-streak$/, reply: { body: { bestStreak: 12 } } },
+    ]);
+    await wrap(<HistoryList trackId="t1" />);
+    expect(await screen.findByText('Best: 12 days')).toBeTruthy();
+  });
+});
+
+describe('Tracks', () => {
+  const track: Track = { id: 't1', tagName: 'HSK4', kinds: ['single', 'readingGroup'], dailySize: 10, version: 4 };
+
+  it('DP-59: a track is added from question tags with quiz counts; ones already added are greyed', async () => {
     const onAdded = jest.fn();
     const { calls } = fakeApi([
       {
@@ -378,5 +485,44 @@ describe('Tracks', () => {
     await waitFor(() => expect(onRemoved).toHaveBeenCalled());
     expect(calls[0].method).toBe('DELETE');
     alert.mockRestore();
+  });
+
+  it('DP-53: settings and remove send the version the screen showed', async () => {
+    const alert = jest
+      .spyOn(Alert, 'alert')
+      .mockImplementation((_title, _message, buttons?: AlertButton[]) =>
+        buttons?.find((b) => b.text === 'Remove')?.onPress?.(),
+      );
+    const onRemoved = jest.fn();
+    const { calls } = fakeApi([
+      { method: 'PATCH', path: /tracks\/t1$/, reply: { body: track } },
+      { method: 'DELETE', path: /tracks\/t1$/, reply: { status: 204 } },
+    ]);
+    await wrap(<TrackSettings track={track} onRemoved={onRemoved} />);
+    await press('size-plus');
+    await press('track-save');
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0].ifMatch).toBe('"4"');
+    await press('track-remove');
+    await waitFor(() => expect(onRemoved).toHaveBeenCalled());
+    expect(calls[1].ifMatch).toBe('"4"');
+    alert.mockRestore();
+  });
+
+  it('DP-53: outdated → "This track changed." and the screen reloads the track', async () => {
+    const { calls } = fakeApi([
+      { method: 'PATCH', path: /tracks\/t1$/, reply: { status: 409, body: { error: 'TrackChanged' } } },
+      { method: 'GET', path: /^\/practice\/tracks$/, reply: { body: [track] } },
+    ]);
+    const List = () => {
+      useTracks();
+      return <TrackSettings track={track} onRemoved={jest.fn()} />;
+    };
+    await wrap(<List />);
+    await waitFor(() => expect(calls.filter((c) => c.method === 'GET')).toHaveLength(1));
+    await press('size-plus');
+    await press('track-save');
+    expect(await screen.findByText('This track changed.')).toBeTruthy();
+    await waitFor(() => expect(calls.filter((c) => c.method === 'GET')).toHaveLength(2));
   });
 });

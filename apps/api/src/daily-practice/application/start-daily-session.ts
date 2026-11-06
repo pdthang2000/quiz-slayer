@@ -63,6 +63,7 @@ export class StartDailySession {
     const timeZone = checkTimeZone(input.timeZone);
     const now = this.clock.now();
     const today = LocalDate.of(now, timeZone);
+    const time = { now, timeZone };
     return this.transactions.run(async () => {
       const track = await this.tracks.findById(input.userId, input.trackId);
       if (!track) throw new TrackNotFound(input.trackId);
@@ -72,7 +73,7 @@ export class StartDailySession {
         track.id,
         today,
       );
-      if (existing) return toSessionView(existing); // DP-22
+      if (existing) return toSessionView(existing, time); // DP-22
       if (!track.isActive) throw new TrackIsRemoved(); // DP-15
 
       // DP-39: one set is built at a time per user, so two tracks can't pick the same quiz.
@@ -82,7 +83,7 @@ export class StartDailySession {
         track.id,
         today,
       );
-      if (raced) return toSessionView(raced);
+      if (raced) return toSessionView(raced, time);
 
       // 1. Pool: the track's tag, allowed kinds, System + own (DP-11, DP-12, QB-10).
       const poolIds = (
@@ -140,7 +141,7 @@ export class StartDailySession {
       });
       await this.sessions.add(session);
       await this.outbox.add(session.pullEvents());
-      return toSessionView(session);
+      return toSessionView(session, time);
     });
   }
 }

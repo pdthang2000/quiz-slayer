@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { CreateCard } from '../../card-library/application/create-card';
-import { UserId as CardUserId } from '../../card-library/domain/ids';
 import {
   TRANSACTION_RUNNER,
   type TransactionRunner,
@@ -34,7 +33,7 @@ export class SaveQuestionAsCard {
     if (!session) throw new DailySessionNotFound(input.sessionId);
     const draft = session.cardDraftFor(input.questionId);
     const cardId = await this.createCard.execute({
-      userId: CardUserId(input.userId),
+      userId: input.userId,
       front: draft.front,
       back: draft.back,
       tagNames: [draft.tagName],

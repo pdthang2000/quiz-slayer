@@ -29,28 +29,30 @@ export class CreateCard {
     private readonly cardTags: CardTags,
   ) {}
 
+  /** A public service for other contexts too, so `userId` is a plain string. */
   async execute(input: {
-    userId: UserId;
+    userId: string;
     front: string;
     back: string;
     tagNames: string[];
   }): Promise<CardId> {
+    const userId = UserId(input.userId);
     const front = CardFront.create(input.front);
     const back = CardBack.create(input.back);
     const { card, created } = await this.transactions.run(async () => {
       const { tagIds, created } = await this.cardTags.resolve(
-        input.userId,
+        userId,
         input.tagNames,
       );
       const card = Card.create({
         id: CardId(randomUUID()),
-        userId: input.userId,
+        userId,
         front,
         back,
         tagIds,
       });
       await this.cards.add(card);
-      await this.cardTags.tagsChanged(input.userId, card.tagIds);
+      await this.cardTags.tagsChanged(userId, card.tagIds);
       return { card, created };
     });
     this.events.publish([

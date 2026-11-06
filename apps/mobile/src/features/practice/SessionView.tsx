@@ -12,12 +12,19 @@ import { formatDay, practiceKeys, useSession, useToday } from './hooks';
 import { QuizCard } from './QuizCard';
 
 /** Errors after which the screen shows the server's current state again. */
-const RELOAD = new Set(['QuizAlreadyAnswered', 'QuizOutOfOrder', 'CannotSaveAsCard', 'PracticeChanged']);
+const RELOAD = new Set([
+  'QuizAlreadyAnswered',
+  'QuizOutOfOrder',
+  'CannotSaveAsCard',
+  'DailySessionClosed',
+  'PracticeChanged',
+]);
 
 /**
  * A daily session: quizzes one by one in order (DP-21), answer → feedback (DP-20) → Next,
  * progress in quizzes (DP-18), no timer (DP-24). Leaving keeps the progress (DP-22).
  * Finished: "23 / 28 correct" and the streak, then every quiz with the answers (DP-26).
+ * DP-52: a closed set opens view only, with the quizzes that were answered.
  */
 export function SessionView({ id, onClose }: { id: string; onClose: () => void }) {
   const { t } = useTranslation();
@@ -69,7 +76,9 @@ export function SessionView({ id, onClose }: { id: string; onClose: () => void }
   const s = session.data;
   const current = reviewing
     ? s.quizzes.find((q) => q.id === reviewing)!
-    : s.quizzes.find((q) => !q.answer);
+    : s.closed
+      ? undefined
+      : s.quizzes.find((q) => !q.answer);
 
   if (!current) return <ResultView session={s} onClose={onClose} onSaveAsCard={saveAsCard.mutate} saving={saveAsCard.isPending} />;
 
@@ -156,7 +165,9 @@ function ResultView({
       contentContainerStyle={styles.body}
       testID="session-result"
     >
-      <Text style={[styles.done, { color: colors.text }]}>{t('practice.finished')}</Text>
+      <Text style={[styles.done, { color: colors.text }]} testID="session-title">
+        {session.finished ? t('practice.finished') : t('errors.DailySessionClosed')}
+      </Text>
       <Text style={[styles.score, { color: colors.text }]} testID="session-score">
         {t('practice.result', session.result)}
       </Text>
@@ -173,7 +184,7 @@ function ResultView({
         <Text style={[styles.buttonText, { color: colors.onPrimary }]}>{t('practice.close')}</Text>
       </Pressable>
       <Text style={[styles.reviewTitle, { color: colors.textMuted }]}>{t('practice.review')}</Text>
-      {session.quizzes.map((quiz) => (
+      {session.quizzes.filter((quiz) => quiz.answer).map((quiz) => (
         <View key={quiz.id} style={[styles.reviewItem, { borderColor: colors.border }]}>
           <QuizCard quiz={quiz} onSaveAsCard={onSaveAsCard} saving={saving} />
         </View>

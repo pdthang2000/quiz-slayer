@@ -1,7 +1,9 @@
 import { DailySession } from './daily-session';
 import {
   CannotSaveAsCard,
+  DailySessionClosed,
   InvalidAnswer,
+  InvalidTimeZone,
   NoQuizzesMatch,
   QuizAlreadyAnswered,
   QuizOutOfOrder,
@@ -224,5 +226,47 @@ describe('Save as card', () => {
     expect(() => session.cardDraftFor(QuestionId('a-q'))).toThrow(
       new CannotSaveAsCard(QuestionId('a-q'), 'alreadySaved'),
     );
+  });
+});
+
+describe('DP-52: finishing a set late', () => {
+  const TZ = 'Asia/Ho_Chi_Minh';
+
+  it('DP-52: a set can be answered until the end of the next day; it counts for its own day', () => {
+    const session = startSession([single('a'), single('b')]);
+    session.answerQuiz(q('a'), [0], AT);
+    session.answerQuiz(q('b'), [0], new Date('2026-11-08T16:59:00Z'), TZ); // 23:59 Sunday
+    expect(session.isFinished).toBe(true);
+    expect(session.day.value).toBe('2026-11-07');
+  });
+
+  it('DP-52: after the end of the next day → DailySessionClosed, nothing changes', () => {
+    const session = startSession([single('a')]);
+    const monday = new Date('2026-11-08T17:00:00Z'); // 00:00 Monday in Hanoi
+    expect(() => session.answerQuiz(q('a'), [0], monday, TZ)).toThrow(
+      DailySessionClosed,
+    );
+    expect(session.progress.answered).toBe(0);
+    expect(session.isClosedAt(monday, TZ)).toBe(true);
+    expect(session.isClosedAt(new Date('2026-11-08T16:59:00Z'), TZ)).toBe(
+      false,
+    );
+  });
+
+  it("DP-52: an app too old to send its timezone gets the session's", () => {
+    const session = startSession([single('a')]);
+    expect(session.isClosedAt(new Date('2026-11-08T17:00:00Z'))).toBe(true);
+  });
+
+  it('DP-05: an unknown timezone is refused', () => {
+    const session = startSession([single('a')]);
+    expect(() => session.isClosedAt(AT, 'Mars/Base')).toThrow(InvalidTimeZone);
+  });
+
+  it('DP-33: QuizAnswered carries the day of the answer, not the day of the session', () => {
+    const session = startSession([single('a')]);
+    session.answerQuiz(q('a'), [1], new Date('2026-11-08T05:00:00Z'), TZ);
+    const [, answered] = session.pullEvents();
+    expect(answered).toMatchObject({ type: 'QuizAnswered', day: '2026-11-08' });
   });
 });

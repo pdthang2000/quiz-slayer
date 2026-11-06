@@ -44,7 +44,8 @@ A streak is the number of consecutive days, ending today or yesterday, with a fi
 - The app sends its IANA timezone in an `X-Time-Zone` header (e.g. `Asia/Ho_Chi_Minh`) on Daily Practice requests. The server computes today's date as the current UTC time in that zone (`LocalDate`, a value object in the domain using `Intl`).
 - The session stores its `day` (a plain `YYYY-MM-DD`) and the timezone it was started in. Everything after that (DP-05 "belongs to the day it was started", streaks, history) compares `day` strings, never times, so a later trip abroad does not move old days.
 - Why not a timezone on the user: DP-05 says the **phone's** timezone; a traveller's phone changes zone, and v1 has no user profile. Why not the phone sending the date itself: the server clock plus a timezone limits the date to ±14 hours of real time.
-- A missing or unknown timezone is a request error (400 `InvalidTimeZone`), not a silent UTC fallback.
+- A missing or unknown timezone is a request error (400 `InvalidTimeZone`), not a silent UTC fallback. One exception (6e.1): reading a session or history and answering use the zone the session was started in when the header is missing, so an installed app older than the server keeps working (CLAUDE.md). An unknown zone is still refused.
+- `QuizAnswered.day` is the day of the answer in the phone's timezone (DP-33), not the session's day; they differ when a set is finished the next day (DP-52).
 
 ### Cross-context
 - **Question Bank → Daily Practice:** Daily Practice calls Question Bank's public application service for the pool (quiz ids for a tag name, kinds and user: system + own, QB-10), the quiz content to snapshot, and the question tags with counts. It never reads Question Bank tables.
@@ -53,7 +54,7 @@ A streak is the number of consecutive days, ending today or yesterday, with a fi
 ### Concurrency
 - DP-01: unique (user, track, day). Two Start taps at once: the second insert fails and the use case resumes the first session.
 - DP-39 across tracks: `startDailySession` takes a per-user advisory lock (`pg_advisory_xact_lock`) inside its transaction, so two tracks started at the same moment cannot pick the same quiz.
-- Each aggregate has a version (optimistic concurrency, like CARD-08) so two devices answering the same quiz cannot both succeed (DP-03).
+- Each aggregate has a version (optimistic concurrency, like CARD-08) so two devices answering the same quiz cannot both succeed (DP-03). Track changes also compare the version the screen showed (DP-53).
 
 ## Options considered
 - **One `DailyPractice` aggregate per user** (tracks + sessions + progress): simplest invariants, but every answer would lock and load everything; and DP-37 progress spans tracks anyway.

@@ -13,6 +13,7 @@ import { ApplyQuizAnswered } from './application/apply-quiz-answered';
 import {
   GetDailySession,
   GetToday,
+  GetTrackBestStreak,
   ListTrackHistory,
   ListTrackOptions,
   ListTracks,
@@ -63,6 +64,7 @@ import {
     ChangeTrackSettings,
     GetToday,
     GetDailySession,
+    GetTrackBestStreak,
     ListTrackHistory,
     ListTracks,
     ListTrackOptions,

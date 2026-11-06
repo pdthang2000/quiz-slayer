@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-06 — Slice 6e.1 Review fixes (continuous run)
+- DP-52: answering after the end of the session's next day fails with `DailySessionClosed`; such a set opens view only, also from History.
+- DP-63: Today shows "Finish yesterday's set · 3 / 10" with Continue. DP-65 tested. DP-69: best streak per track and overall, computed.
+- DP-33: the mistake schedule counts from the answer's day; `QuizAnswered.day` is that day. Session, history and answer requests send `X-Time-Zone`; without it they use the session's timezone (ADR-013).
+- DP-53: track settings and remove send If-Match; `TrackChanged`.
+- Outbox: a failing event waits with backoff and no longer blocks newer ones; QuizProgress ignores an event older than the last answer (ADR-014). Additive migration: `outbox_event.next_attempt_at`.
+- Daily Practice no longer imports `card-library/domain`; `CreateCard` takes a plain user id; ESLint now refuses another context's domain from application/, api/ and infrastructure/.
+
 ## 2026-11-06 — Review up to 6e
 - Confirmed: DP-63 (Today shows "Finish yesterday's set" while DP-52 allows it), DP-64 (Save as card opens the card editor when the card doesn't fit; replaces "button hidden" in DP-40 and DP-49). (R-1..R-5)
 - Confirmed: DP-65 (streak shows 0 while yesterday is unfinished), DP-66..DP-68 (note box, discard prompt, notes on closed sets), DP-63/DP-64 details, texts (R-6..R-15). Backlog B-23 "My notes". Confirmed: DP-69 best streak (R-16).

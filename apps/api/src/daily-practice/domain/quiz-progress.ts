@@ -75,10 +75,13 @@ export class QuizProgress {
    *   right on a 1-day comeback  → in 3 days
    *   right on a 3-day comeback  → in 7 days
    *   right on a 7-day comeback  → retired
-   * Applying the same session's answer twice changes nothing (returns false).
+   * Applying the same session's answer twice changes nothing (returns false), and neither
+   * does an answer older than the last one applied: a retried event can arrive after a
+   * newer one (ADR-014), and the schedule follows the latest answer.
    */
   apply(event: QuizAnswered): boolean {
     if (event.sessionId === this.s.lastSessionId) return false;
+    if (new Date(event.answeredAt) < this.s.lastAnsweredAt) return false;
     const day = LocalDate.parse(event.day);
     let mistake: Mistake | null;
     if (!event.correct) mistake = { stage: 1, dueOn: day.addDays(1) };

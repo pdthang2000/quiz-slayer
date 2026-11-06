@@ -71,6 +71,8 @@
     "QuizAlreadyAnswered": "Already answered. Refresh.",
     "QuizOutOfOrder": "Already answered. Refresh.",
     "CannotSaveAsCard": "Already saved.",
+    "DailySessionClosed": "This day is over.",
+    "TrackChanged": "This track changed.",
     "PracticeChanged": "Changed on another device. Refresh.",
     "DailySessionNotFound": "Not found. Refresh.",
     "TrackNotFound": "Not found. Refresh.",
@@ -197,7 +199,11 @@
     "replay": "↻ Play again",
     "noHistory": "No days yet.",
     "dayResult": "{{correct}} / {{total}}",
-    "unfinished": "{{answered}} / {{total}} quizzes"
+    "unfinished": "{{answered}} / {{total}} quizzes",
+    "finishYesterday": "Finish yesterday's set · {{answered}} / {{total}}",
+    "bestOverall": "Best {{count}}",
+    "bestDays_one": "Best: {{count}} day",
+    "bestDays_other": "Best: {{count}} days"
   },
   "tracks": {
     "title": "Tracks",

@@ -3,7 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { router } from 'expo-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { errorMessageKey } from '../../api/errors';
+import { errorMessageKey, isStale } from '../../api/errors';
 import { practiceApi } from '../../api/practice';
 import type { QuizKind, Track } from '../../api/types';
 import { Checkbox } from '../../components/Checkbox';
@@ -105,22 +105,27 @@ export function TrackSettings({ track, onRemoved }: { track: Track; onRemoved: (
   const changed = dailySize !== track.dailySize || kinds.join() !== track.kinds.join();
 
   const done = () => void queryClient.invalidateQueries({ queryKey: practiceKeys.all });
+  // DP-53, CONFLICT-01: outdated → the message, then the latest settings.
+  const onError = (error: unknown) => {
+    toast({ message: t(errorMessageKey(error)) });
+    if (isStale(error)) done();
+  };
   const save = useMutation({
-    mutationFn: () => practiceApi.changeTrack(track.id, { kinds, dailySize }),
+    mutationFn: () => practiceApi.changeTrack(track, { kinds, dailySize }),
     onSuccess: () => {
       toast({ message: t('tracks.saved') });
       done();
     },
-    onError: (error) => toast({ message: t(errorMessageKey(error)) }),
+    onError,
   });
   const remove = useMutation({
-    mutationFn: () => practiceApi.removeTrack(track.id),
+    mutationFn: () => practiceApi.removeTrack(track),
     onSuccess: () => {
       toast({ message: t('tracks.removed') });
       done();
       onRemoved();
     },
-    onError: (error) => toast({ message: t(errorMessageKey(error)) }),
+    onError,
   });
 
   const toggle = (kind: QuizKind) =>

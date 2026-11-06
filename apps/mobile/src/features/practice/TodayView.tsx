@@ -12,7 +12,8 @@ import { practiceKeys, useToday } from './hooks';
 
 /**
  * G-1, G-5: the Today screen — overall streak at the top, then each track with today's
- * progress (DP-18 quizzes), its streak (DP-19) and Start / Continue / Done.
+ * progress (DP-18 quizzes), its streak (DP-19) and Start / Continue / Done. DP-69: the best
+ * streak under the overall one. DP-63: yesterday's set, while it can still be finished.
  */
 export function TodayView() {
   const { t } = useTranslation();
@@ -48,7 +49,8 @@ export function TodayView() {
     );
   }
 
-  const { overallStreak, tracks } = today.data;
+  const { overallStreak, overallBestStreak, tracks } = today.data;
+  const open = (id: string) => router.push({ pathname: '/practice/[id]', params: { id } });
   return (
     <ScrollView
       style={{ backgroundColor: colors.background }}
@@ -63,6 +65,9 @@ export function TodayView() {
     >
       <Text style={[styles.overall, { color: colors.text }]} testID="overall-streak">
         {t('practice.overallStreak', { count: overallStreak })}
+      </Text>
+      <Text style={[styles.best, { color: colors.textMuted }]} testID="overall-best">
+        {t('practice.bestOverall', { count: overallBestStreak })}
       </Text>
 
       {tracks.length === 0 ? (
@@ -109,6 +114,20 @@ export function TodayView() {
                   <Text style={[styles.buttonText, { color: colors.onPrimary }]}>{label}</Text>
                 </Pressable>
               </View>
+              {track.yesterdaySession ? (
+                <View style={styles.row} testID={`yesterday-${track.tagName}`}>
+                  <Text style={[styles.yesterday, { color: colors.text }]}>
+                    {t('practice.finishYesterday', track.yesterdaySession.progress)}
+                  </Text>
+                  <Pressable
+                    onPress={() => open(track.yesterdaySession!.id)}
+                    accessibilityRole="button"
+                    testID={`continue-yesterday-${track.tagName}`}
+                  >
+                    <Text style={[styles.link, { color: colors.primary }]}>{t('practice.continue')}</Text>
+                  </Pressable>
+                </View>
+              ) : null}
             </View>
           );
         })
@@ -120,7 +139,9 @@ export function TodayView() {
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
   content: { padding: spacing.lg, gap: spacing.md },
-  overall: { fontSize: 22, fontWeight: '700', marginBottom: spacing.sm },
+  overall: { fontSize: 22, fontWeight: '700' },
+  best: { fontSize: 14, marginBottom: spacing.sm },
+  yesterday: { fontSize: 15, flexShrink: 1 },
   empty: { alignItems: 'center', gap: spacing.md, marginTop: spacing.xl },
   card: { borderRadius: 14, borderWidth: StyleSheet.hairlineWidth, padding: spacing.lg, gap: spacing.sm },
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

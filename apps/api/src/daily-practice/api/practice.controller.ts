@@ -10,10 +10,12 @@ import {
   Post,
 } from '@nestjs/common';
 import { CurrentUser } from '../../shared/api/current-user.decorator';
+import { IfMatchVersion } from '../../shared/api/if-match-version.decorator';
 import { AnswerQuiz } from '../application/answer-quiz';
 import {
   GetDailySession,
   GetToday,
+  GetTrackBestStreak,
   ListTrackHistory,
   ListTrackOptions,
   ListTracks,
@@ -45,6 +47,7 @@ export class PracticeController {
     private readonly answerQuiz: AnswerQuiz,
     private readonly saveQuestionAsCard: SaveQuestionAsCard,
     private readonly listTrackHistory: ListTrackHistory,
+    private readonly getTrackBestStreak: GetTrackBestStreak,
     private readonly listTracks: ListTracks,
     private readonly listTrackOptions: ListTrackOptions,
     private readonly addTrack: AddTrack,
@@ -75,10 +78,15 @@ export class PracticeController {
 
   /** DP-22, DP-26: a session with its quizzes and answers. */
   @Get('sessions/:id')
-  session(@CurrentUser() user: string, @Param('id', ParseUUIDPipe) id: string) {
+  session(
+    @CurrentUser() user: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @TimeZone() timeZone?: string,
+  ) {
     return this.getDailySession.execute({
       userId: UserId(user),
       sessionId: DailySessionId(id),
+      timeZone,
     });
   }
 
@@ -90,6 +98,7 @@ export class PracticeController {
     @Param('id', ParseUUIDPipe) id: string,
     @Param('quizId', ParseUUIDPipe) quizId: string,
     @Body() body: AnswerDto,
+    @TimeZone() timeZone?: string,
   ) {
     const userId = UserId(user);
     const sessionId = DailySessionId(id);
@@ -98,8 +107,9 @@ export class PracticeController {
       sessionId,
       quizId: QuizId(quizId),
       choices: body.choices,
+      timeZone,
     });
-    return this.getDailySession.execute({ userId, sessionId });
+    return this.getDailySession.execute({ userId, sessionId, timeZone });
   }
 
   /** DP-10, DP-32, DP-40: creates a Card through Card Library. */
@@ -119,8 +129,25 @@ export class PracticeController {
 
   /** DP-26 */
   @Get('tracks/:id/history')
-  history(@CurrentUser() user: string, @Param('id', ParseUUIDPipe) id: string) {
+  history(
+    @CurrentUser() user: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @TimeZone() timeZone?: string,
+  ) {
     return this.listTrackHistory.execute({
+      userId: UserId(user),
+      trackId: TrackId(id),
+      timeZone,
+    });
+  }
+
+  /** DP-69 */
+  @Get('tracks/:id/best-streak')
+  bestStreak(
+    @CurrentUser() user: string,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.getTrackBestStreak.execute({
       userId: UserId(user),
       trackId: TrackId(id),
     });
@@ -146,28 +173,35 @@ export class PracticeController {
     });
   }
 
-  /** DP-12, DP-13 */
+  /** DP-12, DP-13, DP-53 */
   @Patch('tracks/:id')
   settings(
     @CurrentUser() user: string,
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: TrackSettingsDto,
+    @IfMatchVersion() version: number,
   ) {
     return this.changeTrackSettings.execute({
       userId: UserId(user),
       trackId: TrackId(id),
       kinds: body.kinds,
       dailySize: body.dailySize,
+      version,
     });
   }
 
-  /** DP-15: history stays. */
+  /** DP-15: history stays. DP-53 */
   @Delete('tracks/:id')
   @HttpCode(204)
-  remove(@CurrentUser() user: string, @Param('id', ParseUUIDPipe) id: string) {
+  remove(
+    @CurrentUser() user: string,
+    @Param('id', ParseUUIDPipe) id: string,
+    @IfMatchVersion() version: number,
+  ) {
     return this.removeTrack.execute({
       userId: UserId(user),
       trackId: TrackId(id),
+      version,
     });
   }
 }

@@ -21,6 +21,8 @@ const MAPPINGS: Record<string, Mapping> = {
   QuizAlreadyAnswered: { status: HttpStatus.CONFLICT },
   QuizOutOfOrder: { status: HttpStatus.CONFLICT },
   CannotSaveAsCard: { status: HttpStatus.CONFLICT },
+  DailySessionClosed: { status: HttpStatus.CONFLICT },
+  TrackChanged: { status: HttpStatus.CONFLICT },
   DailySessionExists: { status: HttpStatus.CONFLICT },
   PracticeChanged: { status: HttpStatus.CONFLICT },
   DailySessionNotFound: { status: HttpStatus.NOT_FOUND },

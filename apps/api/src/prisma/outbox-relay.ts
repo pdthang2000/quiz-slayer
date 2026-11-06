@@ -16,6 +16,12 @@ import type {
 /** How often undelivered events are looked for (a crash or a failed handler). */
 const POLL_MS = Number(process.env.OUTBOX_POLL_MS ?? 5_000);
 const BATCH = 50;
+/** ADR-014: 5 s, 10 s, 20 s … up to an hour between tries of a failing event. */
+const FIRST_RETRY_MS = 5_000;
+const MAX_RETRY_MS = 3_600_000;
+
+const retryDelayMs = (attempts: number) =>
+  Math.min(FIRST_RETRY_MS * 2 ** Math.min(attempts, 20), MAX_RETRY_MS);
 
 /**
  * B-10: the transactional outbox. `add` writes events in the caller's transaction;
@@ -23,6 +29,8 @@ const BATCH = 50;
  * also marks it delivered, so a handler's change and "delivered" commit together.
  * Rows are taken with FOR UPDATE SKIP LOCKED, so two relays never deliver the same row
  * at the same time. Events with no handler are just marked delivered.
+ * A failing event waits for its next-attempt time, so it never blocks newer ones; handlers
+ * must therefore accept events out of order (ADR-014).
  */
 @Injectable()
 export class OutboxRelay
@@ -63,6 +71,7 @@ export class OutboxRelay
         id: randomUUID(),
         type: event.type,
         payload: event,
+        nextAttemptAt: new Date(),
       })),
     });
   }
@@ -84,19 +93,23 @@ export class OutboxRelay
 
   private async deliverAll(): Promise<number> {
     let delivered = 0;
+    const tried = new Set<string>();
     for (;;) {
-      const ids = await this.prisma.db.outboxEvent.findMany({
-        where: { deliveredAt: null },
+      const rows = await this.prisma.db.outboxEvent.findMany({
+        where: {
+          deliveredAt: null,
+          nextAttemptAt: { lte: new Date() },
+          id: { notIn: [...tried] },
+        },
         orderBy: { occurredAt: 'asc' },
         select: { id: true },
         take: BATCH,
       });
-      let progressed = 0;
-      for (const { id } of ids) {
-        if (await this.deliverOne(id)) progressed++;
+      for (const { id } of rows) {
+        tried.add(id);
+        if (await this.deliverOne(id)) delivered++;
       }
-      delivered += progressed;
-      if (ids.length < BATCH || progressed === 0) return delivered;
+      if (rows.length < BATCH) return delivered;
     }
   }
 
@@ -125,9 +138,17 @@ export class OutboxRelay
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`Event ${id} failed; will retry: ${message}`);
+      const { attempts } = await this.prisma.db.outboxEvent.findUniqueOrThrow({
+        where: { id },
+        select: { attempts: true },
+      });
       await this.prisma.db.outboxEvent.update({
         where: { id },
-        data: { attempts: { increment: 1 }, lastError: message.slice(0, 1000) },
+        data: {
+          attempts: attempts + 1,
+          lastError: message.slice(0, 1000),
+          nextAttemptAt: new Date(Date.now() + retryDelayMs(attempts)),
+        },
       });
       return false;
     }

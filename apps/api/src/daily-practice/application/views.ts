@@ -10,6 +10,8 @@ export type TrackView = {
   tagName: string;
   kinds: QuizKind[];
   dailySize: number;
+  /** DP-53, CONFLICT-01: sent back with settings and remove. */
+  version: number;
 };
 
 export type AnsweredQuestionView = {
@@ -50,6 +52,8 @@ export type DailySessionView = {
   /** DP-14: fewer quizzes than the daily size ("Only N quizzes match your settings"). */
   short: boolean;
   finished: boolean;
+  /** DP-52: no more answers can be given; the set can only be viewed. */
+  closed: boolean;
   /** DP-18: quizzes. */
   progress: { answered: number; total: number };
   /** DP-18: questions. */
@@ -63,29 +67,40 @@ export type DailySessionSummary = Omit<
   'quizzes' | 'tagName' | 'dailySize'
 >;
 
+/** When a screen is read, for DP-52; no timezone = an app too old to send it. */
+export type ReadTime = { now: Date; timeZone: string | undefined };
+
 export const toTrackView = (t: Track): TrackView => ({
   id: t.id,
   tagName: t.tagName,
   kinds: [...t.kinds],
   dailySize: t.dailySize,
+  version: t.version,
 });
 
-export function toSessionSummary(s: DailySession): DailySessionSummary {
+export function toSessionSummary(
+  s: DailySession,
+  time: ReadTime,
+): DailySessionSummary {
   return {
     id: s.id,
     trackId: s.trackId,
     day: s.day.value,
     short: s.isShort,
     finished: s.isFinished,
+    closed: s.isClosedAt(time.now, time.timeZone),
     progress: s.progress,
     result: s.result,
   };
 }
 
-export function toSessionView(s: DailySession): DailySessionView {
+export function toSessionView(
+  s: DailySession,
+  time: ReadTime,
+): DailySessionView {
   const snap = s.toSnapshot();
   return {
-    ...toSessionSummary(s),
+    ...toSessionSummary(s, time),
     tagName: snap.tagName,
     dailySize: snap.dailySize,
     quizzes: snap.quizzes.map((quiz): QuizView => {

@@ -2,7 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { DailySession } from '../domain/daily-session';
-import { DailySessionExists, PracticeChanged } from '../domain/errors';
+import {
+  DailySessionExists,
+  PracticeChanged,
+  TrackChanged,
+} from '../domain/errors';
 import {
   type DailySessionId,
   QuizId,
@@ -69,7 +73,7 @@ export class PrismaTrackRepository implements TrackRepository {
       where: { id: track.id, userId: track.userId, version: track.version },
       data: { ...toTrackData(track), version: { increment: 1 } },
     });
-    if (count === 0) throw new PracticeChanged('track');
+    if (count === 0) throw new TrackChanged(); // DP-53: changed since it was loaded
   }
 }
 

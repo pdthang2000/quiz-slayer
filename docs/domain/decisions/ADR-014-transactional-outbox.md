@@ -9,7 +9,7 @@ Until now events were published after commit and only logged. Daily Practice is 
 ## Decision
 - An `outbox_event` table. A use case writes its aggregate and its events in **one transaction** through the `Outbox` port (`src/shared/application/outbox.ts`): `outbox.add(session.pullEvents())`.
 - After commit the use case calls `outbox.deliverSoon()`. An `OutboxRelay` (`src/prisma/outbox-relay.ts`, next to `PrismaTransactionRunner`) also polls every 5 s (`OUTBOX_POLL_MS`, 0 = off) for anything left over.
-- Each event is delivered in its own transaction that locks the row (`FOR UPDATE SKIP LOCKED`), runs the handlers, and marks it delivered. A handler's change and "delivered" commit together; a failing handler rolls back, the attempt and error are recorded, and the event is tried again at the next poll.
+- Each event is delivered in its own transaction that locks the row (`FOR UPDATE SKIP LOCKED`), runs the handlers, and marks it delivered. A handler's change and "delivered" commit together; a failing handler rolls back, the attempt and error are recorded, and the event waits for its next-attempt time (5 s, doubling, at most an hour). A failing event never blocks newer ones.
 - Delivery is **at least once**; handlers are idempotent. `QuizProgress` remembers the last session it applied, so a repeated `QuizAnswered` changes nothing.
 - Contexts register handlers by event type at startup (`OutboxHandlers.register`). Events without a handler are just marked delivered. Card Library keeps its logging publisher (nothing listens to its events yet).
 
@@ -19,6 +19,7 @@ Until now events were published after commit and only logged. Daily Practice is 
 - **A message broker** (Redis, RabbitMQ): more moving parts than one app on one VPS needs.
 
 ## Consequences
+- Because a failing event is overtaken, events can reach a handler out of order; handlers must accept that. `QuizProgress` ignores an answer older than the last one it applied.
 - Every event a context wants delivered reliably goes through `outbox.add` inside its transaction; `add` refuses to run outside one.
 - Delivered rows stay in the table. Cleaning up old rows can come later (a delete of rows delivered more than N days ago).
 - Integration tests cover: event stored with the answer, crash before delivery, rollback, double delivery, failing handler.

@@ -103,6 +103,20 @@ describe('buildDailySet', () => {
     ]);
   });
 
+  it('DP-58: the set keeps the build order: due mistakes, new, more mistakes, seen', () => {
+    const set = build(
+      [
+        seen('s1', '2026-10-01'),
+        mistake('m3', '2026-11-10'),
+        fresh('n1'),
+        mistake('m1', '2026-11-08'),
+        mistake('m2', '2026-11-09'),
+      ],
+      5,
+    );
+    expect(set.quizIds).toEqual(['m1', 'm2', 'n1', 'm3', 's1']);
+  });
+
   it('DP-34: a mistake that is not due yet never fills a short day', () => {
     const set = build([mistake('m1', '2026-11-11'), fresh('n1')], 10);
     expect(set.quizIds).toEqual(['n1']);

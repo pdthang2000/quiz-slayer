@@ -86,6 +86,22 @@ export class CannotSaveAsCard extends DomainError {
   }
 }
 
+/** DP-52: a set can be finished until the end of the next day; after that it is view only. */
+export class DailySessionClosed extends DomainError {
+  readonly code = 'DailySessionClosed';
+  constructor() {
+    super('This day is over');
+  }
+}
+
+/** DP-53, CONFLICT-01: the track changed since the screen showed it. */
+export class TrackChanged extends DomainError {
+  readonly code = 'TrackChanged';
+  constructor() {
+    super('This track changed');
+  }
+}
+
 /** DP-01: the track already has a session that day (two Start taps at once). */
 export class DailySessionExists extends DomainError {
   readonly code = 'DailySessionExists';

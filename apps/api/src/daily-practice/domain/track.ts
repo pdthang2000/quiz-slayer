@@ -1,5 +1,5 @@
 import { AggregateRoot } from './aggregate-root';
-import { InvalidDailySize, InvalidTrackKinds } from './errors';
+import { InvalidDailySize, InvalidTrackKinds, TrackChanged } from './errors';
 import type { TrackEvent } from './events';
 import type { TrackId, UserId } from './ids';
 import { isQuizKind, QUIZ_KINDS, type QuizKind } from './quiz-kind';
@@ -116,6 +116,11 @@ export class Track extends AggregateRoot<TrackEvent> {
 
   get isActive(): boolean {
     return this._state === 'active';
+  }
+
+  /** DP-53, CONFLICT-01: `version` is the one the screen showed. */
+  assertVersion(version: number): void {
+    if (version !== this.version) throw new TrackChanged();
   }
 
   /**

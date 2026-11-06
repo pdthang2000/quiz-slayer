@@ -230,14 +230,17 @@ model QuizProgress {
 /// to their handlers after commit by the OutboxRelay. A crash between commit and delivery
 /// loses nothing: undelivered rows are picked up again.
 model OutboxEvent {
-  id          String    @id @db.Uuid
-  type        String
-  payload     Json
-  occurredAt  DateTime  @default(now()) @map("occurred_at")
-  deliveredAt DateTime? @map("delivered_at")
-  attempts    Int       @default(0)
-  lastError   String?   @map("last_error")
+  id            String    @id @db.Uuid
+  type          String
+  payload       Json
+  occurredAt    DateTime  @default(now()) @map("occurred_at")
+  deliveredAt   DateTime? @map("delivered_at")
+  attempts      Int       @default(0)
+  lastError     String?   @map("last_error")
+  /// A failing event waits until this time, so it never blocks newer ones.
+  nextAttemptAt DateTime  @default(now()) @map("next_attempt_at")
 
   @@index([deliveredAt, occurredAt])
+  @@index([deliveredAt, nextAttemptAt])
   @@map("outbox_event")
 }

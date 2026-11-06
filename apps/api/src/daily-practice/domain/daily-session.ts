@@ -1,6 +1,7 @@
 import { AggregateRoot } from './aggregate-root';
 import {
   CannotSaveAsCard,
+  DailySessionClosed,
   InvalidAnswer,
   NoQuizzesMatch,
   QuizAlreadyAnswered,
@@ -14,7 +15,7 @@ import type {
   TrackId,
   UserId,
 } from './ids';
-import type { LocalDate } from './local-date';
+import { checkTimeZone, LocalDate } from './local-date';
 import {
   canBeSavedAsCard,
   cardDraftFor,
@@ -167,17 +168,39 @@ export class DailySession extends AggregateRoot<DailySessionEvent> {
   }
 
   /**
+   * DP-05: the phone's calendar day at an instant. An app too old to send its timezone
+   * gets the zone this session was started in (ADR-013).
+   */
+  private dayAt(at: Date, timeZone: string | undefined): LocalDate {
+    return LocalDate.of(
+      at,
+      timeZone === undefined ? this.s.timeZone : checkTimeZone(timeZone),
+    );
+  }
+
+  /** DP-52: after the end of the next day no more answers; the set stays viewable. */
+  isClosedAt(at: Date, timeZone?: string): boolean {
+    return this.dayAt(at, timeZone).isAfter(this.s.day.addDays(1));
+  }
+
+  /**
    * DP-03, DP-21, DP-29: answers a whole quiz (a single question, or every question of a
    * group) at once. Raises QuizAnswered, and DailySessionFinished with the last one (DP-23).
+   * DP-52: closed after the end of the next day. DP-33: `day` of QuizAnswered is the day of
+   * the answer, which is not the session's day when a set is finished the next day.
    */
   answerQuiz(
     quizId: QuizId,
     choices: readonly number[],
     at: Date,
+    timeZone?: string,
   ): QuizFeedback {
     const quiz = this.quiz(quizId);
     if (!quiz) throw new InvalidAnswer('unknownQuiz');
     if (this.answerOf(quizId)) throw new QuizAlreadyAnswered(quizId);
+    const answeredOn = this.dayAt(at, timeZone);
+    if (answeredOn.isAfter(this.s.day.addDays(1)))
+      throw new DailySessionClosed();
     if (this.nextQuiz?.id !== quizId) throw new QuizOutOfOrder(quizId);
     if (choices.length !== quiz.questions.length)
       throw new InvalidAnswer('wrongCount');
@@ -198,7 +221,7 @@ export class DailySession extends AggregateRoot<DailySessionEvent> {
       sessionId: this.s.id,
       userId: this.s.userId,
       quizId,
-      day: this.s.day.value,
+      day: answeredOn.value,
       answeredAt: at.toISOString(),
       correct: feedback.questions.every((q) => q.correct),
     });

@@ -75,7 +75,14 @@ export type EmptyTrashInput = { expectedCount: number; newestTrashedAt: string |
 /** QB-06 */
 export type QuizKind = 'single' | 'singleAudio' | 'readingGroup' | 'audioGroup';
 
-export type Track = { id: string; tagName: string; kinds: QuizKind[]; dailySize: number };
+export type Track = {
+  id: string;
+  tagName: string;
+  kinds: QuizKind[];
+  dailySize: number;
+  /** DP-53: sent back with settings and remove. */
+  version: number;
+};
 
 /** G-2: a question tag to add a track from. */
 export type TrackOption = { name: string; quizCount: number; tracked: boolean };
@@ -107,6 +114,8 @@ export type DailySessionSummary = {
   day: string;
   short: boolean;
   finished: boolean;
+  /** DP-52: can't be answered any more; view only. */
+  closed: boolean;
   progress: { answered: number; total: number };
   result: { correct: number; total: number };
 };
@@ -117,6 +126,17 @@ export type DailySession = DailySessionSummary & {
   quizzes: Quiz[];
 };
 
-export type TodayTrack = Track & { streak: number; session: DailySessionSummary | null };
+export type TodayTrack = Track & {
+  streak: number;
+  session: DailySessionSummary | null;
+  /** DP-63: yesterday's set while it can still be finished. */
+  yesterdaySession: DailySessionSummary | null;
+};
 
-export type Today = { day: string; overallStreak: number; tracks: TodayTrack[] };
+export type Today = {
+  day: string;
+  overallStreak: number;
+  /** DP-69 */
+  overallBestStreak: number;
+  tracks: TodayTrack[];
+};

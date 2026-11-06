@@ -42,6 +42,8 @@ export class AddTrack {
       if (track) {
         track.addAgain();
         await this.tracks.save(track);
+        await this.outbox.add(track.pullEvents());
+        return { ...toTrackView(track), version: track.version + 1 };
       } else {
         track = Track.add({
           id: TrackId(randomUUID()),
@@ -56,7 +58,7 @@ export class AddTrack {
   }
 }
 
-/** DP-15: removing keeps the history. */
+/** DP-15: removing keeps the history. DP-53: from an outdated screen → TrackChanged. */
 @Injectable()
 export class RemoveTrack {
   constructor(
@@ -66,10 +68,16 @@ export class RemoveTrack {
     @Inject(OUTBOX) private readonly outbox: Outbox,
   ) {}
 
-  execute(input: { userId: UserId; trackId: TrackId }): Promise<void> {
+  execute(input: {
+    userId: UserId;
+    trackId: TrackId;
+    version: number;
+  }): Promise<void> {
     return this.transactions.run(async () => {
       const track = await this.tracks.findById(input.userId, input.trackId);
-      if (!track || !track.isActive) throw new TrackNotFound(input.trackId);
+      if (!track) throw new TrackNotFound(input.trackId);
+      track.assertVersion(input.version); // before "removed": removing bumps the version
+      if (!track.isActive) throw new TrackNotFound(input.trackId);
       track.remove();
       await this.tracks.save(track);
       await this.outbox.add(track.pullEvents());
@@ -77,7 +85,10 @@ export class RemoveTrack {
   }
 }
 
-/** DP-12, DP-13: kinds and daily size; applies from the next daily set. */
+/**
+ * DP-12, DP-13: kinds and daily size; applies from the next daily set.
+ * DP-53: from an outdated screen → TrackChanged.
+ */
 @Injectable()
 export class ChangeTrackSettings {
   constructor(
@@ -92,14 +103,17 @@ export class ChangeTrackSettings {
     trackId: TrackId;
     kinds?: string[];
     dailySize?: number;
+    version: number;
   }): Promise<TrackView> {
     return this.transactions.run(async () => {
       const track = await this.tracks.findById(input.userId, input.trackId);
-      if (!track || !track.isActive) throw new TrackNotFound(input.trackId);
+      if (!track) throw new TrackNotFound(input.trackId);
+      track.assertVersion(input.version); // before "removed": removing bumps the version
+      if (!track.isActive) throw new TrackNotFound(input.trackId);
       track.changeSettings({ kinds: input.kinds, dailySize: input.dailySize });
       await this.tracks.save(track);
       await this.outbox.add(track.pullEvents());
-      return toTrackView(track);
+      return { ...toTrackView(track), version: track.version + 1 };
     });
   }
 }

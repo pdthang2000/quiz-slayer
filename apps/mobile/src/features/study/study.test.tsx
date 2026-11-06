@@ -173,6 +173,13 @@ describe('Study session', () => {
     expect([...after.order.slice(12)].sort()).toEqual([...ids(50).slice(12)].sort());
   });
 
+  it('STUDY-13: Shuffle on the first card shuffles the whole session, card 1 included', () => {
+    const after = shuffleUnseen({ order: ids(4), position: 0 }, () => 0);
+    expect(after.position).toBe(0);
+    expect(after.order[0]).not.toBe('c1');
+    expect([...after.order].sort()).toEqual(ids(4));
+  });
+
   it('STUDY-09: the Shuffle button keeps the cards already seen and the position', async () => {
     jest.spyOn(Math, 'random').mockReturnValue(0);
     studyApi(ids(4));
@@ -204,7 +211,7 @@ describe('Study session', () => {
     expect(await screen.findByText('back c1')).toBeTruthy();
   });
 
-  it('STUDY-11: after the last card "Done! n cards" with Study again · Shuffle & again · Close', async () => {
+  it('STUDY-11, STUDY-14: after the last card "Done! n cards" with Study again · Shuffle & again · Close', async () => {
     studyApi(ids(2));
     await showStudy();
     await screen.findByText('front c1');
