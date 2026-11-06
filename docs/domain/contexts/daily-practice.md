@@ -135,6 +135,17 @@ Phone A: size 10 → 20 ✓ · Phone B (shows 10) turns off "reading group" → 
 - **DP-61** `confirmed` — Quiz flow: tap a choice (one per question in a group), then Check; feedback stays until Next ("See result" after the last quiz); the result screen shows the score, then every quiz with the answers (the same screen for a History day, DP-26). Save as card is in the feedback and on the result list. Track settings: a −/+ stepper and kind checkboxes, one Save button; Remove asks first. (G-15)
 - **DP-62** `confirmed` — Today is the first item of the drawer and the app opens on it (UI-09). (G-1)
 
+### Streak while yesterday can still be finished (2026-11-06)
+- **DP-65** `confirmed` — The streak shows the truth: while yesterday's set is not finished, the streak is 0. Finishing yesterday's set in time (DP-52) counts for yesterday, so the streak comes back. (R-6)
+```
+Tue 08:00  Sun and before ✓ (5 days), Mon 3/10 → 🔥0
+Tue 20:00  finish Monday's set → 🔥5 (Mon counts)    · then Tuesday's set → 🔥6
+```
+- **DP-69** `confirmed` — **Best streak**: the longest run of consecutive finished days ever, the current run included; one per track and one overall; computed from finished days like the streak (nothing stored); a removed and re-added track keeps it (DP-15). Shown in each track's History header ("Best: 12 days") and as a small line under the overall streak on Today ("Best 21"). (R-16)
+```
+#HSK4: ✓×12 · — · ✓×3 · today — → 🔥0 · Best: 12 days
+```
+
 ### Notes (2026-11-04)
 - **DP-41** `confirmed` — The user can write a **Note** on any question they answered, right or wrong: free text, e.g. why an answer is right or wrong. It is the user's own text; the **Explanation** is the author's. (N-11)
 - **DP-42** `confirmed` — A note is private: only the user who wrote it sees it, also on System or public quizzes. (N-1)
@@ -158,6 +169,11 @@ Back:  是 — 是 = to be
 Phone A saves "X" · Phone B, still showing the old note, saves "Y" → "This note changed." and shows "X"
 ```
 - **DP-51** `confirmed` — A note stays when its question's content is fixed (e.g. a corrected answer key, QB-04). Deleting the question deletes its notes. (N-10)
+- **DP-66** `confirmed` — No note yet: a link "📝 Add note" opens a text box with Save and Cancel. A note exists: its text with "Edit". While typing, a counter "120 / 1,000" is always shown; over the limit it turns red and Save is off. (R-8, R-10)
+- **DP-67** `confirmed` — Leaving with a typed note not saved (Next, Close, Back) asks "Discard your note?" with Discard and Keep editing. (R-9)
+- **DP-68** `confirmed` — Notes can still be edited on a closed set (DP-52) from History; only its answers are locked. (R-11)
+
+App texts for 6e.1 and 6f (R-15): "📝 Add note" · "Edit" · "Save" · "Cancel" · "Discard your note?" · "Discard" · "Keep editing" · "This note changed." · "A note is at most 1,000 characters" · "Finish yesterday's set · 3 / 10" · "Continue" · "This day is over." · editor title "Save as card" · "Best: 12 days" (History) · "Best 21" (Today).
 
 ### Finishing a set late (2026-11-04)
 - **DP-52** `confirmed` — A started set can be finished until the end of the next day (phone's timezone, DP-05); it still counts for the day it was started. After that it can only be viewed: answered quizzes and their results, no more answers. Refines DP-05, DP-06, DP-22. Quizzes not answered yet in that set are not seen (DP-27), so the next day's set may pick one of them too. (G-17)
@@ -165,13 +181,13 @@ Phone A saves "X" · Phone B, still showing the old note, saves "Y" → "This no
 Mon 21:00 Start, answer 3 · Tue 20:00 answer the other 7 → Monday finished ✓, counts for Monday
 Mon 21:00 Start, answer 3 · Wed 08:00 open Monday in History → view only, Monday stays unfinished
 ```
-- **DP-63** `confirmed` — While yesterday's set can still be finished (DP-52), Today shows it under its track: "Finish yesterday's set · 3 / 10" with Continue. At most one such row per track; the day before yesterday never shows (it is closed); a day never started has no set, so nothing shows. (R-1)
+- **DP-63** `confirmed` — While yesterday's set can still be finished (DP-52), Today shows it under its track: "Finish yesterday's set · 3 / 10" with Continue. At most one such row per track; the day before yesterday never shows (it is closed); a day never started has no set, so nothing shows. A removed track's set is not shown (removed tracks are not on Today). (R-1, R-7)
 ```
 Today (Tue)
   #HSK4  🔥0   Not started   [Start]
   ↳ Finish yesterday's set · 3 / 10   [Continue]
 ```
-- **DP-64** `confirmed` — "Save as card" when the card fits: one tap saves it (DP-10). When it doesn't fit (front over 500 or back over 3,000, CARD-02): the card editor opens, filled in with the front, the back and the track's tag; all three can be changed; a counter turns red over the limit and Save stays off until the card fits. Save → the card is created and the button shows "Saved ✓" (DP-32). Cancel → nothing is saved, the button still reads "Save as card". (R-2, R-3, R-4, R-5)
+- **DP-64** `confirmed` — "Save as card" when the card fits: one tap saves it (DP-10). When it doesn't fit (front over 500 or back over 3,000, CARD-02): the card editor opens, filled in with the front, the back and the track's tag; all three can be changed; a counter turns red over the limit and Save stays off until the card fits. Save → the card is created and the button shows "Saved ✓" (DP-32). Cancel → nothing is saved, the button still reads "Save as card". After Save the app goes back to the quiz or result screen, where the button shows "Saved ✓"; no extra pop-up. The editor follows the same rules as any new card, so the tag may be removed. (R-2, R-3, R-4, R-5, R-13, R-14)
 ```
 Back   是 — (long explanation) …   🔴 3,400 / 3,000   [Save] off
 ```

@@ -24,4 +24,5 @@ Ideas agreed for later. Not v1 unless moved.
 | B-19 | "Reset progress" for a track | Daily Practice | 2026-11-03 |
 | B-20 | Detect the same question uploaded twice | Question Bank | 2026-11-03 |
 | B-21 | Decide where system-provided content comes from (original, licensed or public domain) before adding any; official IELTS/TOEIC/HSK material belongs to its publishers | Question Bank | 2026-11-03 (Q-12) |
-| B-22 | Daily reminder notification (local, works in Expo Go without a paid Apple account) | Mobile | 2026-11-03 (G-6, provisional) |
+| B-22 | Daily reminder notification (local, works in Expo Go without a paid Apple account) | Mobile | 2026-11-03 (G-6) |
+| B-23 | "My notes" page listing all of the user's notes | Daily Practice | 2026-11-06 (R-12) |

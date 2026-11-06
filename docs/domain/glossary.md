@@ -65,6 +65,7 @@ Names confirmed 2026-10-22. How each error is handled: card-library.md → Error
 | Attempt | The user's answer to one question in a daily session; can't be changed (DP-03). | confirmed |
 | Mistake | A question answered wrong; it comes back after 1, 3 and 7 days (DP-08). | confirmed |
 | Note | The user's private free text on one question, written after answering it; one per user and question (DP-41..DP-51). Code: `QuestionNote`. Not the Explanation (the author's text). | confirmed |
+| Best streak | The longest run of consecutive finished days ever, the current run included; per track and overall; computed (DP-69). | confirmed |
 | Streak | Consecutive days with a finished daily set: one per track, plus one overall (any track) (DP-19, DP-23). | confirmed |
 
 ### Daily Practice design terms (ADR-013)

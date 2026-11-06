@@ -128,6 +128,17 @@ Status: `open` / `answered` (move the answer into the context file, then mark an
 | R-3 | The front too (DP-40 hid the button over 500)? | answered: yes, same editor for both sides → DP-40, DP-64 |
 | R-4 | In that editor, can front, back and tag be changed? | answered: yes, all three → DP-64 |
 | R-5 | Cancel in that editor? | answered: nothing saved, the button still reads "Save as card" → DP-64 |
+| R-6 | Streak while yesterday's set can still be finished: 0, or the streak with a hint? | answered: reset — show 0 (DP-65); show the best streak somewhere else (R-16) |
+| R-7 | Yesterday's set on a removed track: show on Today? | answered: no → DP-63 |
+| R-8 | What a note looks like before / after it exists | answered: "📝 Add note" link; existing note with "Edit" → DP-66 |
+| R-9 | A typed note not saved, then Next | answered: ask "Discard your note?" → DP-67 |
+| R-10 | Note counter | answered: always shown while typing, red over 1,000, Save off → DP-66 |
+| R-11 | Notes on a closed set | answered: still editable from History → DP-68 |
+| R-12 | A "My notes" page | answered: later → backlog B-23 |
+| R-13 | After Save in the Save as card editor | answered: back to the quiz/result, "Saved ✓", no pop-up → DP-64 |
+| R-14 | Removing the track's tag in that editor | answered: allowed, same rules as any new card → DP-64 |
+| R-15 | Texts for 6e.1 and 6f | answered: as written in daily-practice.md (after DP-68) |
+| R-16 | Best streak (R-6): what it counts and where it shows | answered: longest run ever, per track and overall; History header + small line under the overall streak on Today → DP-69 |
 | Q-06a | "Save as card" on an audio question (cards are text only, CARD-03): hide the button, or save the question text only? | answered: hidden for audio kinds → DP-16 |
 | Q-07a | Daily size per track: fixed 10, or set per track (default 10)? | answered: per track, default 10, allowed 1–50 → DP-12 |
 | Q-07b | Add/remove tracks anytime from Settings? | answered: yes; removing keeps history, re-adding continues it → DP-15 |
