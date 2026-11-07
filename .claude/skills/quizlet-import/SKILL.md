@@ -61,11 +61,24 @@ The clipboard is replaced, so tell Jackkie.
    await new Promise(r => setTimeout(r, 600));
    [...document.querySelectorAll('[role=menuitem]')].find(e => e.innerText.trim() === 'Export').click();
    ```
-5. Between term and definition: **Custom** `|`. Between rows: **Custom** `||`. Press **Copy text**.
+5. Between term and definition: **Custom** `@@`. Between rows: **Custom** `##`. Press **Copy text**.
    Custom separators matter: a term or definition can be several lines, so "New line" between rows
-   would break those cards apart.
-   Use real clicks and typing here (`computer`), with coordinates from a screenshot. Setting the
-   separator fields or pressing Copy text from page code froze the tab (2026-11-07).
+   would break those cards apart. Don't use `|` / `||`: a card that is blank on both sides makes
+   `|||||`, which no longer splits into rows (Chinese basic 26).
+   Use real clicks and typing here (`computer`). Setting the separator fields or pressing Copy text
+   from page code froze the tab (2026-11-07).
+   Work out the click positions each time, because they move when the Chrome window changes size:
+   ```js
+   const c = e => { const r = e.getBoundingClientRect(); return [r.x + r.width / 2, r.y + r.height / 2]; };
+   JSON.stringify({
+     radios: [...document.querySelectorAll('input[type=radio][value=custom]')].map(c), // term, row
+     fields: [...document.querySelectorAll('input[type=text]')].filter(t => !t.placeholder).map(c),
+     copy: c([...document.querySelectorAll('button')].find(b => b.innerText.trim() === 'Copy text')),
+     vw: innerWidth,
+   })
+   ```
+   Then take a screenshot: click at each position × (screenshot frame width ÷ `vw`). The positions stay
+   valid while `vw` stays the same, so check `vw` on every set.
    Before saving, check the clipboard changed: same text as the previous set → the copy failed, stop.
 6. Save and parse it:
    ```bash
@@ -73,8 +86,9 @@ The clipboard is replaced, so tell Jackkie.
    pbpaste > $TMPDIR/quizlet-<id>.txt
    node $S/parse-export.mjs $TMPDIR/quizlet-<id>.txt > $TMPDIR/quizlet-<id>.json
    ```
-   If it reports rows that don't split in two, the set uses `|` somewhere. Export again with `@@` / `##`
-   and pass `--term-sep "@@" --row-sep "##"`.
+   `@@` and `##` are the parser's defaults. If it reports rows that don't split in two, the set uses
+   one of them somewhere: export again with other separators (e.g. `%%` / `&&`) and pass
+   `--term-sep "%%" --row-sep "&&"`.
 
 ### Route B: the page's term list, through the clipboard
 For a set Export doesn't offer. Needs the set page open as in route A.
@@ -97,7 +111,7 @@ For a set Export doesn't offer. Needs the set page open as in route A.
    A clipboard error → the tab has no focus: ask Jackkie to click the tab, then run it again.
 
 ### Route C: Jackkie pastes the export
-Ask Jackkie to open the set → **⋯ → Export**, set the separators as in route A, and paste the text into
+Ask Jackkie to open the set → **⋯ → Export**, set the separators to `@@` and `##` as in route A, and paste the text into
 a file or into chat. Save chat text with the Write tool, then parse it as in route A step 6.
 This is the only route where Claude writes card text, because Jackkie handed it over.
 
@@ -139,3 +153,5 @@ Several sets in a row: carry on after exit 0, and report them together at the en
   sides) to the Trash afterwards.
 - 2026-11-07, Chinese basic 12–20 through route A: 222 cards, 0 invalid. Many fronts hold several
   words, one per line (up to 11), kept as single cards.
+- 2026-11-07, Chinese basic 21–30: 159 of 160 cards. Set 26 card 2 is blank on both sides on Quizlet
+  and went to the invalid file.

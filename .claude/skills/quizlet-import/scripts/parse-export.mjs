@@ -2,11 +2,11 @@
 // Turns text from Quizlet's Export box into cards.json for import-cards.mjs.
 //
 // Usage:
-//   node parse-export.mjs export.txt [--term-sep "|"] [--row-sep "||"] > cards.json
+//   node parse-export.mjs export.txt [--term-sep "@@"] [--row-sep "##"] > cards.json
 //
-// Defaults match the old QuizSlayer import script: "|" between term and definition,
-// "||" between cards. Custom separators are needed because a term or definition can
-// span several lines, so "new line" between cards would break them apart.
+// Defaults: "@@" between term and definition, "##" between cards. Custom separators are
+// needed because a term or definition can span several lines, so "new line" between cards
+// would break them apart. "|" and "||" fail on a card that is blank on both sides ("|||||").
 // A row that does not split into exactly one term and one definition stops the parse:
 // re-export with separators that appear nowhere in the set (e.g. "@@" and "##").
 
@@ -16,13 +16,13 @@ import { parseArgs } from 'node:util';
 const { values: args, positionals } = parseArgs({
   allowPositionals: true,
   options: {
-    'term-sep': { type: 'string', default: '|' },
-    'row-sep': { type: 'string', default: '||' },
+    'term-sep': { type: 'string', default: '@@' },
+    'row-sep': { type: 'string', default: '##' },
   },
 });
 
 if (positionals.length !== 1) {
-  console.error('Usage: node parse-export.mjs export.txt [--term-sep "|"] [--row-sep "||"] > cards.json');
+  console.error('Usage: node parse-export.mjs export.txt [--term-sep "@@"] [--row-sep "##"] > cards.json');
   process.exit(2);
 }
 
