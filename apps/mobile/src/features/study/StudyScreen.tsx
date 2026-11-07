@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  PanResponder,
   Pressable,
   StyleSheet,
   Text,
@@ -23,8 +22,8 @@ import {
   skipMissing,
   startSession,
   type StudySession,
-  swipeMove,
 } from './session';
+import { StudyCard } from './StudyCard';
 import { useStudySide } from './useStudySide';
 
 type Props = {
@@ -101,18 +100,7 @@ export function StudyScreen({ filter, onClose }: Props) {
     setSession((s) => (s ? change(s) : s));
   }, []);
 
-  // STUDY-08: swipe left = next, swipe right = previous. Taps go to the card (flip).
-  const pan = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > 10 && Math.abs(g.dx) > Math.abs(g.dy),
-        onPanResponderRelease: (_, g) => {
-          const change = swipeMove(g.dx);
-          if (change) move(change);
-        },
-      }),
-    [move],
-  );
+  const toNext = useCallback(() => move(next), [move]);
 
   const header = (content: React.ReactNode) => (
     <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
@@ -196,6 +184,7 @@ export function StudyScreen({ filter, onClose }: Props) {
   }
 
   const card = cards.get(session.order[session.position]);
+  const nextCard = cards.get(session.order[session.position + 1]);
   // STUDY-04: the chosen side first; a tap shows the other one.
   const showBack = (side === 'back') !== flipped;
 
@@ -227,18 +216,31 @@ export function StudyScreen({ filter, onClose }: Props) {
         </>,
       )}
 
-      <View style={styles.cardArea} {...pan.panHandlers} testID="study-swipe">
+      <View style={styles.cardArea} testID="study-swipe">
         {card ? (
-          <Pressable
-            onPress={() => setFlipped((f) => !f)}
-            accessibilityRole="button"
-            testID="study-card"
-            style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
-          >
-            <Text style={[styles.cardText, { color: colors.text }]}>
-              {showBack ? card.back : card.front}
-            </Text>
-          </Pressable>
+          <View style={styles.flex}>
+            {/* Keyed by card, so the card underneath stays mounted when it becomes the top one. */}
+            {nextCard ? (
+              <StudyCard
+                key={nextCard.id}
+                front={nextCard.front}
+                back={nextCard.back}
+                showBack={side === 'back'}
+                isTop={false}
+                onFlip={() => setFlipped((f) => !f)}
+                onSwipedToNext={toNext}
+              />
+            ) : null}
+            <StudyCard
+              key={card.id}
+              front={card.front}
+              back={card.back}
+              showBack={showBack}
+              isTop
+              onFlip={() => setFlipped((f) => !f)}
+              onSwipedToNext={toNext}
+            />
+          </View>
         ) : batchError ? (
           <View style={styles.center}>
             <Text style={{ color: colors.textMuted }}>{t(errorMessageKey(batchError))}</Text>
@@ -291,15 +293,6 @@ const styles = StyleSheet.create({
   link: { fontSize: 17, fontWeight: '600' },
   doneTitle: { fontSize: 24, fontWeight: '700' },
   cardArea: { flex: 1, padding: spacing.lg },
-  card: {
-    flex: 1,
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.xl,
-  },
-  cardText: { fontSize: 28, textAlign: 'center' },
   nav: { flexDirection: 'row', gap: spacing.lg, paddingHorizontal: spacing.lg },
   navButton: {
     flex: 1,

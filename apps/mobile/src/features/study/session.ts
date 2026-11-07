@@ -82,12 +82,15 @@ export function idsToFetch(s: StudySession, fetched: ReadonlySet<string>): strin
   return ahead.filter((id) => !fetched.has(id)).slice(0, BATCH_SIZE);
 }
 
-/** A horizontal move longer than this is a swipe (STUDY-08). */
-export const SWIPE_DISTANCE = 50;
+/** A swipe counts past this share of the card's width (STUDY-08). */
+export const SWIPE_WIDTH_SHARE = 0.25;
+/** A flick this fast (points per second) counts however short it was (STUDY-08). */
+export const SWIPE_VELOCITY = 800;
 
-/** STUDY-08: swipe left = next, swipe right = previous; a short move does nothing. */
-export function swipeMove(dx: number): typeof next | typeof prev | null {
-  if (dx <= -SWIPE_DISTANCE) return next;
-  if (dx >= SWIPE_DISTANCE) return prev;
-  return null;
+/** STUDY-08: a swipe either way moves to the next card; a short slow move does nothing. */
+export function swipesToNext(dx: number, velocityX: number, width: number): boolean {
+  'worklet';
+  const distance = Math.abs(dx);
+  const flick = Math.sign(velocityX) === Math.sign(dx) && Math.abs(velocityX) >= SWIPE_VELOCITY;
+  return distance > 0 && (distance >= width * SWIPE_WIDTH_SHARE || flick);
 }

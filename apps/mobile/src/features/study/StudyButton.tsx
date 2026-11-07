@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { CardFilter } from '../../api/types';
-import { useTheme } from '../../theme';
+import { spacing, useTheme } from '../../theme';
 import { openStudy } from './openStudy';
 
 type Props = {
@@ -22,12 +22,22 @@ export function StudyButton({ filter, tagName, disabled }: Props) {
       accessibilityRole="button"
       accessibilityState={{ disabled }}
       testID="study-button"
+      style={({ pressed }) => [
+        styles.button,
+        {
+          backgroundColor: disabled ? colors.surfaceMuted : colors.primary,
+          opacity: pressed ? 0.8 : 1,
+        },
+      ]}
     >
-      <Text style={[styles.text, { color: disabled ? colors.textMuted : colors.primary }]}>
+      <Text style={[styles.text, { color: disabled ? colors.textMuted : colors.onPrimary }]}>
         {tagName ? t('study.buttonTag', { name: tagName }) : t('study.button')}
       </Text>
     </Pressable>
   );
 }
 
-const styles = StyleSheet.create({ text: { fontSize: 16, fontWeight: '600' } });
+const styles = StyleSheet.create({
+  button: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: 10 },
+  text: { fontSize: 16, fontWeight: '600' },
+});

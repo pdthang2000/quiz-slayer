@@ -6,9 +6,8 @@ import { fakeApi, type FetchCall, Providers } from '../../test/harness';
 import {
   idsToFetch,
   next,
-  prev,
   shuffleUnseen,
-  swipeMove,
+  swipesToNext,
   skipMissing,
   startSession,
   type StudySession,
@@ -21,6 +20,22 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   jest.requireActual('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 jest.mock('expo-router', () => ({ router: { push: jest.fn(), back: jest.fn() } }));
+// The real gesture and animation modules need the native runtime.
+jest.mock('react-native-worklets', () => ({ scheduleOnRN: jest.fn() }));
+jest.mock('react-native-reanimated', () => ({
+  __esModule: true,
+  default: { View: jest.requireActual('react-native').View },
+  Easing: { bezier: () => ({}) },
+  useAnimatedStyle: () => ({}),
+  useReducedMotion: () => false,
+  useSharedValue: (value: number) => ({ get: () => value, set: () => undefined }),
+  withSpring: (value: number) => value,
+  withTiming: (value: number) => value,
+}));
+jest.mock('react-native-gesture-handler', () => ({
+  GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+  usePanGesture: () => ({}),
+}));
 
 const card = (id: string): Card => ({
   id,
@@ -60,9 +75,8 @@ const showStudy = (filter = {}) =>
 
 const progress = () => screen.getByTestId('study-progress').props.children;
 const shownText = async () => {
-  const node = await screen.findByTestId('study-card');
-  return (node as unknown as { children: { props: { children: string } }[] }).children[0].props
-    .children;
+  const node = await screen.findByTestId('study-shown-text');
+  return node.props.children as string;
 };
 const press = (id: string) => fireEvent.press(screen.getByTestId(id));
 const byIdsCalls = (calls: FetchCall[]) => calls.filter((c) => c.path.startsWith('/cards/by-ids'));
@@ -157,10 +171,16 @@ describe('Study session', () => {
     expect(progress()).toBe('1 / 3');
   });
 
-  it('STUDY-08: swipe left = next, swipe right = previous; a short move does nothing', () => {
-    expect(swipeMove(-80)).toBe(next);
-    expect(swipeMove(80)).toBe(prev);
-    expect(swipeMove(20)).toBeNull();
+  it('STUDY-08: a swipe either way past a quarter of the card or a flick moves next; a short slow move does nothing', () => {
+    const width = 400;
+    expect(swipesToNext(-100, 0, width)).toBe(true);
+    expect(swipesToNext(100, 0, width)).toBe(true);
+    expect(swipesToNext(-20, -900, width)).toBe(true);
+    expect(swipesToNext(20, 900, width)).toBe(true);
+    expect(swipesToNext(-99, -100, width)).toBe(false);
+    expect(swipesToNext(99, 100, width)).toBe(false);
+    expect(swipesToNext(20, -900, width)).toBe(false);
+    expect(swipesToNext(0, 900, width)).toBe(false);
   });
 
   it('STUDY-09: shuffle in the middle reshuffles only cards not seen yet; the position stays', () => {

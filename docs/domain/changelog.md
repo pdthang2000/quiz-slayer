@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-07 — Study: swipe and flip
+- Changed STUDY-08 (Jackkie): a swipe left or right moves to the next card; going back is the Prev button. Before, a swipe right went to the previous card.
+- Tap flips the card around its Y axis. The card follows the finger and flies off in the swipe's direction.
+
 ## 2026-11-06 — Slice 6f.1 Review touch-ups
 - DP-69: the best streak is hidden while 0, on Today and in the History header; from 1 it shows "Best 1" and "Best: 1 day".
 - `rules:coverage` checks every context in docs/domain/contexts/ by default, with one summary per context; naming a context lists its rules one by one. A test naming a rule ID that is in no context doc fails the run.

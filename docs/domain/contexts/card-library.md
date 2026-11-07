@@ -395,11 +395,11 @@ Start Study #HSK1 (50 cards) → add a new #HSK1 card on the laptop → not in t
 
 **STUDY-07** `confirmed` — A Study button is on the Cards screen and on a tag's card list ("Study #HSK1"); both study what that list shows (STUDY-01). With 0 cards the button is disabled. (S-6, S-7)
 
-**STUDY-08** `confirmed` — The study screen shows progress ("12 / 50"), Prev and Next buttons, and also moves by swipe: left = next, right = previous. Tap flips the card. (S-8, S-9, S-10)
+**STUDY-08** `confirmed` — The study screen shows progress ("12 / 50"), Prev and Next buttons, and a swipe left or right moves to the next card; going back is the Prev button. Tap flips the card around its Y axis. (S-8, S-9, S-10; changed 2026-11-07, Jackkie)
 ```
 ┌──────────────────────────────┐
 │ 12 / 50          ⇄ Shuffle ✕ │
-│            你好               │  tap = flip · swipe ← next · swipe → prev
+│            你好               │  tap = flip · swipe ← or → next
 │   [ ◀ Prev ]      [ Next ▶ ] │
 └──────────────────────────────┘
 ```

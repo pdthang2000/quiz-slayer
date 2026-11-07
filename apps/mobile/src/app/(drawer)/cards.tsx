@@ -217,8 +217,14 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     fontSize: 16,
   },
-  chipRow: { flexGrow: 0 },
-  toolbar: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: spacing.lg },
+  // flexShrink: 0 because a long FlatList below would otherwise squeeze this row and clip the chips.
+  chipRow: { flexGrow: 0, flexShrink: 0 },
+  toolbar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+  },
   chips: { paddingHorizontal: spacing.lg, paddingBottom: spacing.sm, gap: spacing.sm },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: spacing.md },
   link: { fontSize: 16, fontWeight: '600' },
