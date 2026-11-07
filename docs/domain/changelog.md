@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-07 — Quizlet import tool
+- Dev tool, no business rules: `/quizlet-import` (`.claude/skills/quizlet-import/`) imports a Quizlet set as cards with one tag through `POST /cards`.
+- Card text goes from Quizlet's Export through the clipboard to a file, never retyped by the agent. Cards that are empty, over the CARD-02 limits or refused by the API go to `quizlet-invalid-cards.json` (gitignored) for Jackkie to edit; the rest import without stopping.
+- The DDD review gate now blocks only real `git commit` commands, not text that mentions them.
+
 ## 2026-11-07 — DDD commit gate
 - `/ddd-review` has a new Impact step: it lists what the diff changes beyond its own lines, reads every user outside the diff, and reports old data, older apps and dependent rules in a second table. An affected user with no test is a must fix.
 - `docs/use-case-checklist.md` gained an "Impact outside the diff" section (items 16–18); the backward-compatible API item moved into it.

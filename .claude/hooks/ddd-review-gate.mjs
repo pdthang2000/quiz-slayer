@@ -69,17 +69,23 @@ if (mode === '--hook') {
   } catch {
     process.exit(0);
   }
-  const commitAt = cmd.search(/\bgit\b[^\n;&|]*?\bcommit\b/);
-  if (commitAt === -1) process.exit(0);
+  // Only real commands count, not text that mentions them: drop heredoc bodies and quoted
+  // text (e.g. the commit message), then look at each command on its own.
+  const commands = cmd
+    .replace(/<<-?\s*(['"]?)(\w+)\1([^\n]*)\n[\s\S]*?\n\s*\2(?=\n|$)/g, '$3')
+    .replace(/'[^']*'|"(?:[^"\\]|\\.)*"/g, '""')
+    .split(/[\n;&|]+/);
+  const gitRuns = (subcommand) =>
+    new RegExp(`^[\\s({$]*(\\w+=\\S*\\s+)*git\\s+(-[cC]\\s+\\S+\\s+)*(${subcommand})(?=[\\s)]|$)`);
+  const commitIndex = commands.findIndex((c) => gitRuns('commit').test(c));
+  if (commitIndex === -1) process.exit(0);
 
   const block = (msg) => {
     console.error(`DDD review gate: ${msg}`);
     process.exit(2); // exit 2 = Claude Code blocks the tool call and shows this message
   };
-  const before = cmd.slice(0, commitAt);
-  // Ignore quoted text (the commit message) when looking for flags.
-  const commitPart = cmd.slice(commitAt).replace(/'[^']*'|"(?:[^"\\]|\\.)*"/g, '""');
-  if (/\bgit\b[^\n;&|]*\b(add|rm|mv)\b/.test(before))
+  const commitPart = commands[commitIndex];
+  if (commands.slice(0, commitIndex).some((c) => gitRuns('add|rm|mv').test(c)))
     block('stage files in a separate command, run /ddd-review, then run `git commit` on its own.');
   if (/\s(--all\b|-[A-Za-z]*a[A-Za-z]*\b)/.test(commitPart))
     block('do not use `git commit -a`: stage with `git add`, run /ddd-review, then commit.');

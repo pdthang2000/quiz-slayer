@@ -4,3 +4,4 @@ coverage/
 .env
 *.log
 .DS_Store
+quizlet-invalid-cards.json
