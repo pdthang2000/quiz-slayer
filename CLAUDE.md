@@ -70,6 +70,7 @@ NestJS and Prisma make it tempting to mix framework code into the domain. Don't:
 - Domain tests are plain unit tests: no Nest testing module, no DB.
 - Reads that return or count cards must say which card state they want (`findActive`, `findTrashed`). No `findAll`.
 - All times are stored and compared in UTC. The app converts to local time for display.
+- A new or changed use case follows `docs/use-case-checklist.md`.
 - Contexts talk through public application services or events, never through each other's tables or repositories.
 
 ## Decide alone vs ask Jackkie
@@ -83,6 +84,13 @@ Always ask (write it in `docs/domain/open-questions.md`, keep working on what is
 - New glossary terms, or changes to a `confirmed` rule.
 - Implement a confirmed answer exactly as confirmed. If you think it is wrong or incomplete, ask; never record your own variant as Jackkie's answer.
 
+## Before each commit
+1. Tests, lint, tsc and rules coverage pass. The git pre-commit hook (`.githooks/pre-commit`) runs them again.
+2. Stage with `git add`, then run `/ddd-review` on the staged diff, including its impact step on code outside the diff. Fix every `must fix`, re-stage, review again. The pre-commit hook also runs `test:int` when the database, events or the outbox are staged.
+3. Commit in its own command: no `git add … && git commit`, no `-a`, no `--no-verify`. Put the review summary line in the commit body.
+- `.claude/hooks/ddd-review-gate.mjs` (Claude Code hook) blocks `git commit` until the staged code has a review. Never run `--mark` without doing the review.
+- Docs-only commits need no review.
+
 ## Work plan
 - Follow `docs/plan.md`. Stop at each checkpoint and let Jackkie review before moving on — except during a **continuous run** (below).
 
@@ -90,7 +98,7 @@ Always ask (write it in `docs/domain/open-questions.md`, keep working on what is
 When `docs/plan.md` says a stretch is a continuous run (currently 6e.1 → 6f):
 - Don't stop to ask. For a behaviour question, build the recommended choice, log it in `docs/domain/open-questions.md` as `provisional, built: <what>`, and keep going. Jackkie reviews these later.
 - Never record a provisional choice as `confirmed`.
-- Each slice: tests, lint, tsc, rules coverage → commit → tag → next slice. `git pull` first; don't push.
+- Each slice: tests, lint, tsc, rules coverage → stage → `/ddd-review` → commit → tag → next slice. `git pull` first; don't push.
 - Stop only after the run's last slice, if something irreversible or destructive is needed (data loss, a migration that drops data, pushing to a remote), or if tests can't be made green.
 
 ## Modelling sessions

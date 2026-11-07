@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-07 — DDD commit gate
+- `/ddd-review` has a new Impact step: it lists what the diff changes beyond its own lines, reads every user outside the diff, and reports old data, older apps and dependent rules in a second table. An affected user with no test is a must fix.
+- `docs/use-case-checklist.md` gained an "Impact outside the diff" section (items 16–18); the backward-compatible API item moved into it.
+- The pre-commit hook runs `test:int` only when the database, events or the outbox are staged, and fails with one line if Postgres is not reachable.
+
 ## 2026-11-07 — Study: swipe and flip
 - Changed STUDY-08 (Jackkie): a swipe left or right moves to the next card; going back is the Prev button. Before, a swipe right went to the previous card.
 - Tap flips the card around its Y axis. The card follows the finger and flies off in the swipe's direction.
